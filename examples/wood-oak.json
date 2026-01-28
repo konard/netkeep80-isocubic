@@ -1,0 +1,37 @@
+{
+  "id": "wood_oak_001",
+  "prompt": "дубовая древесина с корой и годовыми кольцами",
+  "base": {
+    "color": [0.55, 0.35, 0.2],
+    "roughness": 0.6,
+    "transparency": 1.0
+  },
+  "gradients": [
+    {
+      "axis": "radial",
+      "factor": 0.4,
+      "color_shift": [0.15, 0.08, 0.02]
+    },
+    {
+      "axis": "y",
+      "factor": 0.15,
+      "color_shift": [-0.1, -0.05, -0.02]
+    }
+  ],
+  "noise": {
+    "type": "perlin",
+    "scale": 12.0,
+    "octaves": 3,
+    "persistence": 0.4
+  },
+  "physics": {
+    "material": "wood",
+    "density": 0.7,
+    "break_pattern": "splinter"
+  },
+  "meta": {
+    "name": "Дубовая древесина",
+    "tags": ["wood", "oak", "natural", "warm"],
+    "author": "isocubic"
+  }
+}

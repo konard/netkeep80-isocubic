@@ -1,0 +1,185 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/netkeep80/isocubic/cube-schema.json",
+  "title": "SpectralCube",
+  "description": "JSON schema for parametric cube configuration in isocubic editor",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the cube configuration",
+      "pattern": "^[a-z0-9_]+$",
+      "examples": ["stone_moss_001", "wood_oak_002", "metal_rust_003"]
+    },
+    "prompt": {
+      "type": "string",
+      "description": "Text prompt used to generate this cube configuration",
+      "examples": ["каменная кладка с мхом", "дубовая древесина с корой"]
+    },
+    "base": {
+      "type": "object",
+      "description": "Base material properties",
+      "properties": {
+        "color": {
+          "type": "array",
+          "description": "RGB color values normalized to [0, 1]",
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "roughness": {
+          "type": "number",
+          "description": "Surface roughness (0 = smooth/glossy, 1 = rough/matte)",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.5
+        },
+        "transparency": {
+          "type": "number",
+          "description": "Opacity level (0 = fully transparent, 1 = fully opaque)",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 1.0
+        }
+      },
+      "required": ["color"],
+      "additionalProperties": false
+    },
+    "gradients": {
+      "type": "array",
+      "description": "Array of gradient effects applied to the cube",
+      "items": {
+        "type": "object",
+        "properties": {
+          "axis": {
+            "type": "string",
+            "description": "Axis along which gradient is applied",
+            "enum": ["x", "y", "z", "radial"]
+          },
+          "factor": {
+            "type": "number",
+            "description": "Strength of the gradient effect",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "color_shift": {
+            "type": "array",
+            "description": "RGB color shift at the gradient end",
+            "items": {
+              "type": "number",
+              "minimum": -1,
+              "maximum": 1
+            },
+            "minItems": 3,
+            "maxItems": 3
+          }
+        },
+        "required": ["axis", "factor", "color_shift"],
+        "additionalProperties": false
+      }
+    },
+    "noise": {
+      "type": "object",
+      "description": "Procedural noise settings for surface texture",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Type of procedural noise",
+          "enum": ["perlin", "worley", "crackle"],
+          "default": "perlin"
+        },
+        "scale": {
+          "type": "number",
+          "description": "Scale/frequency of the noise pattern",
+          "minimum": 0.1,
+          "maximum": 100,
+          "default": 8.0
+        },
+        "octaves": {
+          "type": "integer",
+          "description": "Number of noise octaves for detail layers",
+          "minimum": 1,
+          "maximum": 8,
+          "default": 4
+        },
+        "persistence": {
+          "type": "number",
+          "description": "Amplitude decay between octaves",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.5
+        },
+        "mask": {
+          "type": "string",
+          "description": "Region mask for noise application",
+          "examples": ["bottom_40%", "top_60%", "center_50%", "edges_20%"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "physics": {
+      "type": "object",
+      "description": "Physical properties of the material",
+      "properties": {
+        "material": {
+          "type": "string",
+          "description": "Material type for physics simulation",
+          "enum": ["stone", "wood", "metal", "glass", "organic", "crystal", "liquid"],
+          "default": "stone"
+        },
+        "density": {
+          "type": "number",
+          "description": "Material density in g/cm3",
+          "minimum": 0.01,
+          "maximum": 20,
+          "default": 2.5
+        },
+        "break_pattern": {
+          "type": "string",
+          "description": "How the material breaks when destroyed",
+          "enum": ["crumble", "shatter", "splinter", "melt", "dissolve"],
+          "default": "crumble"
+        }
+      },
+      "additionalProperties": false
+    },
+    "meta": {
+      "type": "object",
+      "description": "Metadata and tags for organization",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the cube"
+        },
+        "tags": {
+          "type": "array",
+          "description": "Searchable tags for categorization",
+          "items": {
+            "type": "string"
+          }
+        },
+        "author": {
+          "type": "string",
+          "description": "Creator of this configuration"
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp in ISO 8601 format"
+        },
+        "modified": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last modification timestamp in ISO 8601 format"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["id", "base"],
+  "additionalProperties": false
+}

@@ -1,0 +1,33 @@
+{
+  "id": "stone_moss_001",
+  "prompt": "каменная кладка с мхом",
+  "base": {
+    "color": [0.65, 0.55, 0.45],
+    "roughness": 0.8,
+    "transparency": 1.0
+  },
+  "gradients": [
+    {
+      "axis": "y",
+      "factor": 0.3,
+      "color_shift": [0.2, 0.35, 0.15]
+    }
+  ],
+  "noise": {
+    "type": "perlin",
+    "scale": 8.0,
+    "octaves": 4,
+    "persistence": 0.6,
+    "mask": "bottom_40%"
+  },
+  "physics": {
+    "material": "stone",
+    "density": 2.5,
+    "break_pattern": "crumble"
+  },
+  "meta": {
+    "name": "Камень со мхом",
+    "tags": ["stone", "moss", "natural", "outdoor"],
+    "author": "isocubic"
+  }
+}
