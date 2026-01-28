@@ -149,8 +149,8 @@ describe('App', () => {
         fireEvent.click(previewTab)
       })
 
-      // Preview content should be visible
-      expect(screen.getByText('3D Preview coming soon')).toBeInTheDocument()
+      // Preview content should be visible (CubePreview component is rendered)
+      expect(screen.getByTestId('cube-preview')).toBeInTheDocument()
     })
 
     it('should display swipe indicator on mobile', async () => {
