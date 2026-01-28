@@ -143,10 +143,15 @@ isocubic/
 │   │   ├── shader-utils.ts    # Утилиты для шейдеров
 │   │   ├── tinyLLM.ts         # ИИ-генератор (TODO)
 │   │   ├── storage.ts         # Работа с хранилищем
-│   │   └── validation.ts      # Валидация схемы
+│   │   ├── validation.ts      # Валидация схемы
+│   │   └── fft-wasm.ts        # FFT модуль (WASM + JS fallback)
 │   ├── types/             # TypeScript-типы
 │   │   └── cube.ts
 │   └── App.tsx
+├── wasm-fft/              # Rust WASM модуль для FFT
+│   ├── Cargo.toml             # Rust конфигурация
+│   ├── src/lib.rs             # Реализация 3D FFT
+│   └── README.md              # Документация WASM модуля
 ├── public/
 │   └── model/             # Модель TinyLLM
 ├── examples/              # Примеры конфигов
@@ -200,7 +205,7 @@ isocubic/
 ### Фаза 2: FFT для магических объектов (текущая)
 
 - [x] Планирование задач Фазы 2 (TASKS.md)
-- [ ] WASM-модуль для FFT (ISSUE 13)
+- [x] WASM-модуль для FFT (ISSUE 13)
 - [ ] Шейдер энергетической визуализации (ISSUE 14)
 - [ ] Физика энергии (ISSUE 15)
 - [ ] Интеграция с боем и разрушением (ISSUE 16)

@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Rust/WASM build artifacts
+wasm-fft/target
+wasm-fft/pkg
+wasm-fft/Cargo.lock
