@@ -1,0 +1,41 @@
+{
+  "id": "magic_crystal_energy_001",
+  "prompt": "высокоэнергетический магический кристалл с пульсирующим синим свечением",
+  "base": {
+    "color": [0.3, 0.4, 0.9],
+    "roughness": 0.02,
+    "transparency": 0.4
+  },
+  "gradients": [
+    {
+      "axis": "y",
+      "factor": 0.5,
+      "color_shift": [0.15, 0.2, -0.1]
+    },
+    {
+      "axis": "radial",
+      "factor": 0.35,
+      "color_shift": [-0.1, 0.15, 0.2]
+    }
+  ],
+  "noise": {
+    "type": "worley",
+    "scale": 2.5,
+    "octaves": 6,
+    "persistence": 0.7
+  },
+  "physics": {
+    "material": "crystal",
+    "density": 3.5,
+    "break_pattern": "shatter"
+  },
+  "meta": {
+    "name": "High-Energy Crystal",
+    "tags": ["magical", "crystal", "energy", "blue", "glowing", "fantasy", "fft"],
+    "author": "isocubic"
+  },
+  "boundary": {
+    "mode": "smooth",
+    "neighbor_influence": 0.6
+  }
+}

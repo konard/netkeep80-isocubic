@@ -1,0 +1,41 @@
+{
+  "id": "energy_shield_001",
+  "prompt": "защитный энергетический щит с зелёным свечением поглощающий урон",
+  "base": {
+    "color": [0.2, 0.8, 0.4],
+    "roughness": 0.05,
+    "transparency": 0.3
+  },
+  "gradients": [
+    {
+      "axis": "radial",
+      "factor": 0.4,
+      "color_shift": [-0.1, 0.15, 0.1]
+    },
+    {
+      "axis": "y",
+      "factor": 0.25,
+      "color_shift": [0.1, 0.1, 0.2]
+    }
+  ],
+  "noise": {
+    "type": "perlin",
+    "scale": 3.0,
+    "octaves": 5,
+    "persistence": 0.55
+  },
+  "physics": {
+    "material": "crystal",
+    "density": 2.8,
+    "break_pattern": "shatter"
+  },
+  "meta": {
+    "name": "Energy Shield",
+    "tags": ["magical", "shield", "energy", "green", "defensive", "fantasy", "fft"],
+    "author": "isocubic"
+  },
+  "boundary": {
+    "mode": "smooth",
+    "neighbor_influence": 0.7
+  }
+}

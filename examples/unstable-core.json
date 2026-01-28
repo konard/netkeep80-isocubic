@@ -1,0 +1,41 @@
+{
+  "id": "unstable_core_001",
+  "prompt": "нестабильное энергетическое ядро с красно-оранжевым свечением близкое к разрушению",
+  "base": {
+    "color": [0.95, 0.3, 0.1],
+    "roughness": 0.1,
+    "transparency": 0.5
+  },
+  "gradients": [
+    {
+      "axis": "radial",
+      "factor": 0.6,
+      "color_shift": [0.05, 0.25, 0.1]
+    },
+    {
+      "axis": "y",
+      "factor": 0.3,
+      "color_shift": [-0.2, -0.15, 0.05]
+    }
+  ],
+  "noise": {
+    "type": "crackle",
+    "scale": 5.0,
+    "octaves": 4,
+    "persistence": 0.8
+  },
+  "physics": {
+    "material": "crystal",
+    "density": 4.0,
+    "break_pattern": "shatter"
+  },
+  "meta": {
+    "name": "Unstable Core",
+    "tags": ["magical", "unstable", "energy", "red", "orange", "dangerous", "fantasy", "fft"],
+    "author": "isocubic"
+  },
+  "boundary": {
+    "mode": "smooth",
+    "neighbor_influence": 0.4
+  }
+}

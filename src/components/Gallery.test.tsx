@@ -71,8 +71,8 @@ describe('Gallery', () => {
 
     it('should display preset cubes by default', () => {
       render(<Gallery />)
-      // Check that preset cubes are displayed (we have 10 presets)
-      const countText = screen.getByText(/of 10 cubes/)
+      // Check that preset cubes are displayed (we have 13 presets - 10 original + 3 magical energy cubes)
+      const countText = screen.getByText(/of 13 cubes/)
       expect(countText).toBeInTheDocument()
     })
 
@@ -129,7 +129,7 @@ describe('Gallery', () => {
       })
 
       expect(allButton).toHaveClass('gallery__category-btn--active')
-      expect(screen.getByText(/of 10 cubes/)).toBeInTheDocument()
+      expect(screen.getByText(/of 13 cubes/)).toBeInTheDocument()
     })
   })
 
@@ -236,7 +236,7 @@ describe('Gallery', () => {
       })
 
       expect(presetsButton).toHaveClass('gallery__toggle-btn--active')
-      expect(screen.getByText(/of 10 cubes/)).toBeInTheDocument()
+      expect(screen.getByText(/of 13 cubes/)).toBeInTheDocument()
     })
   })
 

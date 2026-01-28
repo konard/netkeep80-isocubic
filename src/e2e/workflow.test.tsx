@@ -33,7 +33,7 @@ describe('E2E: Complete Editing Workflow', () => {
 
       // User sees the gallery with presets
       expect(screen.getByText('Gallery')).toBeInTheDocument()
-      expect(screen.getByText(/of 10 cubes/)).toBeInTheDocument()
+      expect(screen.getByText(/of 13 cubes/)).toBeInTheDocument()
 
       // User can see the cube grid
       const galleryGrid = document.querySelector('.gallery__grid')
@@ -41,7 +41,7 @@ describe('E2E: Complete Editing Workflow', () => {
 
       // User clicks on a cube to select it
       const cubeItems = screen.getAllByRole('button', { name: /Select/i })
-      expect(cubeItems.length).toBe(10) // 10 preset cubes
+      expect(cubeItems.length).toBe(13) // 13 preset cubes (10 original + 3 magical energy)
 
       await act(async () => {
         fireEvent.click(cubeItems[0])
@@ -321,6 +321,6 @@ describe('E2E: Error Handling', () => {
     })
 
     // All cubes should be visible again
-    expect(screen.getByText(/of 10 cubes/)).toBeInTheDocument()
+    expect(screen.getByText(/of 13 cubes/)).toBeInTheDocument()
   })
 })

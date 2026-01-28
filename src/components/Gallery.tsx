@@ -19,6 +19,10 @@ import iceFrozen from '../../examples/ice-frozen.json'
 import crystalMagic from '../../examples/crystal-magic.json'
 import lavaMolten from '../../examples/lava-molten.json'
 import sandDesert from '../../examples/sand-desert.json'
+// Magical energy cubes (Phase 2 FFT system)
+import magicCrystalEnergy from '../../examples/magic-crystal-energy.json'
+import unstableCore from '../../examples/unstable-core.json'
+import energyShield from '../../examples/energy-shield.json'
 
 /** Preset cube configurations */
 const PRESET_CUBES: SpectralCube[] = [
@@ -32,6 +36,10 @@ const PRESET_CUBES: SpectralCube[] = [
   crystalMagic as SpectralCube,
   lavaMolten as SpectralCube,
   sandDesert as SpectralCube,
+  // Magical energy cubes
+  magicCrystalEnergy as SpectralCube,
+  unstableCore as SpectralCube,
+  energyShield as SpectralCube,
 ]
 
 /** Category definition for grouping cubes */
