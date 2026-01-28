@@ -1,14 +1,20 @@
 /**
  * Service Worker for isocubic PWA
  * Provides offline caching and network-first strategy
+ * Supports deployment to both root and subpath (e.g., GitHub Pages)
  */
 
 const CACHE_NAME = 'isocubic-v1';
+
+// Get the base path from the service worker's location
+// This allows the SW to work on both root (/) and subpath (/isocubic/) deployments
+const BASE_PATH = self.location.pathname.replace(/sw\.js$/, '');
+
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/isocubic.svg',
-  '/manifest.json',
+  BASE_PATH,
+  `${BASE_PATH}index.html`,
+  `${BASE_PATH}isocubic.svg`,
+  `${BASE_PATH}manifest.json`,
 ];
 
 // Install event - cache static assets
@@ -77,7 +83,7 @@ self.addEventListener('fetch', (event) => {
 
           // Return offline fallback for navigation requests
           if (event.request.mode === 'navigate') {
-            return caches.match('/index.html');
+            return caches.match(`${BASE_PATH}index.html`);
           }
 
           // Return nothing for other requests

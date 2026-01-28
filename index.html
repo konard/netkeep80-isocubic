@@ -20,15 +20,15 @@
     <meta name="keywords" content="isometric, voxel, cube, editor, 3D, parametric, WebGL, game development" />
     <meta name="author" content="netkeep80" />
 
-    <!-- Favicon and icons (SVG preferred for scalability) -->
-    <link rel="icon" type="image/svg+xml" href="/isocubic.svg" />
-    <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
-    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.svg" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180x180.svg" />
-    <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-167x167.svg" />
+    <!-- Favicon and icons (SVG preferred for scalability) - relative paths for subpath deployment -->
+    <link rel="icon" type="image/svg+xml" href="isocubic.svg" />
+    <link rel="apple-touch-icon" href="icons/icon-192x192.svg" />
+    <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180x180.svg" />
+    <link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167x167.svg" />
 
     <!-- PWA manifest -->
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="manifest.json" />
 
     <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
@@ -43,7 +43,10 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
+          // Get base path from document's base URL for subpath deployments (e.g., GitHub Pages)
+          const basePath = document.baseURI.replace(window.location.origin, '').replace(/[^/]*$/, '');
+          const swPath = basePath + 'sw.js';
+          navigator.serviceWorker.register(swPath)
             .then(registration => {
               console.log('SW registered:', registration.scope);
             })
