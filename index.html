@@ -2,12 +2,56 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
+
+    <!-- Viewport and mobile optimization -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="isocubic" />
+
+    <!-- Theme colors -->
+    <meta name="theme-color" content="#646cff" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#646cff" media="(prefers-color-scheme: light)" />
+    <meta name="msapplication-TileColor" content="#646cff" />
+
+    <!-- SEO and description -->
+    <meta name="description" content="Web editor for creating and editing parametric voxel cubes for isometric 3D worlds" />
+    <meta name="keywords" content="isometric, voxel, cube, editor, 3D, parametric, WebGL, game development" />
+    <meta name="author" content="netkeep80" />
+
+    <!-- Favicon and icons (SVG preferred for scalability) -->
     <link rel="icon" type="image/svg+xml" href="/isocubic.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180x180.svg" />
+    <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-167x167.svg" />
+
+    <!-- PWA manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+
     <title>isocubic</title>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Service Worker registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('SW registered:', registration.scope);
+            })
+            .catch(error => {
+              console.log('SW registration failed:', error);
+            });
+        });
+      }
+    </script>
   </body>
 </html>
