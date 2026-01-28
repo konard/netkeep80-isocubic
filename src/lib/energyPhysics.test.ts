@@ -470,11 +470,11 @@ describe('Energy Physics Module', () => {
         current_energy: 1.0,
       })
 
-      const { source: newSource, target: newTarget, result } = applyEnergyTransfer(
-        source,
-        target,
-        2.0
-      )
+      const {
+        source: newSource,
+        target: newTarget,
+        result,
+      } = applyEnergyTransfer(source, target, 2.0)
 
       expect(result.transferredAmount).toBe(2.0)
       expect(newSource.current_energy).toBe(2.0)

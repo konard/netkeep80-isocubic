@@ -11,12 +11,7 @@
  * @module energyPhysics
  */
 
-import type {
-  FFTCubeConfig,
-  FFTChannel,
-  FFTCoefficient,
-  FFTChannels,
-} from '../types/cube'
+import type { FFTCubeConfig, FFTChannel, FFTCoefficient, FFTChannels } from '../types/cube'
 
 /**
  * Result of a fracture check
@@ -162,10 +157,7 @@ export function applyChannelCoherenceLoss(
  * @param deltaTime - Time elapsed in seconds
  * @returns New cube configuration with decayed energy
  */
-export function applyCoherenceLoss(
-  cube: FFTCubeConfig,
-  deltaTime: number
-): FFTCubeConfig {
+export function applyCoherenceLoss(cube: FFTCubeConfig, deltaTime: number): FFTCubeConfig {
   const coherenceLoss = cube.physics?.coherence_loss ?? 0
 
   if (coherenceLoss <= 0 || deltaTime <= 0) {
@@ -305,11 +297,7 @@ export function transferEnergy(
   amount: number,
   options: EnergyTransferOptions = {}
 ): EnergyTransferResult {
-  const {
-    maxTransferRatio = 1.0,
-    efficiency = 1.0,
-    allowOverflow = false,
-  } = options
+  const { maxTransferRatio = 1.0, efficiency = 1.0, allowOverflow = false } = options
 
   // Calculate current energies
   const sourceEnergy = source.current_energy ?? calculateTotalEnergy(source)
@@ -381,9 +369,8 @@ export function applyEnergyTransfer(
 
   // Calculate energy ratios for scaling
   const sourceCurrentEnergy = source.current_energy ?? calculateTotalEnergy(source)
-  const sourceScale = sourceCurrentEnergy > 0
-    ? Math.sqrt(result.sourceRemainingEnergy / sourceCurrentEnergy)
-    : 0
+  const sourceScale =
+    sourceCurrentEnergy > 0 ? Math.sqrt(result.sourceRemainingEnergy / sourceCurrentEnergy) : 0
 
   const targetCurrentEnergy = target.current_energy ?? calculateTotalEnergy(target)
   const energyAdded = result.targetNewEnergy - targetCurrentEnergy
@@ -451,10 +438,7 @@ export function getNormalizedEnergy(cube: FFTCubeConfig): number {
  * @param warningThreshold - Percentage of threshold to trigger warning (default 0.8 = 80%)
  * @returns True if energy is above warning threshold but below fracture
  */
-export function isNearFracture(
-  cube: FFTCubeConfig,
-  warningThreshold: number = 0.8
-): boolean {
+export function isNearFracture(cube: FFTCubeConfig, warningThreshold: number = 0.8): boolean {
   const threshold = cube.physics?.fracture_threshold ?? 0
   if (threshold <= 0) {
     return false
