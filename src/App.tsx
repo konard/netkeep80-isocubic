@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 import './App.css'
 import { Gallery } from './components/Gallery'
 import { ExportPanel } from './components/ExportPanel'
+import { CubePreview } from './components/CubePreview'
 import type { SpectralCube } from './types/cube'
 import { createDefaultCube } from './types/cube'
 
@@ -180,10 +181,15 @@ function App() {
                   </div>
                 )}
               </div>
-              {/* 3D preview placeholder - will be implemented with Three.js later */}
-              <div className="app__preview-placeholder">
-                <p>3D Preview coming soon</p>
-                <p className="app__preview-hint">Use touch gestures to rotate</p>
+              {/* 3D preview with interactive controls */}
+              <div className="app__3d-preview app__3d-preview--mobile">
+                <CubePreview
+                  config={currentCube}
+                  showGrid={true}
+                  animate={false}
+                  showShadows={true}
+                />
+                <p className="app__preview-hint">Use touch gestures to rotate and zoom</p>
               </div>
             </section>
           )}
@@ -219,6 +225,14 @@ function App() {
         <main className="app__main app__main--tablet">
           {/* Preview area at top */}
           <section className="app__preview-section">
+            <div className="app__3d-preview app__3d-preview--tablet">
+              <CubePreview
+                config={currentCube}
+                showGrid={true}
+                animate={false}
+                showShadows={true}
+              />
+            </div>
             <div className="app__current-cube">
               <h3 className="app__section-title">Current Cube</h3>
               {currentCube && (
@@ -265,10 +279,15 @@ function App() {
       </header>
 
       <main className="app__main">
-        <section className="app__section">
+        {/* Left side: 3D preview and Gallery */}
+        <section className="app__section app__section--main">
+          <div className="app__3d-preview app__3d-preview--desktop">
+            <CubePreview config={currentCube} showGrid={true} animate={false} showShadows={true} />
+          </div>
           <Gallery onCubeSelect={handleCubeSelect} currentCube={currentCube} />
         </section>
 
+        {/* Right side: Current cube info and tools */}
         <section className="app__section app__section--sidebar">
           <div className="app__current-cube">
             <h3 className="app__section-title">Current Cube</h3>

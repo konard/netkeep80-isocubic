@@ -264,7 +264,8 @@ describe('E2E: Mobile Workflow', () => {
       vi.advanceTimersByTime(100)
     })
 
-    expect(screen.getByText('3D Preview coming soon')).toBeInTheDocument()
+    // CubePreview component should be rendered
+    expect(screen.getByTestId('cube-preview')).toBeInTheDocument()
 
     // Get tools tab (third tab)
     const toolsTab = tabButtons[2] as HTMLElement
