@@ -2,12 +2,13 @@ import { useState, useCallback, useEffect } from 'react'
 import './App.css'
 import { Gallery } from './components/Gallery'
 import { ExportPanel } from './components/ExportPanel'
+import { ParamEditor } from './components/ParamEditor'
 import { CubePreview } from './components/CubePreview'
 import type { SpectralCube } from './types/cube'
 import { createDefaultCube } from './types/cube'
 
 /** Mobile navigation tabs */
-type MobileTab = 'gallery' | 'preview' | 'tools'
+type MobileTab = 'gallery' | 'preview' | 'editor' | 'tools'
 
 /** Breakpoint for mobile detection */
 const MOBILE_BREAKPOINT = 768
@@ -68,10 +69,15 @@ function App() {
     setCurrentCube(cube)
   }, [])
 
+  // Handle cube update from ParamEditor
+  const handleCubeUpdate = useCallback((cube: SpectralCube) => {
+    setCurrentCube(cube)
+  }, [])
+
   // Mobile swipe handling for tab navigation
   const handleSwipe = useCallback(
     (direction: 'left' | 'right') => {
-      const tabs: MobileTab[] = ['gallery', 'preview', 'tools']
+      const tabs: MobileTab[] = ['gallery', 'preview', 'editor', 'tools']
       const currentIndex = tabs.indexOf(activeTab)
 
       if (direction === 'left' && currentIndex < tabs.length - 1) {
@@ -146,6 +152,15 @@ function App() {
           </button>
           <button
             type="button"
+            className={`app__mobile-tab ${activeTab === 'editor' ? 'app__mobile-tab--active' : ''}`}
+            onClick={() => setActiveTab('editor')}
+            aria-selected={activeTab === 'editor'}
+          >
+            <span className="app__mobile-tab-icon">🎛️</span>
+            <span className="app__mobile-tab-label">Editor</span>
+          </button>
+          <button
+            type="button"
             className={`app__mobile-tab ${activeTab === 'tools' ? 'app__mobile-tab--active' : ''}`}
             onClick={() => setActiveTab('tools')}
             aria-selected={activeTab === 'tools'}
@@ -191,6 +206,12 @@ function App() {
                 />
                 <p className="app__preview-hint">Use touch gestures to rotate and zoom</p>
               </div>
+            </section>
+          )}
+
+          {activeTab === 'editor' && (
+            <section className="app__mobile-panel">
+              <ParamEditor currentCube={currentCube} onCubeUpdate={handleCubeUpdate} />
             </section>
           )}
 
@@ -258,6 +279,7 @@ function App() {
             </section>
 
             <section className="app__section app__section--sidebar">
+              <ParamEditor currentCube={currentCube} onCubeUpdate={handleCubeUpdate} />
               <ExportPanel
                 currentCube={currentCube}
                 onCubeLoad={handleCubeLoad}
@@ -287,25 +309,9 @@ function App() {
           <Gallery onCubeSelect={handleCubeSelect} currentCube={currentCube} />
         </section>
 
-        {/* Right side: Current cube info and tools */}
+        {/* Right side: Parameter editor and tools */}
         <section className="app__section app__section--sidebar">
-          <div className="app__current-cube">
-            <h3 className="app__section-title">Current Cube</h3>
-            {currentCube && (
-              <div className="app__cube-info">
-                <p>
-                  <strong>Name:</strong> {currentCube.meta?.name || currentCube.id}
-                </p>
-                <p>
-                  <strong>Material:</strong> {currentCube.physics?.material || 'Unknown'}
-                </p>
-                <p>
-                  <strong>Tags:</strong> {currentCube.meta?.tags?.join(', ') || 'None'}
-                </p>
-              </div>
-            )}
-          </div>
-
+          <ParamEditor currentCube={currentCube} onCubeUpdate={handleCubeUpdate} />
           <ExportPanel
             currentCube={currentCube}
             onCubeLoad={handleCubeLoad}

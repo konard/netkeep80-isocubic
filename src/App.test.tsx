@@ -48,12 +48,12 @@ describe('App', () => {
       expect(screen.getByText('Save')).toBeInTheDocument()
     })
 
-    it('should display current cube information', () => {
+    it('should display the parameter editor', () => {
       render(<App />)
 
-      expect(screen.getByText('Current Cube')).toBeInTheDocument()
-      expect(screen.getByText(/Name:/)).toBeInTheDocument()
-      expect(screen.getByText(/Material:/)).toBeInTheDocument()
+      expect(screen.getByText('Edit Parameters')).toBeInTheDocument()
+      expect(screen.getByText('Base Properties')).toBeInTheDocument()
+      expect(screen.getByText('Noise Settings')).toBeInTheDocument()
     })
 
     it('should display undo/redo buttons', () => {

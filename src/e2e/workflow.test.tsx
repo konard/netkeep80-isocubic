@@ -253,7 +253,7 @@ describe('E2E: Mobile Workflow', () => {
 
     // Find mobile tab buttons inside the nav element
     const tabButtons = mobileNav.querySelectorAll('.app__mobile-tab')
-    expect(tabButtons.length).toBe(3)
+    expect(tabButtons.length).toBe(4) // Gallery, Preview, Editor, Tools
 
     // Get preview tab (second tab)
     const previewTab = tabButtons[1] as HTMLElement
@@ -267,8 +267,8 @@ describe('E2E: Mobile Workflow', () => {
     // CubePreview component should be rendered
     expect(screen.getByTestId('cube-preview')).toBeInTheDocument()
 
-    // Get tools tab (third tab)
-    const toolsTab = tabButtons[2] as HTMLElement
+    // Get tools tab (fourth tab - after Editor)
+    const toolsTab = tabButtons[3] as HTMLElement
 
     // Navigate to Tools tab
     await act(async () => {
