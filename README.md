@@ -1,3 +1,4 @@
+[![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/netkeep80/isocubic)
 # isocubic
 
 Веб-редактор параметрических кубиков для создания изометрических 3D-миров.
