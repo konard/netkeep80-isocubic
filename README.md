@@ -131,6 +131,7 @@ isocubic/
 ├── src/
 │   ├── components/        # React-компоненты
 │   │   ├── ParametricCube.tsx # Параметрический куб с шейдером
+│   │   ├── EnergyCube.tsx     # Энергетический куб с FFT визуализацией
 │   │   ├── CubePreview.tsx    # 3D-превью куба с интерактивным управлением
 │   │   ├── ParamEditor.tsx    # Редактор параметров (TODO)
 │   │   ├── PromptGenerator.tsx # Генерация по промпту (TODO)
@@ -138,7 +139,9 @@ isocubic/
 │   │   └── ExportPanel.tsx    # Экспорт/импорт
 │   ├── shaders/           # GLSL-шейдеры
 │   │   ├── parametric-cube.glsl  # Исходный GLSL код
-│   │   └── parametric-cube.ts    # TypeScript модуль для Three.js
+│   │   ├── parametric-cube.ts    # TypeScript модуль для Three.js
+│   │   ├── energy-cube.glsl      # Энергетический шейдер
+│   │   └── energy-cube.ts        # TypeScript модуль для энергетических кубов
 │   ├── lib/               # Утилиты
 │   │   ├── shader-utils.ts    # Утилиты для шейдеров
 │   │   ├── tinyLLM.ts         # ИИ-генератор (TODO)
@@ -206,7 +209,7 @@ isocubic/
 
 - [x] Планирование задач Фазы 2 (TASKS.md)
 - [x] WASM-модуль для FFT (ISSUE 13)
-- [ ] Шейдер энергетической визуализации (ISSUE 14)
+- [x] Шейдер энергетической визуализации (ISSUE 14)
 - [ ] Физика энергии (ISSUE 15)
 - [ ] Интеграция с боем и разрушением (ISSUE 16)
 
