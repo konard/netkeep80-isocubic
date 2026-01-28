@@ -130,15 +130,18 @@ npm run dev
 isocubic/
 ├── src/
 │   ├── components/        # React-компоненты
-│   │   ├── CubePreview.tsx    # 3D-превью куба
-│   │   ├── ParamEditor.tsx    # Редактор параметров
-│   │   ├── PromptGenerator.tsx # Генерация по промпту
+│   │   ├── ParametricCube.tsx # Параметрический куб с шейдером
+│   │   ├── CubePreview.tsx    # 3D-превью куба (TODO)
+│   │   ├── ParamEditor.tsx    # Редактор параметров (TODO)
+│   │   ├── PromptGenerator.tsx # Генерация по промпту (TODO)
 │   │   ├── Gallery.tsx        # Галерея примеров
 │   │   └── ExportPanel.tsx    # Экспорт/импорт
 │   ├── shaders/           # GLSL-шейдеры
-│   │   └── parametric-cube.glsl
+│   │   ├── parametric-cube.glsl  # Исходный GLSL код
+│   │   └── parametric-cube.ts    # TypeScript модуль для Three.js
 │   ├── lib/               # Утилиты
-│   │   ├── tinyLLM.ts         # ИИ-генератор
+│   │   ├── shader-utils.ts    # Утилиты для шейдеров
+│   │   ├── tinyLLM.ts         # ИИ-генератор (TODO)
 │   │   ├── storage.ts         # Работа с хранилищем
 │   │   └── validation.ts      # Валидация схемы
 │   ├── types/             # TypeScript-типы
@@ -183,7 +186,7 @@ isocubic/
 - [x] Анализ подходов (ANALYSIS.md)
 - [x] Инициализация проекта
 - [x] JSON-схема конфигов
-- [ ] Базовый шейдер
+- [x] Базовый шейдер
 - [ ] 3D-превью
 - [ ] Редактор параметров
 - [ ] Генерация по промпту (TinyLLM)
