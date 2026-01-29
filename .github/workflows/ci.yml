@@ -3,7 +3,7 @@
 #
 # Key improvements:
 # - Cross-platform testing (Ubuntu, macOS, Windows)
-# - Multiple Node.js versions (20, 22) - Node.js 18 excluded due to dependency requirements
+# - Node.js 22 (LTS version)
 # - File size limits enforcement (max 1500 lines)
 # - Code coverage reporting to Codecov
 # - Format checking with Prettier
@@ -33,7 +33,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
@@ -88,25 +88,23 @@ jobs:
           fi
 
   # === TEST MATRIX ===
-  # Cross-platform testing on multiple OS and Node.js versions
-  # Note: Node.js 18 is excluded because project dependencies require Node.js 20+
-  # (e.g., @vitejs/plugin-react, lru-cache, jsdom/cssstyle, etc.)
+  # Cross-platform testing on multiple OS
+  # Note: Only Node.js 22 is used for faster CI/CD runs
   test:
-    name: Test (Node ${{ matrix.node-version }} on ${{ matrix.os }})
+    name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     needs: [lint]
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        node-version: ['20', '22']
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
@@ -127,7 +125,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
@@ -157,7 +155,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
