@@ -59,6 +59,7 @@ describe('ParamEditor', () => {
       expect(screen.getByText(/Gradients/)).toBeInTheDocument()
       expect(screen.getByText('Noise Settings')).toBeInTheDocument()
       expect(screen.getByText('Physics Properties')).toBeInTheDocument()
+      expect(screen.getByText('Boundary Settings')).toBeInTheDocument()
     })
   })
 
@@ -335,6 +336,116 @@ describe('ParamEditor', () => {
       const { container } = render(<ParamEditor currentCube={testCube} className="custom-class" />)
       const editor = container.querySelector('.param-editor')
       expect(editor).toHaveClass('custom-class')
+    })
+  })
+
+  describe('Boundary Settings section', () => {
+    let testCube: SpectralCube
+
+    beforeEach(() => {
+      testCube = createDefaultCube('test-cube')
+    })
+
+    it('renders Boundary Settings section header', () => {
+      render(<ParamEditor currentCube={testCube} />)
+      expect(screen.getByText('Boundary Settings')).toBeInTheDocument()
+    })
+
+    it('renders boundary mode selector', () => {
+      render(<ParamEditor currentCube={testCube} />)
+      const modeSelect = screen.getByLabelText('Mode') as HTMLSelectElement
+      expect(modeSelect).toBeInTheDocument()
+      // Check that all options are available
+      expect(modeSelect).toContainHTML('None')
+      expect(modeSelect).toContainHTML('Smooth')
+      expect(modeSelect).toContainHTML('Hard')
+    })
+
+    it('renders neighbor influence slider', () => {
+      render(<ParamEditor currentCube={testCube} />)
+      expect(screen.getByLabelText(/Neighbor Influence/)).toBeInTheDocument()
+    })
+
+    it('displays mode descriptions', () => {
+      render(<ParamEditor currentCube={testCube} />)
+      // Default mode is 'smooth', so we should see its description
+      expect(screen.getByText('Smooth interpolation at edges')).toBeInTheDocument()
+    })
+
+    it('calls onCubeUpdate when boundary mode is changed', () => {
+      render(<ParamEditor currentCube={testCube} onCubeUpdate={mockOnCubeUpdate} />)
+      const modeSelect = screen.getByLabelText('Mode') as HTMLSelectElement
+      fireEvent.change(modeSelect, { target: { value: 'hard' } })
+      expect(mockOnCubeUpdate).toHaveBeenCalled()
+      const updatedCube = mockOnCubeUpdate.mock.calls[0][0]
+      expect(updatedCube.boundary.mode).toBe('hard')
+    })
+
+    it('calls onCubeUpdate when neighbor influence is changed', () => {
+      render(<ParamEditor currentCube={testCube} onCubeUpdate={mockOnCubeUpdate} />)
+      const influenceSlider = screen.getByLabelText(/Neighbor Influence/)
+      fireEvent.change(influenceSlider, { target: { value: '0.8' } })
+      expect(mockOnCubeUpdate).toHaveBeenCalled()
+      const updatedCube = mockOnCubeUpdate.mock.calls[0][0]
+      expect(updatedCube.boundary.neighbor_influence).toBe(0.8)
+    })
+
+    it('displays correct mode description when mode changes', () => {
+      render(<ParamEditor currentCube={testCube} onCubeUpdate={mockOnCubeUpdate} />)
+      const modeSelect = screen.getByLabelText('Mode') as HTMLSelectElement
+
+      // Change to 'none'
+      fireEvent.change(modeSelect, { target: { value: 'none' } })
+      expect(screen.getByText('No blending between cubes')).toBeInTheDocument()
+    })
+
+    it('displays hint text about boundary settings', () => {
+      render(<ParamEditor currentCube={testCube} />)
+      expect(
+        screen.getByText('Controls how this cube blends with neighboring cubes in a grid.')
+      ).toBeInTheDocument()
+    })
+
+    it('displays neighbor influence description', () => {
+      render(<ParamEditor currentCube={testCube} />)
+      expect(
+        screen.getByText('How much neighboring cubes affect the color and gradient blending at edges.')
+      ).toBeInTheDocument()
+    })
+
+    it('can collapse and expand boundary section', () => {
+      render(<ParamEditor currentCube={testCube} />)
+      const boundaryHeader = screen.getByText('Boundary Settings')
+
+      // Initially expanded
+      expect(screen.getByLabelText('Mode')).toBeInTheDocument()
+
+      // Click to collapse
+      fireEvent.click(boundaryHeader)
+
+      // Should now be collapsed - mode selector should not be visible
+      expect(screen.queryByLabelText('Mode')).not.toBeInTheDocument()
+
+      // Click to expand
+      fireEvent.click(boundaryHeader)
+
+      // Should now be expanded again
+      expect(screen.getByLabelText('Mode')).toBeInTheDocument()
+    })
+
+    it('shows default boundary values from CUBE_DEFAULTS', () => {
+      // Create cube without explicit boundary settings
+      const cubeWithoutBoundary = createDefaultCube('test-cube-no-boundary')
+      delete cubeWithoutBoundary.boundary
+
+      render(<ParamEditor currentCube={cubeWithoutBoundary} />)
+
+      const modeSelect = screen.getByLabelText('Mode') as HTMLSelectElement
+      expect(modeSelect.value).toBe('smooth')
+
+      // Default neighbor_influence is 0.50 - check slider has correct value
+      const influenceSlider = screen.getByLabelText(/Neighbor Influence/) as HTMLInputElement
+      expect(influenceSlider.value).toBe('0.5')
     })
   })
 })

@@ -10,10 +10,12 @@ import type {
   CubeGradient,
   CubeNoise,
   CubePhysics,
+  CubeBoundary,
   GradientAxis,
   NoiseType,
   MaterialType,
   BreakPattern,
+  BoundaryMode,
   Color3,
   ColorShift3,
 } from '../types/cube'
@@ -50,6 +52,16 @@ const MATERIAL_TYPES: MaterialType[] = [
 
 /** Available break patterns */
 const BREAK_PATTERNS: BreakPattern[] = ['crumble', 'shatter', 'splinter', 'melt', 'dissolve']
+
+/** Available boundary modes */
+const BOUNDARY_MODES: BoundaryMode[] = ['none', 'smooth', 'hard']
+
+/** Descriptions for boundary modes */
+const BOUNDARY_MODE_DESCRIPTIONS: Record<BoundaryMode, string> = {
+  none: 'No blending between cubes',
+  smooth: 'Smooth interpolation at edges',
+  hard: 'Sharp edges between cubes',
+}
 
 /** Common noise masks */
 const NOISE_MASKS = [
@@ -113,7 +125,7 @@ export function ParamEditor({ currentCube, onCubeUpdate, className = '' }: Param
   // Use local state for editing
   const [localCube, setLocalCube] = useState<SpectralCube | null>(currentCube)
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['base', 'gradients', 'noise', 'physics'])
+    new Set(['base', 'gradients', 'noise', 'physics', 'boundary'])
   )
 
   // Sync local state with prop
@@ -189,6 +201,20 @@ export function ParamEditor({ currentCube, onCubeUpdate, className = '' }: Param
       updateCube({
         physics: {
           ...localCube.physics,
+          ...updates,
+        },
+      })
+    },
+    [localCube, updateCube]
+  )
+
+  // Update boundary properties
+  const updateBoundary = useCallback(
+    (updates: Partial<CubeBoundary>) => {
+      if (!localCube) return
+      updateCube({
+        boundary: {
+          ...localCube.boundary,
           ...updates,
         },
       })
@@ -657,6 +683,79 @@ export function ParamEditor({ currentCube, onCubeUpdate, className = '' }: Param
                   </option>
                 ))}
               </select>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Boundary Settings Section */}
+      <section className="param-editor__section">
+        <button
+          type="button"
+          className={`param-editor__section-header ${expandedSections.has('boundary') ? 'param-editor__section-header--expanded' : ''}`}
+          onClick={() => toggleSection('boundary')}
+          aria-expanded={expandedSections.has('boundary')}
+        >
+          <span>Boundary Settings</span>
+          <span className="param-editor__chevron">
+            {expandedSections.has('boundary') ? '▼' : '▶'}
+          </span>
+        </button>
+
+        {expandedSections.has('boundary') && (
+          <div className="param-editor__section-content">
+            {/* Info about boundary settings */}
+            <p className="param-editor__hint">
+              Controls how this cube blends with neighboring cubes in a grid.
+            </p>
+
+            {/* Boundary mode selector */}
+            <div className="param-editor__field">
+              <label htmlFor="boundary-mode" className="param-editor__label">
+                Mode
+              </label>
+              <select
+                id="boundary-mode"
+                className="param-editor__select"
+                value={localCube.boundary?.mode ?? CUBE_DEFAULTS.boundary.mode}
+                onChange={(e) => updateBoundary({ mode: e.target.value as BoundaryMode })}
+              >
+                {BOUNDARY_MODES.map((mode) => (
+                  <option key={mode} value={mode}>
+                    {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                  </option>
+                ))}
+              </select>
+              <p className="param-editor__description">
+                {BOUNDARY_MODE_DESCRIPTIONS[localCube.boundary?.mode ?? CUBE_DEFAULTS.boundary.mode]}
+              </p>
+            </div>
+
+            {/* Neighbor influence slider */}
+            <div className="param-editor__field">
+              <label htmlFor="boundary-neighbor-influence" className="param-editor__label">
+                Neighbor Influence
+                <span className="param-editor__value">
+                  {(localCube.boundary?.neighbor_influence ?? CUBE_DEFAULTS.boundary.neighbor_influence).toFixed(2)}
+                </span>
+              </label>
+              <input
+                id="boundary-neighbor-influence"
+                type="range"
+                className="param-editor__slider"
+                min="0"
+                max="1"
+                step="0.01"
+                value={localCube.boundary?.neighbor_influence ?? CUBE_DEFAULTS.boundary.neighbor_influence}
+                onChange={(e) => updateBoundary({ neighbor_influence: parseFloat(e.target.value) })}
+              />
+              <div className="param-editor__slider-labels">
+                <span>None</span>
+                <span>Full</span>
+              </div>
+              <p className="param-editor__description">
+                How much neighboring cubes affect the color and gradient blending at edges.
+              </p>
             </div>
           </div>
         )}

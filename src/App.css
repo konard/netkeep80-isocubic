@@ -1204,6 +1204,21 @@
   margin-top: 0.25rem;
 }
 
+/* Hint and description styles */
+.param-editor__hint {
+  font-size: 0.75rem;
+  color: #888;
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+}
+
+.param-editor__description {
+  font-size: 0.6875rem;
+  color: #666;
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+
 /* Select styles */
 .param-editor__select {
   width: 100%;
