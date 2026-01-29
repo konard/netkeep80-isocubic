@@ -1056,11 +1056,11 @@ export function extractStyle(cubes: SpectralCube[]): ExtractedStyle {
   }
 
   // Calculate average color
-  const colorSum = cubes.reduce(
+  const colorSum: [number, number, number] = cubes.reduce<[number, number, number]>(
     (sum, cube) => {
       return [sum[0] + cube.base.color[0], sum[1] + cube.base.color[1], sum[2] + cube.base.color[2]]
     },
-    [0, 0, 0] as [number, number, number]
+    [0, 0, 0]
   )
   const averageColor: Color3 = [
     colorSum[0] / cubes.length,
