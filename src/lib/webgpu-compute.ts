@@ -712,49 +712,65 @@ export class WebGPUCompute {
       // Sample 8 corners and compute gradient dot products
       const n000 = (() => {
         const h = hash3(ix, iy, iz)
-        const gx = h[0] * 2 - 1, gy = h[1] * 2 - 1, gz = h[2] * 2 - 1
+        const gx = h[0] * 2 - 1,
+          gy = h[1] * 2 - 1,
+          gz = h[2] * 2 - 1
         return gx * fx + gy * fy + gz * fz
       })()
 
       const n100 = (() => {
         const h = hash3(ix + 1, iy, iz)
-        const gx = h[0] * 2 - 1, gy = h[1] * 2 - 1, gz = h[2] * 2 - 1
+        const gx = h[0] * 2 - 1,
+          gy = h[1] * 2 - 1,
+          gz = h[2] * 2 - 1
         return gx * (fx - 1) + gy * fy + gz * fz
       })()
 
       const n010 = (() => {
         const h = hash3(ix, iy + 1, iz)
-        const gx = h[0] * 2 - 1, gy = h[1] * 2 - 1, gz = h[2] * 2 - 1
+        const gx = h[0] * 2 - 1,
+          gy = h[1] * 2 - 1,
+          gz = h[2] * 2 - 1
         return gx * fx + gy * (fy - 1) + gz * fz
       })()
 
       const n110 = (() => {
         const h = hash3(ix + 1, iy + 1, iz)
-        const gx = h[0] * 2 - 1, gy = h[1] * 2 - 1, gz = h[2] * 2 - 1
+        const gx = h[0] * 2 - 1,
+          gy = h[1] * 2 - 1,
+          gz = h[2] * 2 - 1
         return gx * (fx - 1) + gy * (fy - 1) + gz * fz
       })()
 
       const n001 = (() => {
         const h = hash3(ix, iy, iz + 1)
-        const gx = h[0] * 2 - 1, gy = h[1] * 2 - 1, gz = h[2] * 2 - 1
+        const gx = h[0] * 2 - 1,
+          gy = h[1] * 2 - 1,
+          gz = h[2] * 2 - 1
         return gx * fx + gy * fy + gz * (fz - 1)
       })()
 
       const n101 = (() => {
         const h = hash3(ix + 1, iy, iz + 1)
-        const gx = h[0] * 2 - 1, gy = h[1] * 2 - 1, gz = h[2] * 2 - 1
+        const gx = h[0] * 2 - 1,
+          gy = h[1] * 2 - 1,
+          gz = h[2] * 2 - 1
         return gx * (fx - 1) + gy * fy + gz * (fz - 1)
       })()
 
       const n011 = (() => {
         const h = hash3(ix, iy + 1, iz + 1)
-        const gx = h[0] * 2 - 1, gy = h[1] * 2 - 1, gz = h[2] * 2 - 1
+        const gx = h[0] * 2 - 1,
+          gy = h[1] * 2 - 1,
+          gz = h[2] * 2 - 1
         return gx * fx + gy * (fy - 1) + gz * (fz - 1)
       })()
 
       const n111 = (() => {
         const h = hash3(ix + 1, iy + 1, iz + 1)
-        const gx = h[0] * 2 - 1, gy = h[1] * 2 - 1, gz = h[2] * 2 - 1
+        const gx = h[0] * 2 - 1,
+          gy = h[1] * 2 - 1,
+          gz = h[2] * 2 - 1
         return gx * (fx - 1) + gy * (fy - 1) + gz * (fz - 1)
       })()
 
@@ -1043,10 +1059,7 @@ export async function getPreferredComputeMethod(): Promise<'webgpu' | 'wasm' | '
 
   // Check WASM support
   try {
-    if (
-      typeof WebAssembly === 'object' &&
-      typeof WebAssembly.instantiate === 'function'
-    ) {
+    if (typeof WebAssembly === 'object' && typeof WebAssembly.instantiate === 'function') {
       return 'wasm'
     }
   } catch {
