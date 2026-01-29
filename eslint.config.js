@@ -27,6 +27,9 @@ export default defineConfig([
     },
     rules: {
       'prettier/prettier': 'error',
+      // Allow exporting component metadata constants alongside components
+      // This is safe because metadata objects don't affect component behavior during HMR
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },
   },
 ])

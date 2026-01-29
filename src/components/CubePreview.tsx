@@ -2,12 +2,15 @@
  * CubePreview Component
  * React Three Fiber component for interactive 3D visualization of parametric cubes
  *
+ * TASK 40: Added component metadata for Developer Mode support (Phase 6)
+ *
  * Features:
  * - Interactive camera controls (orbit, zoom, pan)
  * - Configurable lighting system
  * - Grid for spatial orientation
  * - Responsive viewport handling
  * - Touch gesture support for mobile devices
+ * - Developer Mode metadata for self-documentation
  */
 
 import { Suspense, useRef, useState, useCallback, useEffect } from 'react'
@@ -16,6 +19,177 @@ import { OrbitControls, Grid, Environment, ContactShadows } from '@react-three/d
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib'
 import { ParametricCube } from './ParametricCube'
 import type { SpectralCube } from '../types/cube'
+import type { ComponentMeta } from '../types/component-meta'
+import { registerComponentMeta } from '../types/component-meta'
+import { ComponentInfo } from './ComponentInfo'
+import { useIsDevModeEnabled } from '../lib/devmode'
+
+/**
+ * Component metadata for Developer Mode
+ */
+export const CUBE_PREVIEW_META: ComponentMeta = {
+  id: 'cube-preview',
+  name: 'CubePreview',
+  version: '1.1.0',
+  summary: 'Interactive 3D preview canvas for parametric cubes using React Three Fiber.',
+  description:
+    'CubePreview is the main 3D visualization component for isocubic. It renders parametric cubes ' +
+    'using Three.js via React Three Fiber with interactive OrbitControls for camera manipulation. ' +
+    'The component includes configurable lighting (ambient, directional, point), an optional grid floor ' +
+    'for spatial orientation, contact shadows for depth perception, and environment reflections. ' +
+    'It is fully responsive and supports touch gestures on mobile devices.',
+  phase: 1,
+  taskId: 'TASK 1',
+  filePath: 'components/CubePreview.tsx',
+  history: [
+    {
+      version: '1.0.0',
+      date: '2026-01-28T12:00:00Z',
+      description: 'Initial implementation with Three.js canvas and OrbitControls',
+      taskId: 'TASK 1',
+      type: 'created',
+    },
+    {
+      version: '1.0.1',
+      date: '2026-01-28T14:00:00Z',
+      description: 'Added touch gesture support for mobile devices',
+      taskId: 'TASK 1',
+      type: 'updated',
+    },
+    {
+      version: '1.1.0',
+      date: '2026-01-29T21:00:00Z',
+      description: 'Added Developer Mode metadata support for self-documentation',
+      taskId: 'TASK 40',
+      type: 'updated',
+    },
+  ],
+  features: [
+    {
+      id: 'orbit-controls',
+      name: 'Orbit Controls',
+      description: 'Interactive camera controls with orbit, zoom, and pan capabilities',
+      enabled: true,
+      taskId: 'TASK 1',
+    },
+    {
+      id: 'lighting-system',
+      name: 'Configurable Lighting',
+      description: 'Multi-light setup with ambient, directional, and point lights',
+      enabled: true,
+      taskId: 'TASK 1',
+    },
+    {
+      id: 'grid-floor',
+      name: 'Grid Floor',
+      description: 'Optional infinite grid for spatial orientation',
+      enabled: true,
+      taskId: 'TASK 1',
+    },
+    {
+      id: 'contact-shadows',
+      name: 'Contact Shadows',
+      description: 'Soft shadows beneath the cube for depth perception',
+      enabled: true,
+      taskId: 'TASK 1',
+    },
+    {
+      id: 'responsive-viewport',
+      name: 'Responsive Viewport',
+      description: 'Automatically resizes with container using ResizeObserver',
+      enabled: true,
+      taskId: 'TASK 1',
+    },
+    {
+      id: 'touch-support',
+      name: 'Touch Gesture Support',
+      description: 'Mobile-friendly touch gestures for rotation and zoom',
+      enabled: true,
+      taskId: 'TASK 1',
+    },
+  ],
+  dependencies: [
+    { name: '@react-three/fiber', type: 'external', purpose: 'React renderer for Three.js' },
+    { name: '@react-three/drei', type: 'external', purpose: 'Useful helpers for R3F' },
+    {
+      name: 'ParametricCube',
+      type: 'component',
+      path: 'components/ParametricCube.tsx',
+      purpose: 'Renders the parametric cube mesh',
+    },
+  ],
+  relatedFiles: [
+    {
+      path: 'components/CubePreview.test.tsx',
+      type: 'test',
+      description: 'Unit tests for CubePreview',
+    },
+    {
+      path: 'components/ParametricCube.tsx',
+      type: 'component',
+      description: 'The cube mesh component',
+    },
+    {
+      path: 'shaders/parametric-cube.ts',
+      type: 'util',
+      description: 'GLSL shader for cube rendering',
+    },
+  ],
+  props: [
+    {
+      name: 'config',
+      type: 'SpectralCube | null',
+      required: true,
+      description: 'Cube configuration to display',
+    },
+    {
+      name: 'showGrid',
+      type: 'boolean',
+      required: false,
+      defaultValue: 'true',
+      description: 'Whether to show the grid floor',
+    },
+    {
+      name: 'animate',
+      type: 'boolean',
+      required: false,
+      defaultValue: 'false',
+      description: 'Enable rotation animation',
+    },
+    {
+      name: 'rotationSpeed',
+      type: 'number',
+      required: false,
+      defaultValue: '0.5',
+      description: 'Animation speed in rad/s',
+    },
+    {
+      name: 'showShadows',
+      type: 'boolean',
+      required: false,
+      defaultValue: 'true',
+      description: 'Show contact shadows',
+    },
+    {
+      name: 'backgroundColor',
+      type: 'string',
+      required: false,
+      defaultValue: '#1a1a1a',
+      description: 'Background color',
+    },
+  ],
+  tips: [
+    'Use mouse drag to orbit, scroll to zoom, right-click drag to pan',
+    'On touch devices: one finger to rotate, two fingers to zoom and pan',
+    'Enable animate prop for a rotating showcase effect',
+  ],
+  tags: ['3d', 'preview', 'three.js', 'webgl', 'visualization', 'phase-1'],
+  status: 'stable',
+  lastUpdated: '2026-01-29T21:00:00Z',
+}
+
+// Register metadata in the global registry
+registerComponentMeta(CUBE_PREVIEW_META)
 
 /**
  * Props for the CubePreview component
@@ -241,7 +415,10 @@ export function CubePreview({
     }
   }, [updateDimensions])
 
-  return (
+  // Check if DevMode is enabled for ComponentInfo wrapper
+  const isDevModeEnabled = useIsDevModeEnabled()
+
+  const previewContent = (
     <div
       ref={containerRef}
       className={`cube-preview ${className}`}
@@ -302,6 +479,12 @@ export function CubePreview({
         </div>
       )}
     </div>
+  )
+
+  return isDevModeEnabled ? (
+    <ComponentInfo meta={CUBE_PREVIEW_META}>{previewContent}</ComponentInfo>
+  ) : (
+    previewContent
   )
 }
 

@@ -2145,7 +2145,7 @@
   margin-top: 0.75rem;
 }
 
-.prompt-generator__checkbox-label input[type="checkbox"] {
+.prompt-generator__checkbox-label input[type='checkbox'] {
   width: 16px;
   height: 16px;
   cursor: pointer;

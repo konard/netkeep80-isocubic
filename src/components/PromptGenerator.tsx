@@ -1,15 +1,19 @@
 /**
  * PromptGenerator component for generating cube configurations from text descriptions
  *
+ * TASK 40: Added component metadata for Developer Mode support (Phase 6)
+ *
  * Provides a user-friendly interface for:
  * - Text input for custom prompts
  * - Quick template selection for common materials
  * - Random generation fallback
  * - Real-time generation status feedback
+ * - Developer Mode metadata for self-documentation
  */
 
 import { useState, useCallback } from 'react'
 import type { SpectralCube, CompositeDescription, BatchGenerationRequest } from '../types/cube'
+import type { ComponentMeta } from '../types/component-meta'
 import {
   generateFromTemplate,
   generateRandom,
@@ -26,6 +30,168 @@ import {
   recordFeedback,
   type GenerationResult,
 } from '../lib/tinyLLM'
+import { registerComponentMeta } from '../types/component-meta'
+import { ComponentInfo } from './ComponentInfo'
+import { useIsDevModeEnabled } from '../lib/devmode'
+
+/**
+ * Component metadata for Developer Mode
+ */
+export const PROMPT_GENERATOR_META: ComponentMeta = {
+  id: 'prompt-generator',
+  name: 'PromptGenerator',
+  version: '1.2.0',
+  summary: 'AI-powered text-to-cube generation interface using TinyLLM.',
+  description:
+    'PromptGenerator provides an AI-powered interface for generating cube configurations from text descriptions. ' +
+    'It uses TinyLLM (a lightweight language model) to interpret prompts and create corresponding cube parameters. ' +
+    'The component supports multiple generation modes: single prompt, batch processing, group generation, ' +
+    'composite descriptions, and contextual generation based on existing cubes. Features include template ' +
+    'selection, random generation, theme application, and user feedback collection for model improvement.',
+  phase: 5,
+  taskId: 'TASK 32',
+  filePath: 'components/PromptGenerator.tsx',
+  history: [
+    {
+      version: '1.0.0',
+      date: '2026-01-28T12:00:00Z',
+      description: 'Initial implementation with template-based generation',
+      taskId: 'TASK 1',
+      type: 'created',
+    },
+    {
+      version: '1.1.0',
+      date: '2026-01-29T16:00:00Z',
+      description: 'Added advanced modes: batch, group, composite, contextual generation',
+      taskId: 'TASK 32',
+      type: 'updated',
+    },
+    {
+      version: '1.2.0',
+      date: '2026-01-29T21:00:00Z',
+      description: 'Added Developer Mode metadata support for self-documentation',
+      taskId: 'TASK 40',
+      type: 'updated',
+    },
+  ],
+  features: [
+    {
+      id: 'prompt-generation',
+      name: 'Text Prompt Generation',
+      description: 'Generate cubes from free-form text descriptions',
+      enabled: true,
+      taskId: 'TASK 1',
+    },
+    {
+      id: 'template-selection',
+      name: 'Template Selection',
+      description: 'Quick generation from predefined material templates',
+      enabled: true,
+      taskId: 'TASK 1',
+    },
+    {
+      id: 'random-generation',
+      name: 'Random Generation',
+      description: 'Generate random cube configurations',
+      enabled: true,
+      taskId: 'TASK 1',
+    },
+    {
+      id: 'batch-mode',
+      name: 'Batch Generation',
+      description: 'Generate multiple cubes from multiple prompts at once',
+      enabled: true,
+      taskId: 'TASK 32',
+    },
+    {
+      id: 'group-mode',
+      name: 'Group Generation',
+      description: 'Generate cohesive groups of related cubes',
+      enabled: true,
+      taskId: 'TASK 32',
+    },
+    {
+      id: 'contextual-mode',
+      name: 'Contextual Generation',
+      description: 'Generate cubes based on existing cube context',
+      enabled: true,
+      taskId: 'TASK 32',
+    },
+    {
+      id: 'theme-application',
+      name: 'Theme Application',
+      description: 'Apply consistent themes across generation',
+      enabled: true,
+      taskId: 'TASK 32',
+    },
+    {
+      id: 'feedback-collection',
+      name: 'Feedback Collection',
+      description: 'Collect user feedback for model improvement',
+      enabled: true,
+      taskId: 'TASK 32',
+    },
+  ],
+  dependencies: [
+    {
+      name: 'tinyLLM',
+      type: 'lib',
+      path: 'lib/tinyLLM.ts',
+      purpose: 'AI-powered text-to-cube generation',
+    },
+  ],
+  relatedFiles: [
+    {
+      path: 'components/PromptGenerator.test.tsx',
+      type: 'test',
+      description: 'Unit tests for PromptGenerator',
+    },
+    { path: 'lib/tinyLLM.ts', type: 'util', description: 'TinyLLM model and generation logic' },
+    { path: 'lib/tinyLLM.test.ts', type: 'test', description: 'TinyLLM unit tests' },
+  ],
+  props: [
+    {
+      name: 'onCubeGenerated',
+      type: '(cube: SpectralCube) => void',
+      required: false,
+      description: 'Callback when single cube is generated',
+    },
+    {
+      name: 'onCubesGenerated',
+      type: '(cubes: SpectralCube[]) => void',
+      required: false,
+      description: 'Callback for batch/group generation',
+    },
+    {
+      name: 'contextCubes',
+      type: 'SpectralCube[]',
+      required: false,
+      description: 'Existing cubes for contextual mode',
+    },
+    {
+      name: 'enableAdvanced',
+      type: 'boolean',
+      required: false,
+      defaultValue: 'false',
+      description: 'Enable advanced generation modes',
+    },
+  ],
+  tips: [
+    'Try descriptive prompts like "dark weathered stone with moss" for best results',
+    'Use templates for quick generation of common materials',
+    'Enable Advanced mode for batch, group, and contextual generation',
+    'The AI supports both English and Russian prompts',
+  ],
+  knownIssues: [
+    'TinyLLM is a simplified model; complex prompts may fall back to template matching',
+  ],
+  tags: ['ai', 'generation', 'tinyLLM', 'prompts', 'templates', 'phase-5'],
+  status: 'stable',
+  lastUpdated: '2026-01-29T21:00:00Z',
+}
+
+// Register metadata in the global registry
+registerComponentMeta(PROMPT_GENERATOR_META)
 
 /**
  * Props for PromptGenerator component
@@ -102,6 +268,9 @@ export function PromptGenerator({
   const [feedbackRating, setFeedbackRating] = useState<number>(0)
   const [useContextCubes, setUseContextCubes] = useState<boolean>(true)
   const [showContextInfo, setShowContextInfo] = useState<boolean>(false)
+
+  // Check if DevMode is enabled for ComponentInfo wrapper
+  const isDevModeEnabled = useIsDevModeEnabled()
 
   // Handle prompt generation (supports multiple modes)
   const handleGenerate = useCallback(async () => {
@@ -409,7 +578,7 @@ export function PromptGenerator({
   const availableThemes = getAvailableThemes()
   const availableGroupTypes = getAvailableGroupTypes()
 
-  return (
+  const generatorContent = (
     <div className={`prompt-generator ${className}`}>
       <div className="prompt-generator__header">
         <h2 className="prompt-generator__title">Generate by Description</h2>
@@ -799,6 +968,12 @@ export function PromptGenerator({
         </div>
       )}
     </div>
+  )
+
+  return isDevModeEnabled ? (
+    <ComponentInfo meta={PROMPT_GENERATOR_META}>{generatorContent}</ComponentInfo>
+  ) : (
+    generatorContent
   )
 }
 

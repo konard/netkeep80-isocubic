@@ -5,6 +5,8 @@
  * TASK 34: Unified Editor - Combines ParamEditor, FFTParamEditor, StackEditor,
  * CollaborativeParamEditor, LODConfigEditor, and EnergyVisualizationEditor
  *
+ * TASK 40: Added component metadata for Developer Mode support (Phase 6)
+ *
  * Features:
  * - Tab-based navigation for organizing sections
  * - Mobile-optimized responsive design
@@ -12,6 +14,7 @@
  * - Editor mode switching (Spectral, FFT, Stack)
  * - Collaboration mode support
  * - Performance optimized with lazy loading
+ * - Developer Mode metadata for self-documentation
  */
 
 import { useState, useCallback, useMemo, useEffect, lazy, Suspense } from 'react'
@@ -20,10 +23,230 @@ import type { CubeStackConfig } from '../types/stack'
 import type { LODConfig, LODStatistics } from '../types/lod'
 import type { Participant, CollaborativeAction, ParticipantId } from '../types/collaboration'
 import type { EnergyVisualizationEditorSettings } from '../lib/energy-visualization-defaults'
+import type { ComponentMeta } from '../types/component-meta'
 import { createDefaultCube, createDefaultFFTCube } from '../types/cube'
 import { createCubeStack } from '../types/stack'
 import { CollaborationManager } from '../lib/collaboration'
 import { DEFAULT_EDITOR_SETTINGS } from '../lib/energy-visualization-defaults'
+import { registerComponentMeta } from '../types/component-meta'
+import { ComponentInfo } from './ComponentInfo'
+import { useIsDevModeEnabled } from '../lib/devmode'
+
+/**
+ * Component metadata for Developer Mode
+ */
+export const UNIFIED_EDITOR_META: ComponentMeta = {
+  id: 'unified-editor',
+  name: 'UnifiedEditor',
+  version: '1.1.0',
+  summary: 'Main editor component combining all sub-editors into a unified tabbed interface.',
+  description:
+    'UnifiedEditor is the primary editing interface for isocubic. It combines ParamEditor, ' +
+    'FFTParamEditor, StackEditor, CollaborativeParamEditor, LODConfigEditor, and EnergyVisualizationEditor ' +
+    'into a single adaptive component with tab-based navigation. The component supports three editing modes ' +
+    '(Spectral, FFT, Stack) and provides Quick Actions for common operations. It is optimized for performance ' +
+    'with lazy loading of sub-editors and supports both desktop and mobile layouts.',
+  phase: 5,
+  taskId: 'TASK 34',
+  filePath: 'components/UnifiedEditor.tsx',
+  history: [
+    {
+      version: '1.0.0',
+      date: '2026-01-29T19:00:00Z',
+      description: 'Initial implementation of UnifiedEditor with tabbed interface',
+      taskId: 'TASK 34',
+      type: 'created',
+    },
+    {
+      version: '1.1.0',
+      date: '2026-01-29T21:00:00Z',
+      description: 'Added Developer Mode metadata support for self-documentation',
+      taskId: 'TASK 40',
+      type: 'updated',
+    },
+  ],
+  features: [
+    {
+      id: 'tab-navigation',
+      name: 'Tab Navigation',
+      description:
+        'Tab-based navigation for organizing editor sections (General, Appearance, Physics, etc.)',
+      enabled: true,
+      taskId: 'TASK 34',
+    },
+    {
+      id: 'mode-switching',
+      name: 'Editor Mode Switching',
+      description: 'Switch between Spectral, FFT, and Stack editing modes',
+      enabled: true,
+      taskId: 'TASK 34',
+    },
+    {
+      id: 'quick-actions',
+      name: 'Quick Actions',
+      description: 'Panel with common operations (Reset, Duplicate, Randomize, Copy, Export)',
+      enabled: true,
+      taskId: 'TASK 34',
+    },
+    {
+      id: 'keyboard-shortcuts',
+      name: 'Keyboard Shortcuts',
+      description: 'Keyboard shortcuts for quick actions (Ctrl+R, Ctrl+D, Ctrl+S, etc.)',
+      enabled: true,
+      taskId: 'TASK 34',
+    },
+    {
+      id: 'lazy-loading',
+      name: 'Lazy Loading',
+      description: 'Sub-editors are loaded on-demand for better initial load performance',
+      enabled: true,
+      taskId: 'TASK 34',
+    },
+    {
+      id: 'mobile-layout',
+      name: 'Mobile Layout',
+      description: 'Responsive layout optimized for mobile devices with accordion navigation',
+      enabled: true,
+      taskId: 'TASK 34',
+    },
+    {
+      id: 'collaboration',
+      name: 'Collaboration Mode',
+      description: 'Integration with CollaborativeParamEditor for real-time multi-user editing',
+      enabled: true,
+      taskId: 'TASK 33',
+    },
+  ],
+  dependencies: [
+    {
+      name: 'ParamEditor',
+      type: 'component',
+      path: 'components/ParamEditor.tsx',
+      purpose: 'Spectral cube parameter editing',
+    },
+    {
+      name: 'FFTParamEditor',
+      type: 'component',
+      path: 'components/FFTParamEditor.tsx',
+      purpose: 'FFT/energy cube editing',
+    },
+    {
+      name: 'StackEditor',
+      type: 'component',
+      path: 'components/StackEditor.tsx',
+      purpose: 'Stack layer editing',
+    },
+    {
+      name: 'CollaborativeParamEditor',
+      type: 'component',
+      path: 'components/CollaborativeParamEditor.tsx',
+      purpose: 'Collaborative editing support',
+    },
+    {
+      name: 'LODConfigEditor',
+      type: 'component',
+      path: 'components/LODConfigEditor.tsx',
+      purpose: 'LOD settings editing',
+    },
+    {
+      name: 'EnergyVisualizationEditor',
+      type: 'component',
+      path: 'components/EnergyVisualizationEditor.tsx',
+      purpose: 'Energy visualization settings',
+    },
+    {
+      name: 'FFTChannelEditor',
+      type: 'component',
+      path: 'components/FFTChannelEditor.tsx',
+      purpose: 'FFT channel coefficient editing',
+    },
+    {
+      name: 'CollaborationManager',
+      type: 'lib',
+      path: 'lib/collaboration.ts',
+      purpose: 'Manages collaboration sessions',
+    },
+  ],
+  relatedFiles: [
+    {
+      path: 'components/UnifiedEditor.test.tsx',
+      type: 'test',
+      description: 'Unit tests for UnifiedEditor',
+    },
+    {
+      path: 'e2e/workflow.test.tsx',
+      type: 'test',
+      description: 'E2E tests including UnifiedEditor workflow',
+    },
+    { path: 'types/cube.ts', type: 'type', description: 'SpectralCube and FFTCubeConfig types' },
+    { path: 'types/stack.ts', type: 'type', description: 'CubeStackConfig type' },
+    { path: 'types/lod.ts', type: 'type', description: 'LOD configuration types' },
+  ],
+  props: [
+    {
+      name: 'currentCube',
+      type: 'SpectralCube | null',
+      required: false,
+      description: 'Current spectral cube for editing',
+    },
+    {
+      name: 'currentFFTCube',
+      type: 'FFTCubeConfig | null',
+      required: false,
+      description: 'Current FFT cube for editing',
+    },
+    {
+      name: 'currentStack',
+      type: 'CubeStackConfig | null',
+      required: false,
+      description: 'Current stack for editing',
+    },
+    {
+      name: 'initialMode',
+      type: 'EditorMode',
+      required: false,
+      defaultValue: 'spectral',
+      description: 'Initial editor mode',
+    },
+    {
+      name: 'onCubeUpdate',
+      type: '(cube: SpectralCube) => void',
+      required: false,
+      description: 'Callback when spectral cube is updated',
+    },
+    {
+      name: 'onFFTCubeUpdate',
+      type: '(cube: FFTCubeConfig) => void',
+      required: false,
+      description: 'Callback when FFT cube is updated',
+    },
+    {
+      name: 'onStackUpdate',
+      type: '(stack: CubeStackConfig) => void',
+      required: false,
+      description: 'Callback when stack is updated',
+    },
+    {
+      name: 'isMobile',
+      type: 'boolean',
+      required: false,
+      defaultValue: 'false',
+      description: 'Whether to use mobile layout',
+    },
+  ],
+  tips: [
+    'Use Ctrl+Shift+R for randomize, Ctrl+R for reset, Ctrl+D for duplicate',
+    'Switch between modes using the mode selector at the top',
+    'Enable collaboration mode to edit with multiple users simultaneously',
+    'LOD settings affect rendering performance on distant cubes',
+  ],
+  tags: ['editor', 'ui', 'tabs', 'spectral', 'fft', 'stack', 'collaboration', 'phase-5'],
+  status: 'stable',
+  lastUpdated: '2026-01-29T21:00:00Z',
+}
+
+// Register metadata in the global registry
+registerComponentMeta(UNIFIED_EDITOR_META)
 
 // Lazy load heavy editor components for better performance
 const ParamEditor = lazy(() => import('./ParamEditor').then((m) => ({ default: m.ParamEditor })))
@@ -868,60 +1091,69 @@ export function UnifiedEditor({
     </div>
   )
 
+  // Check if DevMode is enabled for ComponentInfo wrapper
+  const isDevModeEnabled = useIsDevModeEnabled()
+
   // Mobile accordion layout
-  if (isMobile) {
-    return (
-      <div className={`unified-editor unified-editor--mobile ${className}`}>
-        <header className="unified-editor__header">
-          <h2 className="unified-editor__title">Unified Editor</h2>
-          {renderModeSelector()}
-        </header>
+  const mobileContent = (
+    <div className={`unified-editor unified-editor--mobile ${className}`}>
+      <header className="unified-editor__header">
+        <h2 className="unified-editor__title">Unified Editor</h2>
+        {renderModeSelector()}
+      </header>
 
-        {/* Quick actions as collapsible */}
-        <div className="unified-editor__mobile-quick-actions">
-          <button
-            type="button"
-            className="unified-editor__accordion-header"
-            onClick={() => setShowQuickActions(!showQuickActions)}
-            aria-expanded={showQuickActions}
-          >
-            <span>Quick Actions</span>
-            <span className="unified-editor__chevron">{showQuickActions ? '▼' : '▶'}</span>
-          </button>
-          {showQuickActions && renderQuickActions()}
-        </div>
-
-        {/* Tab selector for mobile */}
-        <div className="unified-editor__mobile-tab-selector">
-          <select
-            value={activeTab}
-            onChange={(e) => setActiveTab(e.target.value as EditorTab)}
-            className="unified-editor__tab-select"
-            aria-label="Select editor section"
-          >
-            {availableTabs.map((tab) => (
-              <option key={tab.id} value={tab.id}>
-                {tab.icon} {tab.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Tab content */}
-        <main
-          className="unified-editor__content"
-          role="tabpanel"
-          id={`tabpanel-${activeTab}`}
-          aria-labelledby={`tab-${activeTab}`}
+      {/* Quick actions as collapsible */}
+      <div className="unified-editor__mobile-quick-actions">
+        <button
+          type="button"
+          className="unified-editor__accordion-header"
+          onClick={() => setShowQuickActions(!showQuickActions)}
+          aria-expanded={showQuickActions}
         >
-          {renderTabContent()}
-        </main>
+          <span>Quick Actions</span>
+          <span className="unified-editor__chevron">{showQuickActions ? '▼' : '▶'}</span>
+        </button>
+        {showQuickActions && renderQuickActions()}
       </div>
+
+      {/* Tab selector for mobile */}
+      <div className="unified-editor__mobile-tab-selector">
+        <select
+          value={activeTab}
+          onChange={(e) => setActiveTab(e.target.value as EditorTab)}
+          className="unified-editor__tab-select"
+          aria-label="Select editor section"
+        >
+          {availableTabs.map((tab) => (
+            <option key={tab.id} value={tab.id}>
+              {tab.icon} {tab.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Tab content */}
+      <main
+        className="unified-editor__content"
+        role="tabpanel"
+        id={`tabpanel-${activeTab}`}
+        aria-labelledby={`tab-${activeTab}`}
+      >
+        {renderTabContent()}
+      </main>
+    </div>
+  )
+
+  if (isMobile) {
+    return isDevModeEnabled ? (
+      <ComponentInfo meta={UNIFIED_EDITOR_META}>{mobileContent}</ComponentInfo>
+    ) : (
+      mobileContent
     )
   }
 
   // Desktop/tablet layout
-  return (
+  const desktopContent = (
     <div className={`unified-editor unified-editor--desktop ${className}`}>
       <header className="unified-editor__header">
         <h2 className="unified-editor__title">Unified Editor</h2>
@@ -944,6 +1176,12 @@ export function UnifiedEditor({
         {renderTabContent()}
       </main>
     </div>
+  )
+
+  return isDevModeEnabled ? (
+    <ComponentInfo meta={UNIFIED_EDITOR_META}>{desktopContent}</ComponentInfo>
+  ) : (
+    desktopContent
   )
 }
 

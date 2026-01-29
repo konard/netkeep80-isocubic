@@ -1,10 +1,21 @@
 /**
  * ExportPanel component for managing cube configuration export/import
  * Provides UI for downloading, uploading, and managing saved cube configurations
+ *
+ * TASK 40: Added component metadata for Developer Mode support (Phase 6)
+ *
+ * Features:
+ * - Download cube configurations as JSON files
+ * - Upload and import existing configurations
+ * - Save configurations to browser localStorage
+ * - List and manage saved configurations
+ * - Undo/Redo support for editing history
+ * - Developer Mode metadata for self-documentation
  */
 
 import { useState, useCallback, useEffect } from 'react'
 import type { SpectralCube } from '../types/cube'
+import type { ComponentMeta } from '../types/component-meta'
 import {
   exportCubeToFile,
   importCubeFromFile,
@@ -20,6 +31,142 @@ import {
   type StoredConfig,
   type ImportResult,
 } from '../lib/storage'
+import { registerComponentMeta } from '../types/component-meta'
+import { ComponentInfo } from './ComponentInfo'
+import { useIsDevModeEnabled } from '../lib/devmode'
+
+/**
+ * Component metadata for Developer Mode
+ */
+export const EXPORT_PANEL_META: ComponentMeta = {
+  id: 'export-panel',
+  name: 'ExportPanel',
+  version: '1.1.0',
+  summary: 'Export/Import and storage management panel for cube configurations.',
+  description:
+    'ExportPanel provides a comprehensive UI for managing cube configurations. It supports exporting ' +
+    'cubes as JSON files for sharing or backup, importing previously saved configurations, and storing ' +
+    'configurations locally in the browser using localStorage. The component also includes undo/redo ' +
+    'functionality to navigate through editing history, and displays a list of all saved configurations ' +
+    'with options to load or delete them.',
+  phase: 4,
+  taskId: 'TASK 40',
+  filePath: 'components/ExportPanel.tsx',
+  history: [
+    {
+      version: '1.0.0',
+      date: '2026-01-28T12:00:00Z',
+      description: 'Initial implementation with export/import and localStorage support',
+      taskId: 'TASK 4',
+      type: 'created',
+    },
+    {
+      version: '1.0.1',
+      date: '2026-01-28T14:00:00Z',
+      description: 'Added undo/redo history navigation',
+      taskId: 'TASK 4',
+      type: 'updated',
+    },
+    {
+      version: '1.1.0',
+      date: '2026-01-29T21:00:00Z',
+      description: 'Added Developer Mode metadata support for self-documentation',
+      taskId: 'TASK 40',
+      type: 'updated',
+    },
+  ],
+  features: [
+    {
+      id: 'json-export',
+      name: 'JSON Export',
+      description: 'Download cube configuration as a shareable JSON file',
+      enabled: true,
+      taskId: 'TASK 4',
+    },
+    {
+      id: 'json-import',
+      name: 'JSON Import',
+      description: 'Upload and load cube configuration from JSON files',
+      enabled: true,
+      taskId: 'TASK 4',
+    },
+    {
+      id: 'local-storage',
+      name: 'Local Storage',
+      description: 'Save configurations to browser localStorage for persistence',
+      enabled: true,
+      taskId: 'TASK 4',
+    },
+    {
+      id: 'saved-configs-list',
+      name: 'Saved Configurations List',
+      description: 'View, load, and delete previously saved configurations',
+      enabled: true,
+      taskId: 'TASK 4',
+    },
+    {
+      id: 'undo-redo',
+      name: 'Undo/Redo History',
+      description: 'Navigate through editing history with undo/redo controls',
+      enabled: true,
+      taskId: 'TASK 4',
+    },
+  ],
+  dependencies: [
+    {
+      name: '../lib/storage',
+      type: 'lib',
+      purpose: 'Storage utilities for export/import and localStorage',
+    },
+  ],
+  relatedFiles: [
+    { path: 'lib/storage.ts', type: 'util', description: 'Storage utilities and functions' },
+    {
+      path: 'components/ExportPanel.test.tsx',
+      type: 'test',
+      description: 'Unit tests for ExportPanel',
+    },
+  ],
+  props: [
+    {
+      name: 'currentCube',
+      type: 'SpectralCube | null',
+      required: true,
+      description: 'Current cube configuration to export/save',
+    },
+    {
+      name: 'onCubeLoad',
+      type: '(cube: SpectralCube) => void',
+      required: false,
+      description: 'Callback when a cube is loaded/imported',
+    },
+    {
+      name: 'onCubeChange',
+      type: '(cube: SpectralCube) => void',
+      required: false,
+      description: 'Callback for undo/redo cube changes',
+    },
+    {
+      name: 'className',
+      type: 'string',
+      required: false,
+      defaultValue: "''",
+      description: 'Additional CSS class name',
+    },
+  ],
+  tips: [
+    'Use Download JSON to share configurations with others',
+    'Saved configurations persist in browser localStorage across sessions',
+    'Keyboard shortcuts: Ctrl+Z for undo, Ctrl+Shift+Z for redo',
+  ],
+  knownIssues: ['localStorage has a size limit (~5MB); large galleries may exceed this'],
+  tags: ['export', 'import', 'storage', 'persistence', 'phase-4'],
+  status: 'stable',
+  lastUpdated: '2026-01-29T21:00:00Z',
+}
+
+// Register metadata in the global registry
+registerComponentMeta(EXPORT_PANEL_META)
 
 /**
  * Props for ExportPanel component
@@ -51,6 +198,9 @@ export function ExportPanel({
   const [importSuccess, setImportSuccess] = useState<string | null>(null)
   const [undoAvailable, setUndoAvailable] = useState(() => canUndo())
   const [redoAvailable, setRedoAvailable] = useState(() => canRedo())
+
+  // Check if DevMode is enabled for ComponentInfo wrapper
+  const isDevModeEnabled = useIsDevModeEnabled()
 
   // Refresh saved configs
   const refreshSavedConfigs = useCallback(() => {
@@ -154,7 +304,7 @@ export function ExportPanel({
     }
   }
 
-  return (
+  const panelContent = (
     <div className={`export-panel ${className}`}>
       {/* Undo/Redo controls */}
       <div className="export-panel__history">
@@ -259,6 +409,12 @@ export function ExportPanel({
         </div>
       )}
     </div>
+  )
+
+  return isDevModeEnabled ? (
+    <ComponentInfo meta={EXPORT_PANEL_META}>{panelContent}</ComponentInfo>
+  ) : (
+    panelContent
   )
 }
 

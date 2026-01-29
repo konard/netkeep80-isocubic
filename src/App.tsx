@@ -5,6 +5,8 @@ import { ExportPanel } from './components/ExportPanel'
 import { UnifiedEditor } from './components/UnifiedEditor'
 import { CubePreview } from './components/CubePreview'
 import { PromptGenerator } from './components/PromptGenerator'
+import { DevModeIndicator } from './components/ComponentInfo'
+import { DevModeProvider } from './lib/devmode'
 import type { SpectralCube } from './types/cube'
 import { createDefaultCube } from './types/cube'
 
@@ -44,7 +46,7 @@ function useDeviceType() {
   return deviceType
 }
 
-function App() {
+function AppContent() {
   // Current cube state
   const [currentCube, setCurrentCube] = useState<SpectralCube | null>(() =>
     createDefaultCube('default_cube')
@@ -134,6 +136,7 @@ function App() {
       <div className="app app--mobile">
         <header className="app__header app__header--mobile">
           <h1>isocubic</h1>
+          <DevModeIndicator />
         </header>
 
         {/* Mobile tab navigation */}
@@ -256,6 +259,7 @@ function App() {
         <header className="app__header">
           <h1>isocubic</h1>
           <p>Web editor for parametric cubes</p>
+          <DevModeIndicator />
         </header>
 
         <main className="app__main app__main--tablet">
@@ -318,6 +322,7 @@ function App() {
       <header className="app__header">
         <h1>isocubic</h1>
         <p>Web editor for parametric cubes</p>
+        <DevModeIndicator />
       </header>
 
       <main className="app__main">
@@ -345,6 +350,18 @@ function App() {
         </section>
       </main>
     </div>
+  )
+}
+
+/**
+ * App component wrapped with DevModeProvider
+ * Enables Developer Mode functionality throughout the application
+ */
+function App() {
+  return (
+    <DevModeProvider>
+      <AppContent />
+    </DevModeProvider>
   )
 }
 

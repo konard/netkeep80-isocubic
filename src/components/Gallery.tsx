@@ -1,11 +1,138 @@
 /**
  * Gallery component for displaying and selecting cube presets
  * Provides thumbnail previews, category filtering, tag-based search, and user cube management
+ *
+ * TASK 40: Added component metadata for Developer Mode support (Phase 6)
  */
 
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import type { SpectralCube, MaterialType } from '../types/cube'
+import type { ComponentMeta } from '../types/component-meta'
 import { getSavedCubesList, saveCubeToStorage, type StoredConfig } from '../lib/storage'
+import { registerComponentMeta } from '../types/component-meta'
+import { ComponentInfo } from './ComponentInfo'
+import { useIsDevModeEnabled } from '../lib/devmode'
+
+/**
+ * Component metadata for Developer Mode
+ */
+export const GALLERY_META: ComponentMeta = {
+  id: 'gallery',
+  name: 'Gallery',
+  version: '1.1.0',
+  summary: 'Displays and manages cube presets with filtering, search, and user cube storage.',
+  description:
+    'Gallery is the cube browsing and management interface for isocubic. It displays preset cubes ' +
+    'loaded from JSON files and user-saved cubes from localStorage. Features include category filtering ' +
+    'by material type, tag-based search, thumbnail preview generation from cube gradients, and the ability ' +
+    'to save the current cube to the personal gallery. The component supports both preset cubes (read-only) ' +
+    'and user cubes (editable).',
+  phase: 1,
+  taskId: 'TASK 1',
+  filePath: 'components/Gallery.tsx',
+  history: [
+    {
+      version: '1.0.0',
+      date: '2026-01-28T12:00:00Z',
+      description: 'Initial implementation with preset display and category filtering',
+      taskId: 'TASK 1',
+      type: 'created',
+    },
+    {
+      version: '1.0.1',
+      date: '2026-01-28T14:00:00Z',
+      description: 'Added magical energy cubes (FFT system presets)',
+      taskId: 'TASK 5',
+      type: 'updated',
+    },
+    {
+      version: '1.1.0',
+      date: '2026-01-29T21:00:00Z',
+      description: 'Added Developer Mode metadata support for self-documentation',
+      taskId: 'TASK 40',
+      type: 'updated',
+    },
+  ],
+  features: [
+    {
+      id: 'preset-display',
+      name: 'Preset Display',
+      description: 'Displays built-in preset cubes from JSON files',
+      enabled: true,
+      taskId: 'TASK 1',
+    },
+    {
+      id: 'user-cubes',
+      name: 'User Cubes',
+      description: 'Manage user-saved cubes in localStorage',
+      enabled: true,
+      taskId: 'TASK 1',
+    },
+    {
+      id: 'category-filter',
+      name: 'Category Filtering',
+      description: 'Filter cubes by material type (Stone, Wood, Metal, etc.)',
+      enabled: true,
+      taskId: 'TASK 1',
+    },
+    {
+      id: 'tag-search',
+      name: 'Tag Search',
+      description: 'Search cubes by name, tags, or prompt',
+      enabled: true,
+      taskId: 'TASK 1',
+    },
+    {
+      id: 'thumbnail-preview',
+      name: 'Thumbnail Preview',
+      description: 'CSS-based thumbnail generation from cube gradients',
+      enabled: true,
+      taskId: 'TASK 1',
+    },
+    {
+      id: 'save-current',
+      name: 'Save Current Cube',
+      description: 'Save the current editing cube to personal gallery',
+      enabled: true,
+      taskId: 'TASK 1',
+    },
+  ],
+  dependencies: [
+    { name: 'storage', type: 'lib', path: 'lib/storage.ts', purpose: 'Cube storage operations' },
+  ],
+  relatedFiles: [
+    { path: 'components/Gallery.test.tsx', type: 'test', description: 'Unit tests for Gallery' },
+    { path: 'lib/storage.ts', type: 'util', description: 'LocalStorage operations' },
+    { path: 'examples/*.json', type: 'config', description: 'Preset cube JSON files' },
+  ],
+  props: [
+    {
+      name: 'onCubeSelect',
+      type: '(cube: SpectralCube) => void',
+      required: false,
+      description: 'Callback when a cube is selected',
+    },
+    {
+      name: 'currentCube',
+      type: 'SpectralCube | null',
+      required: false,
+      description: 'Current cube for save functionality',
+    },
+    { name: 'className', type: 'string', required: false, description: 'Additional CSS class' },
+  ],
+  tips: [
+    'Click on a cube thumbnail to load it into the editor',
+    'Use the search bar to find cubes by name or tags',
+    'Switch between Presets and My Cubes tabs to view different collections',
+    'Save your current work using the "Save Current to Gallery" button',
+  ],
+  tags: ['gallery', 'ui', 'presets', 'storage', 'search', 'phase-1'],
+  status: 'stable',
+  lastUpdated: '2026-01-29T21:00:00Z',
+}
+
+// Register metadata in the global registry
+registerComponentMeta(GALLERY_META)
 
 // Preset cubes data - these are imported at build time
 // In a production app, these would be loaded from the /examples folder
@@ -230,7 +357,10 @@ export function Gallery({ onCubeSelect, currentCube, className = '' }: GalleryPr
     return Array.from(tagSet).sort()
   }, [displayCubes])
 
-  return (
+  // Check if DevMode is enabled for ComponentInfo wrapper
+  const isDevModeEnabled = useIsDevModeEnabled()
+
+  const galleryContent = (
     <div className={`gallery ${className}`}>
       {/* Header */}
       <div className="gallery__header">
@@ -404,6 +534,12 @@ export function Gallery({ onCubeSelect, currentCube, className = '' }: GalleryPr
         </span>
       </div>
     </div>
+  )
+
+  return isDevModeEnabled ? (
+    <ComponentInfo meta={GALLERY_META}>{galleryContent}</ComponentInfo>
+  ) : (
+    galleryContent
   )
 }
 
