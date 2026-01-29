@@ -958,7 +958,7 @@ export class CollaborationManager {
   dispose(): void {
     this.leaveSession()
     this.listeners.clear()
-    this.actionQueue = []
+    this._actionQueue = []
   }
 }
 
