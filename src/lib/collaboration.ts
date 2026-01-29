@@ -1008,3 +1008,431 @@ export function formatSessionCode(code: string): string {
 export function parseSessionCode(formattedCode: string): string {
   return formattedCode.replace(/-/g, '').toUpperCase()
 }
+
+// ============================================================================
+// WebSocket-Enabled Collaboration Manager
+// ============================================================================
+
+import {
+  WebSocketClient,
+  RealtimeClient,
+  createWebSocketClient,
+  createRealtimeClient,
+} from './websocket-client'
+import type {
+  WebSocketClientConfig,
+  IncomingMessage,
+  SyncActionMessage,
+  FullSyncMessage,
+  PresenceUpdateMessage,
+} from '../types/websocket'
+import type { RealtimeClientConfig } from './websocket-client'
+
+/**
+ * Configuration for networked collaboration
+ */
+export interface NetworkedCollaborationConfig extends CollaborationConfig {
+  /** WebSocket configuration */
+  websocket?: Partial<WebSocketClientConfig>
+  /** Realtime client configuration */
+  realtime?: Partial<RealtimeClientConfig>
+  /** Whether to use unified realtime client (with fallback) */
+  useRealtimeClient?: boolean
+  /** Auto-sync actions to server */
+  autoSyncActions?: boolean
+  /** Sync debounce delay (ms) */
+  syncDebounceDelay?: number
+}
+
+/**
+ * Default networked collaboration configuration
+ */
+export const DEFAULT_NETWORKED_CONFIG: Partial<NetworkedCollaborationConfig> = {
+  useRealtimeClient: true,
+  autoSyncActions: true,
+  syncDebounceDelay: 100,
+}
+
+/**
+ * Extended CollaborationManager with WebSocket support
+ * Provides real-time synchronization capabilities
+ */
+export class NetworkedCollaborationManager extends CollaborationManager {
+  private networkConfig: NetworkedCollaborationConfig
+  private wsClient: WebSocketClient | null = null
+  private realtimeClient: RealtimeClient | null = null
+  private syncDebounceTimer: ReturnType<typeof setTimeout> | null = null
+
+  constructor(config?: Partial<NetworkedCollaborationConfig>) {
+    super(config)
+    this.networkConfig = {
+      ...DEFAULT_COLLABORATION_CONFIG,
+      ...DEFAULT_NETWORKED_CONFIG,
+      ...config,
+    }
+  }
+
+  // ==========================================================================
+  // Connection Management
+  // ==========================================================================
+
+  /**
+   * Connects to the WebSocket server
+   */
+  async connect(serverUrl?: string): Promise<void> {
+    if (this.networkConfig.useRealtimeClient) {
+      this.realtimeClient = createRealtimeClient(this.networkConfig.realtime)
+      this.setupRealtimeListeners()
+
+      const session = this.getSession()
+      const localParticipantId = this.getState().localParticipantId
+
+      if (session && localParticipantId) {
+        await this.realtimeClient.connect(session.id, localParticipantId, serverUrl)
+        this.setConnectionState('connected')
+      } else {
+        throw new Error('Must be in a session to connect')
+      }
+    } else {
+      this.wsClient = createWebSocketClient(this.networkConfig.websocket)
+      this.setupWebSocketListeners()
+      await this.wsClient.connect(serverUrl)
+      this.setConnectionState('connected')
+    }
+  }
+
+  /**
+   * Disconnects from the server
+   */
+  disconnect(): void {
+    if (this.realtimeClient) {
+      this.realtimeClient.disconnect()
+      this.realtimeClient = null
+    }
+    if (this.wsClient) {
+      this.wsClient.disconnect()
+      this.wsClient = null
+    }
+    this.setConnectionState('disconnected')
+  }
+
+  /**
+   * Checks if connected to server
+   */
+  isConnected(): boolean {
+    if (this.realtimeClient) {
+      return this.realtimeClient.isConnected()
+    }
+    if (this.wsClient) {
+      return this.wsClient.isConnected()
+    }
+    return false
+  }
+
+  /**
+   * Gets the current latency (WebSocket only)
+   */
+  getLatency(): number {
+    return this.wsClient?.getLatency() ?? 0
+  }
+
+  // ==========================================================================
+  // WebSocket Event Handlers
+  // ==========================================================================
+
+  /**
+   * Sets up WebSocket event listeners
+   */
+  private setupWebSocketListeners(): void {
+    if (!this.wsClient) return
+
+    // Handle connection state changes
+    this.wsClient.on('state_changed', (event) => {
+      const data = event.data as { previousState: string; currentState: string }
+      this.setConnectionState(data.currentState as ConnectionState)
+    })
+
+    // Handle incoming sync actions
+    this.wsClient.onMessage('sync_action', (event) => {
+      const message = event.data as SyncActionMessage
+      this.handleRemoteAction(message.payload.action)
+    })
+
+    // Handle full sync responses
+    this.wsClient.onMessage('full_sync', (event) => {
+      const message = event.data as FullSyncMessage
+      if (message.payload.requestType === 'response' && message.payload.session) {
+        this.handleFullSync(message)
+      }
+    })
+
+    // Handle presence updates
+    this.wsClient.onMessage('presence_update', (event) => {
+      const message = event.data as PresenceUpdateMessage
+      this.handlePresenceUpdate(message)
+    })
+
+    // Handle reconnection
+    this.wsClient.on('reconnected', () => {
+      this.requestFullSync()
+    })
+  }
+
+  /**
+   * Sets up realtime client event listeners
+   */
+  private setupRealtimeListeners(): void {
+    if (!this.realtimeClient) return
+
+    this.realtimeClient.on('state_changed', (event) => {
+      const data = event.data as { previousState: string; currentState: string }
+      this.setConnectionState(data.currentState as ConnectionState)
+    })
+
+    this.realtimeClient.on('message', (event) => {
+      const message = event.data as IncomingMessage
+      this.handleIncomingMessage(message)
+    })
+
+    this.realtimeClient.on('reconnected', () => {
+      this.requestFullSync()
+    })
+  }
+
+  /**
+   * Handles incoming messages
+   */
+  private handleIncomingMessage(message: IncomingMessage): void {
+    switch (message.type) {
+      case 'sync_action':
+        this.handleRemoteAction((message as SyncActionMessage).payload.action)
+        break
+      case 'full_sync':
+        if ((message as FullSyncMessage).payload.requestType === 'response') {
+          this.handleFullSync(message as FullSyncMessage)
+        }
+        break
+      case 'presence_update':
+        this.handlePresenceUpdate(message as PresenceUpdateMessage)
+        break
+    }
+  }
+
+  /**
+   * Handles a remote action from another participant
+   */
+  private handleRemoteAction(action: CollaborativeAction): void {
+    // Don't apply our own actions
+    if (action.participantId === this.getState().localParticipantId) {
+      return
+    }
+    this.receiveAction(action)
+  }
+
+  /**
+   * Handles full sync response
+   */
+  private handleFullSync(message: FullSyncMessage): void {
+    if (!message.payload.session) return
+
+    const session = deserializeSession(message.payload.session)
+
+    // Update local state with server state
+    // This is a simplified version - in production you'd want to merge states
+    const state = this.getState()
+    if (state.session && state.session.id === session.id) {
+      // Preserve local participant
+      const localParticipant = state.session.participants.get(state.localParticipantId!)
+      if (localParticipant) {
+        session.participants.set(state.localParticipantId!, localParticipant)
+      }
+    }
+  }
+
+  /**
+   * Handles presence update
+   */
+  private handlePresenceUpdate(message: PresenceUpdateMessage): void {
+    const { participantId, status, cursor } = message.payload
+
+    // Don't update our own presence from server
+    if (participantId === this.getState().localParticipantId) {
+      return
+    }
+
+    const session = this.getSession()
+    if (!session) return
+
+    const participant = session.participants.get(participantId)
+    if (!participant) return
+
+    if (status) {
+      participant.status = status
+    }
+    if (cursor) {
+      participant.cursor = cursor
+    }
+    participant.lastActiveAt = new Date().toISOString()
+  }
+
+  // ==========================================================================
+  // Sync Operations
+  // ==========================================================================
+
+  /**
+   * Requests full state synchronization from server
+   */
+  requestFullSync(): void {
+    const session = this.getSession()
+    if (!session) return
+
+    if (this.wsClient?.isConnected()) {
+      this.wsClient.requestFullSync(session.id)
+    }
+  }
+
+  /**
+   * Syncs an action to the server
+   */
+  async syncAction(action: CollaborativeAction): Promise<void> {
+    const session = this.getSession()
+    if (!session) return
+
+    if (this.wsClient?.isConnected()) {
+      try {
+        await this.wsClient.syncAction(action, session.id)
+        this.confirmSyncedActions([action.id])
+      } catch (error) {
+        console.error('Failed to sync action:', error)
+      }
+    } else if (this.realtimeClient?.isConnected()) {
+      const pollingClient = this.realtimeClient.getPollingClient()
+      if (pollingClient) {
+        try {
+          await pollingClient.sendAction(action)
+          this.confirmSyncedActions([action.id])
+        } catch (error) {
+          console.error('Failed to sync action via polling:', error)
+        }
+      }
+    }
+  }
+
+  /**
+   * Syncs pending actions with debouncing
+   */
+  private scheduleSyncPendingActions(): void {
+    if (!this.networkConfig.autoSyncActions) return
+
+    if (this.syncDebounceTimer) {
+      clearTimeout(this.syncDebounceTimer)
+    }
+
+    this.syncDebounceTimer = setTimeout(() => {
+      this.syncPendingActions()
+    }, this.networkConfig.syncDebounceDelay)
+  }
+
+  /**
+   * Syncs all pending actions
+   */
+  private async syncPendingActions(): Promise<void> {
+    const pending = this.getPendingActions()
+    for (const action of pending) {
+      await this.syncAction(action)
+    }
+  }
+
+  /**
+   * Updates presence on server
+   */
+  updatePresenceOnServer(): void {
+    const session = this.getSession()
+    const localParticipantId = this.getState().localParticipantId
+    const localParticipant = this.getLocalParticipant()
+
+    if (!session || !localParticipantId || !localParticipant) return
+
+    if (this.wsClient?.isConnected()) {
+      this.wsClient.updatePresence(
+        session.id,
+        localParticipantId,
+        localParticipant.status,
+        localParticipant.cursor
+      )
+    } else if (this.realtimeClient?.isConnected()) {
+      const pollingClient = this.realtimeClient.getPollingClient()
+      if (pollingClient) {
+        pollingClient
+          .updatePresence(localParticipant.status, localParticipant.cursor)
+          .catch(console.error)
+      }
+    }
+  }
+
+  // ==========================================================================
+  // Overrides with Auto-Sync
+  // ==========================================================================
+
+  /**
+   * Applies an action and optionally syncs to server
+   */
+  override applyAction(action: CollaborativeAction): ActionResult {
+    const result = super.applyAction(action)
+
+    if (result.success && this.networkConfig.autoSyncActions && this.isConnected()) {
+      this.scheduleSyncPendingActions()
+    }
+
+    return result
+  }
+
+  /**
+   * Updates cursor and syncs to server
+   */
+  override updateCursor(position: CursorPosition): ActionResult {
+    const result = super.updateCursor(position)
+
+    if (result.success && this.isConnected()) {
+      this.updatePresenceOnServer()
+    }
+
+    return result
+  }
+
+  /**
+   * Updates participant status and syncs to server
+   */
+  override updateParticipantStatus(status: ParticipantStatus): void {
+    super.updateParticipantStatus(status)
+
+    if (this.isConnected()) {
+      this.updatePresenceOnServer()
+    }
+  }
+
+  // ==========================================================================
+  // Cleanup
+  // ==========================================================================
+
+  /**
+   * Cleans up resources
+   */
+  override dispose(): void {
+    if (this.syncDebounceTimer) {
+      clearTimeout(this.syncDebounceTimer)
+      this.syncDebounceTimer = null
+    }
+    this.disconnect()
+    super.dispose()
+  }
+}
+
+/**
+ * Creates a new networked collaboration manager
+ */
+export function createNetworkedCollaborationManager(
+  config?: Partial<NetworkedCollaborationConfig>
+): NetworkedCollaborationManager {
+  return new NetworkedCollaborationManager(config)
+}
