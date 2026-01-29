@@ -87,13 +87,11 @@ export class CollaborationManager {
   private state: CollaborationState
   private config: CollaborationConfig
   private listeners: Map<CollaborationEventType, Set<CollaborationEventListener>>
-  private _actionQueue: CollaborativeAction[] // Reserved for WebSocket integration in ISSUE 22
   private cursorUpdateTimer: ReturnType<typeof setInterval> | null = null
 
   constructor(config?: Partial<CollaborationConfig>) {
     this.config = { ...DEFAULT_COLLABORATION_CONFIG, ...config }
     this.listeners = new Map()
-    this._actionQueue = []
     this.state = this.loadState()
   }
 
@@ -958,7 +956,6 @@ export class CollaborationManager {
   dispose(): void {
     this.leaveSession()
     this.listeners.clear()
-    this._actionQueue = []
   }
 }
 
