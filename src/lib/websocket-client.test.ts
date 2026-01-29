@@ -24,6 +24,25 @@ import {
   createPresenceUpdateMessage,
   createHeartbeatMessage,
 } from '../types/websocket'
+import type { CollaborativeAction } from '../types/collaboration'
+
+// Helper to create mock cube for tests
+const createMockCube = () => ({
+  id: 'cube-1',
+  base: { color: [1, 0, 0] as [number, number, number] },
+})
+
+// Helper to create mock action for tests
+const createMockAction = (overrides = {}): CollaborativeAction =>
+  ({
+    id: 'action-1',
+    type: 'cube_create',
+    participantId: 'participant-1',
+    sessionId: 'session-1',
+    timestamp: new Date().toISOString(),
+    payload: { cube: createMockCube() },
+    ...overrides,
+  }) as CollaborativeAction
 
 // ============================================================================
 // Mock WebSocket
@@ -41,7 +60,7 @@ class MockWebSocket {
   onerror: ((event: Event) => void) | null = null
   onmessage: ((event: MessageEvent) => void) | null = null
 
-  private url: string
+  public readonly url: string
   private messageQueue: string[] = []
 
   constructor(url: string) {
@@ -176,19 +195,7 @@ describe('WebSocket message helpers', () => {
 
   describe('createSyncActionMessage', () => {
     it('should create sync action message', () => {
-      const action = {
-        id: 'action-1',
-        type: 'cube_create' as const,
-        participantId: 'p-1',
-        sessionId: 's-1',
-        timestamp: new Date().toISOString(),
-        payload: {
-          cube: {
-            id: 'cube-1',
-            base: { color: [1, 0, 0] },
-          },
-        },
-      }
+      const action = createMockAction({ id: 'action-1', participantId: 'p-1', sessionId: 's-1' })
       const message = createSyncActionMessage(action, 'session-1')
       expect(message.type).toBe('sync_action')
       expect(message.payload.action).toEqual(action)
@@ -505,19 +512,7 @@ describe('PollingClient', () => {
     })
 
     it('should send actions', async () => {
-      const action = {
-        id: 'action-1',
-        type: 'cube_create' as const,
-        participantId: 'participant-1',
-        sessionId: 'session-1',
-        timestamp: new Date().toISOString(),
-        payload: {
-          cube: {
-            id: 'cube-1',
-            base: { color: [1, 0, 0] },
-          },
-        },
-      }
+      const action = createMockAction()
 
       fetchMock.mockResolvedValue({ ok: true })
 
@@ -527,19 +522,7 @@ describe('PollingClient', () => {
     it('should fail when not connected', async () => {
       client.disconnect()
 
-      const action = {
-        id: 'action-1',
-        type: 'cube_create' as const,
-        participantId: 'participant-1',
-        sessionId: 'session-1',
-        timestamp: new Date().toISOString(),
-        payload: {
-          cube: {
-            id: 'cube-1',
-            base: { color: [1, 0, 0] },
-          },
-        },
-      }
+      const action = createMockAction()
 
       await expect(client.sendAction(action)).rejects.toThrow('Not connected')
     })

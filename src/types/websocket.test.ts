@@ -19,6 +19,25 @@ import {
   serializeWebSocketMessage,
 } from './websocket'
 import type { WebSocketMessage, JoinSessionResponse, ErrorMessage, AckMessage } from './websocket'
+import type { CollaborativeAction } from './collaboration'
+
+// Helper to create mock cube for tests
+const createMockCube = () => ({
+  id: 'cube-1',
+  base: { color: [1, 0, 0] as [number, number, number] },
+})
+
+// Helper to create mock action for tests
+const createMockAction = (overrides = {}): CollaborativeAction =>
+  ({
+    id: 'action-1',
+    type: 'cube_create',
+    participantId: 'p-1',
+    sessionId: 's-1',
+    timestamp: new Date().toISOString(),
+    payload: { cube: createMockCube() },
+    ...overrides,
+  }) as CollaborativeAction
 
 // ============================================================================
 // Default Configuration Tests
@@ -145,14 +164,7 @@ describe('Message creation functions', () => {
 
   describe('createSyncActionMessage', () => {
     it('should create valid sync action message', () => {
-      const action = {
-        id: 'action-1',
-        type: 'cube_create' as const,
-        participantId: 'p-1',
-        sessionId: 's-1',
-        timestamp: new Date().toISOString(),
-        payload: { cube: { id: 'cube-1', base: { color: [1, 0, 0] } } },
-      }
+      const action = createMockAction()
 
       const message = createSyncActionMessage(action, 's-123')
 
@@ -283,17 +295,7 @@ describe('parseWebSocketMessage', () => {
     const messages = [
       createJoinSessionMessage('ABC', 'User'),
       createLeaveSessionMessage('s-1', 'p-1'),
-      createSyncActionMessage(
-        {
-          id: 'a-1',
-          type: 'cube_create' as const,
-          participantId: 'p-1',
-          sessionId: 's-1',
-          timestamp: new Date().toISOString(),
-          payload: { cube: { id: 'c-1', base: { color: [1, 0, 0] } } },
-        },
-        's-1'
-      ),
+      createSyncActionMessage(createMockAction({ id: 'a-1' }), 's-1'),
       createFullSyncRequestMessage('s-1'),
       createPresenceUpdateMessage('s-1', 'p-1', 'online'),
       createHeartbeatMessage(),
@@ -317,20 +319,18 @@ describe('serializeWebSocketMessage', () => {
   })
 
   it('should handle complex payloads', () => {
-    const action = {
-      id: 'action-1',
-      type: 'cube_update' as const,
-      participantId: 'p-1',
-      sessionId: 's-1',
-      timestamp: new Date().toISOString(),
+    const action = createMockAction({
+      type: 'cube_update',
       payload: {
         cubeId: 'cube-1',
         changes: {
-          base: { color: [1, 0, 0] },
-          gradients: [{ axis: 'x', factor: 0.5, color_shift: [0.1, 0.2, 0.3] }],
+          base: { color: [1, 0, 0] as [number, number, number] },
+          gradients: [
+            { axis: 'x', factor: 0.5, color_shift: [0.1, 0.2, 0.3] as [number, number, number] },
+          ],
         },
       },
-    }
+    })
 
     const message = createSyncActionMessage(action, 's-1')
     const serialized = serializeWebSocketMessage(message)
@@ -420,17 +420,7 @@ describe('Message type validation', () => {
     expect(leave.type).toBe('leave_session')
 
     // Sync action
-    const sync = createSyncActionMessage(
-      {
-        id: 'a-1',
-        type: 'cube_create',
-        participantId: 'p-1',
-        sessionId: 's-1',
-        timestamp: new Date().toISOString(),
-        payload: { cube: { id: 'c-1', base: { color: [1, 0, 0] } } },
-      },
-      's-1'
-    )
+    const sync = createSyncActionMessage(createMockAction({ id: 'a-1' }), 's-1')
     expect(sync.type).toBe('sync_action')
 
     // Full sync
@@ -456,17 +446,7 @@ describe('Message timestamps', () => {
     const messages = [
       createJoinSessionMessage('ABC', 'User'),
       createLeaveSessionMessage('s-1', 'p-1'),
-      createSyncActionMessage(
-        {
-          id: 'a-1',
-          type: 'cube_create',
-          participantId: 'p-1',
-          sessionId: 's-1',
-          timestamp: new Date().toISOString(),
-          payload: { cube: { id: 'c-1', base: { color: [1, 0, 0] } } },
-        },
-        's-1'
-      ),
+      createSyncActionMessage(createMockAction({ id: 'a-1' }), 's-1'),
       createFullSyncRequestMessage('s-1'),
       createPresenceUpdateMessage('s-1', 'p-1', 'online'),
       createHeartbeatMessage(),
