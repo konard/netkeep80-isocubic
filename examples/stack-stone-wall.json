@@ -1,0 +1,139 @@
+{
+  "id": "stack_stone_wall_001",
+  "prompt": "каменная стена из нескольких слоёв камня разного оттенка",
+  "layers": [
+    {
+      "id": "stone-wall-base",
+      "name": "Фундамент",
+      "position": "bottom",
+      "cubeConfig": {
+        "id": "stone_wall_layer_0",
+        "base": {
+          "color": [0.35, 0.32, 0.28],
+          "roughness": 0.9,
+          "transparency": 1.0
+        },
+        "gradients": [
+          {
+            "axis": "y",
+            "factor": 0.15,
+            "color_shift": [0.05, 0.05, 0.03]
+          }
+        ],
+        "noise": {
+          "type": "worley",
+          "scale": 6.0,
+          "octaves": 3,
+          "persistence": 0.5
+        },
+        "physics": {
+          "material": "stone",
+          "density": 3.0,
+          "break_pattern": "crumble"
+        }
+      },
+      "height": 1,
+      "transitionToNext": {
+        "type": "blend",
+        "blendHeight": 0.15,
+        "easing": "smooth",
+        "blendNoise": true,
+        "blendGradients": true
+      }
+    },
+    {
+      "id": "stone-wall-middle",
+      "name": "Средний слой",
+      "position": "middle",
+      "cubeConfig": {
+        "id": "stone_wall_layer_1",
+        "base": {
+          "color": [0.45, 0.42, 0.38],
+          "roughness": 0.85,
+          "transparency": 1.0
+        },
+        "gradients": [
+          {
+            "axis": "y",
+            "factor": 0.2,
+            "color_shift": [0.08, 0.08, 0.06]
+          }
+        ],
+        "noise": {
+          "type": "perlin",
+          "scale": 8.0,
+          "octaves": 4,
+          "persistence": 0.55
+        },
+        "physics": {
+          "material": "stone",
+          "density": 2.6,
+          "break_pattern": "crumble"
+        }
+      },
+      "height": 1,
+      "transitionToNext": {
+        "type": "blend",
+        "blendHeight": 0.2,
+        "easing": "smooth",
+        "blendNoise": true,
+        "blendGradients": true
+      }
+    },
+    {
+      "id": "stone-wall-top",
+      "name": "Верхний слой",
+      "position": "top",
+      "cubeConfig": {
+        "id": "stone_wall_layer_2",
+        "base": {
+          "color": [0.55, 0.52, 0.48],
+          "roughness": 0.8,
+          "transparency": 1.0
+        },
+        "gradients": [
+          {
+            "axis": "y",
+            "factor": 0.25,
+            "color_shift": [0.1, 0.12, 0.08]
+          },
+          {
+            "axis": "radial",
+            "factor": 0.1,
+            "color_shift": [-0.05, -0.05, -0.03]
+          }
+        ],
+        "noise": {
+          "type": "perlin",
+          "scale": 10.0,
+          "octaves": 4,
+          "persistence": 0.6,
+          "mask": "top_30%"
+        },
+        "physics": {
+          "material": "stone",
+          "density": 2.4,
+          "break_pattern": "crumble"
+        }
+      },
+      "height": 1
+    }
+  ],
+  "totalHeight": 3,
+  "physics": {
+    "material": "stone",
+    "density": 2.67,
+    "break_pattern": "crumble",
+    "isStable": true,
+    "totalWeight": 8.0,
+    "weightDistribution": 0.6,
+    "structuralIntegrity": 0.95
+  },
+  "boundaryMode": "smooth",
+  "neighborInfluence": 0.5,
+  "meta": {
+    "name": "Каменная стена",
+    "tags": ["stone", "wall", "stack", "construction", "medieval"],
+    "author": "isocubic"
+  }
+}

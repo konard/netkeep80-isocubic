@@ -19,8 +19,8 @@ export interface ParametricCubeProps {
   config: SpectralCube
   /** Position in 3D space [x, y, z] */
   position?: [number, number, number]
-  /** Scale multiplier */
-  scale?: number
+  /** Scale multiplier (uniform) or [x, y, z] scale (per-axis) */
+  scale?: number | [number, number, number]
   /** Whether to animate rotation */
   animate?: boolean
   /** Rotation speed (radians per second) */
