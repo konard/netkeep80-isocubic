@@ -3546,3 +3546,550 @@
     animation: none;
   }
 }
+
+/* =============================================================================
+   FFT Channel Editor Styles (ISSUE 27)
+   ============================================================================= */
+
+.fft-channel-editor {
+  background: #1a1a2e;
+  border-radius: 8px;
+  padding: 16px;
+  color: #e0e0e0;
+}
+
+.fft-channel-editor__empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #888;
+}
+
+.fft-channel-editor__empty p {
+  margin: 8px 0;
+}
+
+.fft-channel-editor__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #333;
+}
+
+.fft-channel-editor__title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.fft-channel-editor__presets-btn {
+  padding: 6px 12px;
+  background: #2d2d44;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e0e0e0;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.fft-channel-editor__presets-btn:hover {
+  background: #3d3d54;
+  border-color: #555;
+}
+
+/* Presets Panel */
+.fft-channel-editor__presets-panel {
+  background: #252538;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.fft-channel-editor__presets-panel h4 {
+  margin: 0 0 12px 0;
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+.fft-channel-editor__presets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fft-channel-editor__preset-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 10px 12px;
+  background: #1a1a2e;
+  border: 1px solid #3a3a4e;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.fft-channel-editor__preset-item:hover {
+  background: #2a2a3e;
+  border-color: #5a5a6e;
+}
+
+.fft-channel-editor__preset-name {
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.fft-channel-editor__preset-desc {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+/* Total Energy Indicator */
+.fft-channel-editor__total-energy {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #252538;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+}
+
+.fft-channel-editor__total-energy-value {
+  font-weight: 600;
+  color: #fff;
+}
+
+/* Channel Tabs */
+.fft-channel-editor__tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.fft-channel-editor__tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 8px;
+  background: #252538;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.fft-channel-editor__tab:hover {
+  background: #2d2d44;
+}
+
+.fft-channel-editor__tab--active {
+  background: #2d2d44;
+}
+
+.fft-channel-editor__tab-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.fft-channel-editor__tab-name {
+  font-size: 0.85rem;
+  color: #e0e0e0;
+}
+
+/* Channel Content */
+.fft-channel-editor__content {
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.fft-channel-editor__section {
+  margin-bottom: 16px;
+}
+
+.fft-channel-editor__section:last-child {
+  margin-bottom: 0;
+}
+
+.fft-channel-editor__section-title {
+  margin: 0 0 12px 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ccc;
+}
+
+/* Spectrum Visualization */
+.fft-channel-editor__spectrum {
+  background: #1a1a2e;
+  border-radius: 4px;
+  padding: 12px;
+  min-height: 100px;
+}
+
+.fft-channel-editor__spectrum--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+}
+
+.fft-channel-editor__spectrum-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 8px;
+  height: 80px;
+  margin-bottom: 8px;
+}
+
+.fft-channel-editor__spectrum-bar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  max-width: 60px;
+  height: 100%;
+}
+
+.fft-channel-editor__spectrum-bar {
+  width: 100%;
+  min-height: 4px;
+  border-radius: 2px 2px 0 0;
+  transition: height 0.2s;
+}
+
+.fft-channel-editor__spectrum-label {
+  font-size: 0.65rem;
+  color: #888;
+  margin-top: 4px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.fft-channel-editor__spectrum-energy {
+  text-align: right;
+  font-size: 0.8rem;
+  color: #aaa;
+  padding-top: 8px;
+  border-top: 1px solid #333;
+}
+
+/* DC Component Editor */
+.fft-channel-editor__dc-editor {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  background: #1a1a2e;
+  border-radius: 4px;
+  padding: 12px;
+}
+
+.fft-channel-editor__dc-amplitude {
+  flex: 1;
+}
+
+.fft-channel-editor__dc-phase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.fft-channel-editor__phase-selector {
+  margin-top: 8px;
+}
+
+/* Field styling */
+.fft-channel-editor__field {
+  margin-bottom: 12px;
+}
+
+.fft-channel-editor__field:last-child {
+  margin-bottom: 0;
+}
+
+.fft-channel-editor__field label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  color: #bbb;
+}
+
+.fft-channel-editor__value {
+  font-weight: 600;
+  color: #fff;
+  margin-left: 8px;
+}
+
+.fft-channel-editor__field input[type="range"] {
+  width: 100%;
+  height: 6px;
+  background: #333;
+  border-radius: 3px;
+  appearance: none;
+  cursor: pointer;
+}
+
+.fft-channel-editor__field input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #007bff;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.fft-channel-editor__field input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+.fft-channel-editor__field input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #007bff;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Coefficients Section */
+.fft-channel-editor__coefficients-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.fft-channel-editor__add-btn {
+  padding: 6px 12px;
+  background: #28a745;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.fft-channel-editor__add-btn:hover:not(:disabled) {
+  background: #218838;
+}
+
+.fft-channel-editor__add-btn:disabled {
+  background: #555;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.fft-channel-editor__no-coefficients {
+  text-align: center;
+  padding: 24px;
+  background: #1a1a2e;
+  border-radius: 4px;
+  color: #666;
+}
+
+.fft-channel-editor__no-coefficients p {
+  margin: 4px 0;
+}
+
+.fft-channel-editor__coefficients-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Single Coefficient Editor */
+.fft-channel-editor__coefficient {
+  background: #1a1a2e;
+  border-radius: 6px;
+  padding: 12px;
+  border: 1px solid #333;
+}
+
+.fft-channel-editor__coefficient-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #333;
+}
+
+.fft-channel-editor__coefficient-index {
+  font-weight: 600;
+  color: #888;
+}
+
+.fft-channel-editor__coefficient-remove {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: #dc3545;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.fft-channel-editor__coefficient-remove:hover {
+  background: #c82333;
+}
+
+.fft-channel-editor__coefficient-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Frequency fields in a row */
+.fft-channel-editor__freq-fields {
+  display: flex;
+  gap: 12px;
+}
+
+.fft-channel-editor__field--freq {
+  flex: 1;
+}
+
+.fft-channel-editor__field--freq input[type="number"] {
+  width: 100%;
+  padding: 6px 8px;
+  background: #252538;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e0e0e0;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.fft-channel-editor__field--freq input[type="number"]:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .fft-channel-editor__tabs {
+    flex-wrap: wrap;
+  }
+
+  .fft-channel-editor__tab {
+    flex: 1 1 calc(50% - 2px);
+  }
+
+  .fft-channel-editor__dc-editor {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .fft-channel-editor__dc-phase {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .fft-channel-editor__phase-selector {
+    margin-top: 0;
+  }
+
+  .fft-channel-editor__freq-fields {
+    flex-wrap: wrap;
+  }
+
+  .fft-channel-editor__field--freq {
+    flex: 1 1 calc(33.333% - 8px);
+    min-width: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .fft-channel-editor {
+    padding: 12px;
+  }
+
+  .fft-channel-editor__presets-panel {
+    padding: 10px;
+  }
+
+  .fft-channel-editor__content {
+    padding: 10px;
+  }
+
+  .fft-channel-editor__tab {
+    padding: 8px 6px;
+    font-size: 0.8rem;
+  }
+
+  .fft-channel-editor__tab-name {
+    font-size: 0.75rem;
+  }
+
+  .fft-channel-editor__spectrum-bars {
+    height: 60px;
+  }
+}
+
+/* Touch-friendly styling for mobile */
+@media (hover: none) and (pointer: coarse) {
+  .fft-channel-editor__tab,
+  .fft-channel-editor__preset-item,
+  .fft-channel-editor__add-btn,
+  .fft-channel-editor__coefficient-remove,
+  .fft-channel-editor__presets-btn {
+    min-height: 44px;
+  }
+
+  .fft-channel-editor__field input[type="range"] {
+    height: 10px;
+  }
+
+  .fft-channel-editor__field input[type="range"]::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+  }
+
+  .fft-channel-editor__field input[type="range"]::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* Performance optimizations */
+.fft-channel-editor__tab,
+.fft-channel-editor__preset-item,
+.fft-channel-editor__add-btn,
+.fft-channel-editor__presets-btn {
+  will-change: background-color;
+  transform: translateZ(0);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .fft-channel-editor__tab,
+  .fft-channel-editor__preset-item,
+  .fft-channel-editor__add-btn,
+  .fft-channel-editor__presets-btn,
+  .fft-channel-editor__coefficient-remove,
+  .fft-channel-editor__spectrum-bar,
+  .fft-channel-editor__field input[type="range"]::-webkit-slider-thumb {
+    transition: none;
+  }
+}
