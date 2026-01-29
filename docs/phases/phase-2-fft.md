@@ -139,4 +139,4 @@ graph TD
 
 ---
 
-**Назад к [ROADMAP](../../ROADMAP.md)**
+**Назад к [README](../../README.md)**
