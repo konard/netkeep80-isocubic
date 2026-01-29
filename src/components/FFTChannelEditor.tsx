@@ -12,7 +12,7 @@
  */
 
 import { useState, useCallback, useMemo } from 'react'
-import type { FFTCubeConfig, FFTChannel, FFTCoefficient } from '../types/cube'
+import type { FFTCubeConfig, FFTChannel, FFTChannels, FFTCoefficient } from '../types/cube'
 import { createDefaultFFTChannel } from '../types/cube'
 import { calculateChannelEnergy, calculateTotalEnergy } from '../lib/energyPhysics'
 import { FFT_CHANNEL_PRESETS } from '../lib/fft-presets'
