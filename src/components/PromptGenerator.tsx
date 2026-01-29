@@ -21,6 +21,8 @@ import {
   generateBatch,
   generateGroup,
   generateWithFineTuning,
+  generateContextual,
+  extractStyle,
   recordFeedback,
   type GenerationResult,
 } from '../lib/tinyLLM'
@@ -45,7 +47,7 @@ export interface PromptGeneratorProps {
 type GenerationStatus = 'idle' | 'generating' | 'success' | 'error'
 
 /** Generation modes */
-type GenerationMode = 'single' | 'batch' | 'group' | 'composite'
+type GenerationMode = 'single' | 'batch' | 'group' | 'composite' | 'contextual'
 
 /** Preset template categories for organized display */
 const TEMPLATE_CATEGORIES: Record<string, string[]> = {
@@ -98,6 +100,8 @@ export function PromptGenerator({
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [lastGeneratedCube, setLastGeneratedCube] = useState<SpectralCube | null>(null)
   const [feedbackRating, setFeedbackRating] = useState<number>(0)
+  const [useContextCubes, setUseContextCubes] = useState<boolean>(true)
+  const [showContextInfo, setShowContextInfo] = useState<boolean>(false)
 
   // Handle prompt generation (supports multiple modes)
   const handleGenerate = useCallback(async () => {
@@ -233,6 +237,45 @@ export function PromptGenerator({
             }
           } else {
             setError('Composite generation failed. Try a different description.')
+            setStatus('error')
+          }
+          break
+        }
+
+        case 'contextual': {
+          if (!prompt.trim()) {
+            setError('Please enter a description')
+            setStatus('idle')
+            return
+          }
+
+          if (!contextCubes || contextCubes.length === 0) {
+            setError('No context cubes available. Add cubes to the grid first.')
+            setStatus('error')
+            return
+          }
+
+          const context = {
+            existingCubes: new Map(contextCubes.map((c, i) => [`ctx_${i}`, c])),
+            theme: selectedTheme || undefined,
+            extractedStyle: extractStyle(contextCubes),
+          }
+
+          const contextualResult = await generateContextual(prompt.trim(), context)
+
+          if (contextualResult.success && contextualResult.cube) {
+            setResult({
+              ...contextualResult,
+              warnings: [
+                ...contextualResult.warnings,
+                `Generated with context from ${contextCubes.length} existing cube(s)`,
+              ],
+            })
+            setStatus('success')
+            setLastGeneratedCube(contextualResult.cube)
+            onCubeGenerated?.(contextualResult.cube)
+          } else {
+            setError('Contextual generation failed. Try a different description.')
             setStatus('error')
           }
           break
@@ -489,6 +532,19 @@ export function PromptGenerator({
               >
                 Composite
               </button>
+              <button
+                type="button"
+                className={`prompt-generator__mode-btn ${mode === 'contextual' ? 'prompt-generator__mode-btn--active' : ''}`}
+                onClick={() => setMode('contextual')}
+                disabled={!contextCubes || contextCubes.length === 0}
+                title={
+                  !contextCubes || contextCubes.length === 0
+                    ? 'Add cubes to use contextual mode'
+                    : 'Generate based on existing cubes'
+                }
+              >
+                Contextual
+              </button>
             </div>
           </div>
 
@@ -548,6 +604,76 @@ export function PromptGenerator({
                 placeholder="stone&#10;brick&#10;wood&#10;..."
                 rows={4}
               />
+            </div>
+          )}
+
+          {/* Contextual mode info (ISSUE 32: AI integration) */}
+          {mode === 'contextual' && contextCubes && contextCubes.length > 0 && (
+            <div className="prompt-generator__advanced-section">
+              <div className="prompt-generator__context-header">
+                <label className="prompt-generator__label">Context Cubes</label>
+                <button
+                  type="button"
+                  className="prompt-generator__context-toggle"
+                  onClick={() => setShowContextInfo(!showContextInfo)}
+                  aria-expanded={showContextInfo}
+                >
+                  {showContextInfo ? 'Hide' : 'Show'} ({contextCubes.length})
+                </button>
+              </div>
+              {showContextInfo && (
+                <div className="prompt-generator__context-info">
+                  <p className="prompt-generator__context-description">
+                    New cube will be generated based on the style of these existing cubes:
+                  </p>
+                  <ul className="prompt-generator__context-list">
+                    {contextCubes.slice(0, 5).map((cube, idx) => (
+                      <li key={cube.id || idx} className="prompt-generator__context-item">
+                        <span
+                          className="prompt-generator__context-swatch"
+                          style={{
+                            backgroundColor: `rgb(${Math.round(cube.base.color[0] * 255)}, ${Math.round(cube.base.color[1] * 255)}, ${Math.round(cube.base.color[2] * 255)})`,
+                          }}
+                        />
+                        <span className="prompt-generator__context-name">
+                          {cube.meta?.name || cube.id || `Cube ${idx + 1}`}
+                        </span>
+                        <span className="prompt-generator__context-material">
+                          {cube.physics?.material || 'Unknown'}
+                        </span>
+                      </li>
+                    ))}
+                    {contextCubes.length > 5 && (
+                      <li className="prompt-generator__context-item prompt-generator__context-item--more">
+                        +{contextCubes.length - 5} more...
+                      </li>
+                    )}
+                  </ul>
+                  {(() => {
+                    const style = extractStyle(contextCubes)
+                    return (
+                      <div className="prompt-generator__extracted-style">
+                        <p>
+                          <strong>Extracted Style:</strong>
+                        </p>
+                        <p>Dominant material: {style.dominantMaterial}</p>
+                        <p>Dominant noise: {style.dominantNoiseType}</p>
+                        {style.commonTags.length > 0 && (
+                          <p>Common tags: {style.commonTags.slice(0, 5).join(', ')}</p>
+                        )}
+                      </div>
+                    )
+                  })()}
+                </div>
+              )}
+              <label className="prompt-generator__checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={useContextCubes}
+                  onChange={(e) => setUseContextCubes(e.target.checked)}
+                />
+                Use context for style blending
+              </label>
             </div>
           )}
 

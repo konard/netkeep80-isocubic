@@ -223,7 +223,11 @@ function App() {
 
           {activeTab === 'tools' && (
             <section className="app__mobile-panel">
-              <PromptGenerator onCubeGenerated={handleCubeGenerated} />
+              <PromptGenerator
+                onCubeGenerated={handleCubeGenerated}
+                contextCubes={currentCube ? [currentCube] : undefined}
+                enableAdvanced={true}
+              />
               <ExportPanel
                 currentCube={currentCube}
                 onCubeLoad={handleCubeLoad}
@@ -286,7 +290,11 @@ function App() {
             </section>
 
             <section className="app__section app__section--sidebar">
-              <PromptGenerator onCubeGenerated={handleCubeGenerated} />
+              <PromptGenerator
+                onCubeGenerated={handleCubeGenerated}
+                contextCubes={currentCube ? [currentCube] : undefined}
+                enableAdvanced={true}
+              />
               <ParamEditor currentCube={currentCube} onCubeUpdate={handleCubeUpdate} />
               <ExportPanel
                 currentCube={currentCube}
@@ -319,7 +327,11 @@ function App() {
 
         {/* Right side: Parameter editor and tools */}
         <section className="app__section app__section--sidebar">
-          <PromptGenerator onCubeGenerated={handleCubeGenerated} />
+          <PromptGenerator
+            onCubeGenerated={handleCubeGenerated}
+            contextCubes={currentCube ? [currentCube] : undefined}
+            enableAdvanced={true}
+          />
           <ParamEditor currentCube={currentCube} onCubeUpdate={handleCubeUpdate} />
           <ExportPanel
             currentCube={currentCube}

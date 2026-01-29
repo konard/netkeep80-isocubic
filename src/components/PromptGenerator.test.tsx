@@ -481,4 +481,176 @@ describe('PromptGenerator', () => {
       expect(screen.getByText('Hybrid')).toBeInTheDocument()
     })
   })
+
+  describe('Advanced mode (ISSUE 32: AI Integration)', () => {
+    it('should render advanced mode toggle when enableAdvanced is true', () => {
+      render(<PromptGenerator enableAdvanced={true} />)
+
+      expect(screen.getByRole('button', { name: /Advanced/i })).toBeInTheDocument()
+    })
+
+    it('should not render advanced mode toggle when enableAdvanced is false', () => {
+      render(<PromptGenerator enableAdvanced={false} />)
+
+      expect(screen.queryByRole('button', { name: /Advanced/i })).not.toBeInTheDocument()
+    })
+
+    it('should show mode buttons when advanced panel is opened', async () => {
+      const user = userEvent.setup()
+      render(<PromptGenerator enableAdvanced={true} />)
+
+      const advancedButton = screen.getByRole('button', { name: /Advanced/i })
+      await user.click(advancedButton)
+
+      // Should show mode buttons
+      expect(screen.getByRole('button', { name: 'Single' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Batch' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Group' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Composite' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Contextual' })).toBeInTheDocument()
+    })
+
+    it('should disable Contextual mode button when no context cubes provided', async () => {
+      const user = userEvent.setup()
+      render(<PromptGenerator enableAdvanced={true} />)
+
+      const advancedButton = screen.getByRole('button', { name: /Advanced/i })
+      await user.click(advancedButton)
+
+      const contextualButton = screen.getByRole('button', { name: 'Contextual' })
+      expect(contextualButton).toBeDisabled()
+    })
+
+    it('should enable Contextual mode button when context cubes provided', async () => {
+      const user = userEvent.setup()
+      const contextCube: SpectralCube = {
+        id: 'ctx_1',
+        base: { color: [0.5, 0.5, 0.5], roughness: 0.5 },
+        physics: { material: 'stone' },
+        meta: { name: 'Test Stone' },
+      }
+      render(<PromptGenerator enableAdvanced={true} contextCubes={[contextCube]} />)
+
+      const advancedButton = screen.getByRole('button', { name: /Advanced/i })
+      await user.click(advancedButton)
+
+      const contextualButton = screen.getByRole('button', { name: 'Contextual' })
+      expect(contextualButton).not.toBeDisabled()
+    })
+
+    it('should show context info when in contextual mode with cubes', async () => {
+      const user = userEvent.setup()
+      const contextCube: SpectralCube = {
+        id: 'ctx_1',
+        base: { color: [0.5, 0.5, 0.5], roughness: 0.5 },
+        physics: { material: 'stone' },
+        meta: { name: 'Test Stone' },
+      }
+      render(<PromptGenerator enableAdvanced={true} contextCubes={[contextCube]} />)
+
+      // Open advanced mode
+      const advancedButton = screen.getByRole('button', { name: /Advanced/i })
+      await user.click(advancedButton)
+
+      // Switch to contextual mode
+      const contextualButton = screen.getByRole('button', { name: 'Contextual' })
+      await user.click(contextualButton)
+
+      // Should show context cubes toggle
+      expect(screen.getByText('Context Cubes')).toBeInTheDocument()
+    })
+
+    it('should generate cube in contextual mode using context', async () => {
+      const user = userEvent.setup()
+      const onCubeGenerated = vi.fn()
+      const contextCube: SpectralCube = {
+        id: 'ctx_1',
+        base: { color: [0.8, 0.6, 0.4], roughness: 0.7 },
+        physics: { material: 'wood' },
+        meta: { name: 'Oak Wood', tags: ['wood', 'natural'] },
+        noise: { type: 'perlin', scale: 2 },
+      }
+      render(
+        <PromptGenerator
+          enableAdvanced={true}
+          contextCubes={[contextCube]}
+          onCubeGenerated={onCubeGenerated}
+        />
+      )
+
+      // Open advanced mode
+      const advancedButton = screen.getByRole('button', { name: /Advanced/i })
+      await user.click(advancedButton)
+
+      // Switch to contextual mode
+      const contextualButton = screen.getByRole('button', { name: 'Contextual' })
+      await user.click(contextualButton)
+
+      // Enter prompt
+      const input = screen.getByPlaceholderText(/e\.g\., dark stone with moss/i)
+      await user.type(input, 'similar wooden plank')
+
+      // Generate
+      const generateButton = screen.getByRole('button', { name: 'Generate cube' })
+      await act(async () => {
+        fireEvent.click(generateButton)
+      })
+
+      await waitFor(() => {
+        expect(onCubeGenerated).toHaveBeenCalled()
+      })
+
+      // Verify the cube was generated
+      const generatedCube = onCubeGenerated.mock.calls[0][0] as SpectralCube
+      expect(generatedCube.id).toBeDefined()
+    })
+
+    it('should show extracted style info in contextual mode', async () => {
+      const user = userEvent.setup()
+      const contextCubes: SpectralCube[] = [
+        {
+          id: 'ctx_1',
+          base: { color: [0.5, 0.5, 0.5], roughness: 0.6 },
+          physics: { material: 'stone' },
+          meta: { tags: ['stone', 'natural'] },
+          noise: { type: 'perlin', scale: 2 },
+        },
+        {
+          id: 'ctx_2',
+          base: { color: [0.4, 0.4, 0.4], roughness: 0.7 },
+          physics: { material: 'stone' },
+          meta: { tags: ['stone', 'rough'] },
+          noise: { type: 'perlin', scale: 3 },
+        },
+      ]
+      render(<PromptGenerator enableAdvanced={true} contextCubes={contextCubes} />)
+
+      // Open advanced mode
+      const advancedButton = screen.getByRole('button', { name: /Advanced/i })
+      await user.click(advancedButton)
+
+      // Switch to contextual mode
+      const contextualButton = screen.getByRole('button', { name: 'Contextual' })
+      await user.click(contextualButton)
+
+      // Toggle show context info
+      const showButton = screen.getByRole('button', { name: /Show \(2\)/i })
+      await user.click(showButton)
+
+      // Should show extracted style
+      expect(screen.getByText('Extracted Style:')).toBeInTheDocument()
+      expect(screen.getByText(/Dominant material:/)).toBeInTheDocument()
+    })
+
+    it('should show theme selector in advanced mode', async () => {
+      const user = userEvent.setup()
+      render(<PromptGenerator enableAdvanced={true} />)
+
+      const advancedButton = screen.getByRole('button', { name: /Advanced/i })
+      await user.click(advancedButton)
+
+      // Should have theme selector
+      expect(screen.getByLabelText(/Theme/i)).toBeInTheDocument()
+    })
+  })
 })
