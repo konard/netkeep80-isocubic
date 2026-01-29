@@ -15,18 +15,11 @@ import type {
   CloseEventData,
   ErrorEventData,
   StateChangeEventData,
-  JoinSessionMessage,
-  LeaveSessionMessage,
-  SyncActionMessage,
-  FullSyncMessage,
-  PresenceUpdateMessage,
-  HeartbeatMessage,
   JoinSessionResponse,
   SyncActionResponse,
 } from '../types/websocket'
 import {
   DEFAULT_WEBSOCKET_CONFIG,
-  generateMessageId,
   parseWebSocketMessage,
   serializeWebSocketMessage,
   createJoinSessionMessage,
@@ -56,11 +49,14 @@ export class WebSocketClient {
   private connectionTimeoutTimer: ReturnType<typeof setTimeout> | null = null
   private listeners: Map<WebSocketEventType, Set<WebSocketEventListener>> = new Map()
   private messageListeners: Map<string, Set<WebSocketEventListener<IncomingMessage>>> = new Map()
-  private pendingRequests: Map<string, {
-    resolve: (message: IncomingMessage) => void
-    reject: (error: Error) => void
-    timeout: ReturnType<typeof setTimeout>
-  }> = new Map()
+  private pendingRequests: Map<
+    string,
+    {
+      resolve: (message: IncomingMessage) => void
+      reject: (error: Error) => void
+      timeout: ReturnType<typeof setTimeout>
+    }
+  > = new Map()
   private lastPingTime: number = 0
   private latency: number = 0
 
@@ -135,7 +131,10 @@ export class WebSocketClient {
       this.socket.onmessage = null
       this.socket.onopen = null
 
-      if (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING) {
+      if (
+        this.socket.readyState === WebSocket.OPEN ||
+        this.socket.readyState === WebSocket.CONNECTING
+      ) {
         this.socket.close(1000, reason)
       }
       this.socket = null
@@ -253,7 +252,8 @@ export class WebSocketClient {
   /**
    * Handles heartbeat response
    */
-  private handleHeartbeatResponse(message: WebSocketMessage): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private handleHeartbeatResponse(_message: WebSocketMessage): void {
     if (this.lastPingTime > 0) {
       this.latency = Date.now() - this.lastPingTime
       this.log('Latency:', this.latency, 'ms')
@@ -438,7 +438,7 @@ export class WebSocketClient {
    * Clears all pending requests with an error
    */
   private clearPendingRequests(error: Error): void {
-    for (const [id, request] of this.pendingRequests) {
+    for (const request of this.pendingRequests.values()) {
       clearTimeout(request.timeout)
       request.reject(error)
     }
@@ -476,10 +476,7 @@ export class WebSocketClient {
   /**
    * Synchronizes an action
    */
-  async syncAction(
-    action: CollaborativeAction,
-    sessionId: SessionId
-  ): Promise<SyncActionResponse> {
+  async syncAction(action: CollaborativeAction, sessionId: SessionId): Promise<SyncActionResponse> {
     const message = createSyncActionMessage(action, sessionId)
     return this.sendWithResponse<SyncActionResponse>(message)
   }
@@ -632,9 +629,7 @@ export class WebSocketClient {
 /**
  * Creates a new WebSocket client instance
  */
-export function createWebSocketClient(
-  config?: Partial<WebSocketClientConfig>
-): WebSocketClient {
+export function createWebSocketClient(config?: Partial<WebSocketClientConfig>): WebSocketClient {
   return new WebSocketClient(config)
 }
 
@@ -952,9 +947,7 @@ export class PollingClient {
 /**
  * Creates a new polling client instance
  */
-export function createPollingClient(
-  config?: Partial<PollingClientConfig>
-): PollingClient {
+export function createPollingClient(config?: Partial<PollingClientConfig>): PollingClient {
   return new PollingClient(config)
 }
 
@@ -1100,8 +1093,14 @@ export class RealtimeClient {
     if (!this.wsClient) return
 
     const events: WebSocketEventType[] = [
-      'open', 'close', 'error', 'message',
-      'reconnecting', 'reconnected', 'max_reconnects', 'state_changed',
+      'open',
+      'close',
+      'error',
+      'message',
+      'reconnecting',
+      'reconnected',
+      'max_reconnects',
+      'state_changed',
     ]
 
     for (const eventType of events) {
@@ -1117,9 +1116,7 @@ export class RealtimeClient {
   private setupPollingListeners(): void {
     if (!this.pollingClient) return
 
-    const events: WebSocketEventType[] = [
-      'open', 'close', 'error', 'message', 'state_changed',
-    ]
+    const events: WebSocketEventType[] = ['open', 'close', 'error', 'message', 'state_changed']
 
     for (const eventType of events) {
       this.pollingClient.on(eventType, (event) => {
@@ -1195,8 +1192,6 @@ export class RealtimeClient {
 /**
  * Creates a new realtime client instance
  */
-export function createRealtimeClient(
-  config?: Partial<RealtimeClientConfig>
-): RealtimeClient {
+export function createRealtimeClient(config?: Partial<RealtimeClientConfig>): RealtimeClient {
   return new RealtimeClient(config)
 }

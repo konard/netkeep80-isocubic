@@ -18,20 +18,7 @@ import {
   parseWebSocketMessage,
   serializeWebSocketMessage,
 } from './websocket'
-import type {
-  WebSocketMessage,
-  JoinSessionMessage,
-  JoinSessionResponse,
-  LeaveSessionMessage,
-  SyncActionMessage,
-  FullSyncMessage,
-  PresenceUpdateMessage,
-  HeartbeatMessage,
-  ErrorMessage,
-  AckMessage,
-  OutgoingMessage,
-  IncomingMessage,
-} from './websocket'
+import type { WebSocketMessage, JoinSessionResponse, ErrorMessage, AckMessage } from './websocket'
 
 // ============================================================================
 // Default Configuration Tests
@@ -259,39 +246,54 @@ describe('parseWebSocketMessage', () => {
 
   it('should return null for missing required fields', () => {
     // Missing id
-    expect(parseWebSocketMessage(JSON.stringify({
-      type: 'heartbeat',
-      timestamp: '2024-01-01',
-      payload: {},
-    }))).toBeNull()
+    expect(
+      parseWebSocketMessage(
+        JSON.stringify({
+          type: 'heartbeat',
+          timestamp: '2024-01-01',
+          payload: {},
+        })
+      )
+    ).toBeNull()
 
     // Missing type
-    expect(parseWebSocketMessage(JSON.stringify({
-      id: 'msg-1',
-      timestamp: '2024-01-01',
-      payload: {},
-    }))).toBeNull()
+    expect(
+      parseWebSocketMessage(
+        JSON.stringify({
+          id: 'msg-1',
+          timestamp: '2024-01-01',
+          payload: {},
+        })
+      )
+    ).toBeNull()
 
     // Missing timestamp
-    expect(parseWebSocketMessage(JSON.stringify({
-      id: 'msg-1',
-      type: 'heartbeat',
-      payload: {},
-    }))).toBeNull()
+    expect(
+      parseWebSocketMessage(
+        JSON.stringify({
+          id: 'msg-1',
+          type: 'heartbeat',
+          payload: {},
+        })
+      )
+    ).toBeNull()
   })
 
   it('should parse all message types', () => {
     const messages = [
       createJoinSessionMessage('ABC', 'User'),
       createLeaveSessionMessage('s-1', 'p-1'),
-      createSyncActionMessage({
-        id: 'a-1',
-        type: 'cube_create' as const,
-        participantId: 'p-1',
-        sessionId: 's-1',
-        timestamp: new Date().toISOString(),
-        payload: { cube: { id: 'c-1' } },
-      }, 's-1'),
+      createSyncActionMessage(
+        {
+          id: 'a-1',
+          type: 'cube_create' as const,
+          participantId: 'p-1',
+          sessionId: 's-1',
+          timestamp: new Date().toISOString(),
+          payload: { cube: { id: 'c-1' } },
+        },
+        's-1'
+      ),
       createFullSyncRequestMessage('s-1'),
       createPresenceUpdateMessage('s-1', 'p-1', 'online'),
       createHeartbeatMessage(),
@@ -418,14 +420,17 @@ describe('Message type validation', () => {
     expect(leave.type).toBe('leave_session')
 
     // Sync action
-    const sync = createSyncActionMessage({
-      id: 'a-1',
-      type: 'cube_create',
-      participantId: 'p-1',
-      sessionId: 's-1',
-      timestamp: new Date().toISOString(),
-      payload: { cube: { id: 'c-1' } },
-    }, 's-1')
+    const sync = createSyncActionMessage(
+      {
+        id: 'a-1',
+        type: 'cube_create',
+        participantId: 'p-1',
+        sessionId: 's-1',
+        timestamp: new Date().toISOString(),
+        payload: { cube: { id: 'c-1' } },
+      },
+      's-1'
+    )
     expect(sync.type).toBe('sync_action')
 
     // Full sync
@@ -451,14 +456,17 @@ describe('Message timestamps', () => {
     const messages = [
       createJoinSessionMessage('ABC', 'User'),
       createLeaveSessionMessage('s-1', 'p-1'),
-      createSyncActionMessage({
-        id: 'a-1',
-        type: 'cube_create',
-        participantId: 'p-1',
-        sessionId: 's-1',
-        timestamp: new Date().toISOString(),
-        payload: { cube: { id: 'c-1' } },
-      }, 's-1'),
+      createSyncActionMessage(
+        {
+          id: 'a-1',
+          type: 'cube_create',
+          participantId: 'p-1',
+          sessionId: 's-1',
+          timestamp: new Date().toISOString(),
+          payload: { cube: { id: 'c-1' } },
+        },
+        's-1'
+      ),
       createFullSyncRequestMessage('s-1'),
       createPresenceUpdateMessage('s-1', 'p-1', 'online'),
       createHeartbeatMessage(),

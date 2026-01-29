@@ -11,13 +11,6 @@ import {
   createPollingClient,
   createRealtimeClient,
 } from './websocket-client'
-import type {
-  WebSocketClientConfig,
-  PollingClientConfig,
-  IncomingMessage,
-  JoinSessionResponse,
-  SyncActionResponse,
-} from '../types/websocket'
 import {
   DEFAULT_WEBSOCKET_CONFIG,
   DEFAULT_POLLING_CONFIG,
@@ -209,12 +202,11 @@ describe('WebSocket message helpers', () => {
 
   describe('createPresenceUpdateMessage', () => {
     it('should create presence update message', () => {
-      const message = createPresenceUpdateMessage(
-        'session-1',
-        'participant-1',
-        'online',
-        { x: 1, y: 2, z: 3 }
-      )
+      const message = createPresenceUpdateMessage('session-1', 'participant-1', 'online', {
+        x: 1,
+        y: 2,
+        z: 3,
+      })
       expect(message.type).toBe('presence_update')
       expect(message.payload.sessionId).toBe('session-1')
       expect(message.payload.participantId).toBe('participant-1')
@@ -240,11 +232,10 @@ describe('WebSocket message helpers', () => {
 
 describe('WebSocketClient', () => {
   let client: WebSocketClient
-  let mockSocket: MockWebSocket
 
   beforeEach(() => {
     // Replace global WebSocket with mock
-    (globalThis as Record<string, unknown>).WebSocket = MockWebSocket
+    ;(globalThis as Record<string, unknown>).WebSocket = MockWebSocket
     client = createWebSocketClient({ debug: false })
   })
 
@@ -551,9 +542,7 @@ describe('PollingClient', () => {
     it('should update presence', async () => {
       fetchMock.mockResolvedValue({ ok: true })
 
-      await expect(
-        client.updatePresence('online', { x: 1, y: 2, z: 3 })
-      ).resolves.not.toThrow()
+      await expect(client.updatePresence('online', { x: 1, y: 2, z: 3 })).resolves.not.toThrow()
     })
   })
 })
@@ -568,7 +557,7 @@ describe('RealtimeClient', () => {
 
   beforeEach(() => {
     // Mock WebSocket and fetch
-    (globalThis as Record<string, unknown>).WebSocket = MockWebSocket
+    ;(globalThis as Record<string, unknown>).WebSocket = MockWebSocket
     fetchMock = vi.fn()
     globalThis.fetch = fetchMock
     client = createRealtimeClient({

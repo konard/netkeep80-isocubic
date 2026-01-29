@@ -1364,10 +1364,9 @@ export class NetworkedCollaborationManager extends CollaborationManager {
     } else if (this.realtimeClient?.isConnected()) {
       const pollingClient = this.realtimeClient.getPollingClient()
       if (pollingClient) {
-        pollingClient.updatePresence(
-          localParticipant.status,
-          localParticipant.cursor
-        ).catch(console.error)
+        pollingClient
+          .updatePresence(localParticipant.status, localParticipant.cursor)
+          .catch(console.error)
       }
     }
   }
