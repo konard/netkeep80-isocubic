@@ -1,0 +1,183 @@
+{
+  "id": "stack_wooden_tower_001",
+  "prompt": "деревянная башня из брёвен с кольцевыми узорами",
+  "layers": [
+    {
+      "id": "tower-base",
+      "name": "Основание башни",
+      "position": "bottom",
+      "cubeConfig": {
+        "id": "wooden_tower_layer_0",
+        "base": {
+          "color": [0.45, 0.30, 0.18],
+          "roughness": 0.75,
+          "transparency": 1.0
+        },
+        "gradients": [
+          {
+            "axis": "radial",
+            "factor": 0.25,
+            "color_shift": [0.15, 0.08, 0.03]
+          },
+          {
+            "axis": "y",
+            "factor": 0.1,
+            "color_shift": [0.05, 0.03, 0.02]
+          }
+        ],
+        "noise": {
+          "type": "perlin",
+          "scale": 12.0,
+          "octaves": 5,
+          "persistence": 0.65
+        },
+        "physics": {
+          "material": "wood",
+          "density": 0.8,
+          "break_pattern": "splinter"
+        }
+      },
+      "height": 1.2,
+      "transitionToNext": {
+        "type": "gradient",
+        "blendHeight": 0.1,
+        "easing": "ease-out",
+        "blendNoise": true,
+        "blendGradients": false
+      }
+    },
+    {
+      "id": "tower-middle-1",
+      "name": "Средний слой 1",
+      "position": "middle",
+      "cubeConfig": {
+        "id": "wooden_tower_layer_1",
+        "base": {
+          "color": [0.50, 0.35, 0.22],
+          "roughness": 0.7,
+          "transparency": 1.0
+        },
+        "gradients": [
+          {
+            "axis": "radial",
+            "factor": 0.3,
+            "color_shift": [0.18, 0.10, 0.05]
+          }
+        ],
+        "noise": {
+          "type": "perlin",
+          "scale": 14.0,
+          "octaves": 4,
+          "persistence": 0.6
+        },
+        "physics": {
+          "material": "wood",
+          "density": 0.75,
+          "break_pattern": "splinter"
+        }
+      },
+      "height": 1.0,
+      "transitionToNext": {
+        "type": "gradient",
+        "blendHeight": 0.1,
+        "easing": "linear",
+        "blendNoise": true,
+        "blendGradients": false
+      }
+    },
+    {
+      "id": "tower-middle-2",
+      "name": "Средний слой 2",
+      "position": "middle",
+      "cubeConfig": {
+        "id": "wooden_tower_layer_2",
+        "base": {
+          "color": [0.55, 0.38, 0.25],
+          "roughness": 0.68,
+          "transparency": 1.0
+        },
+        "gradients": [
+          {
+            "axis": "radial",
+            "factor": 0.28,
+            "color_shift": [0.16, 0.09, 0.04]
+          }
+        ],
+        "noise": {
+          "type": "perlin",
+          "scale": 15.0,
+          "octaves": 4,
+          "persistence": 0.55
+        },
+        "physics": {
+          "material": "wood",
+          "density": 0.7,
+          "break_pattern": "splinter"
+        }
+      },
+      "height": 1.0,
+      "transitionToNext": {
+        "type": "gradient",
+        "blendHeight": 0.1,
+        "easing": "ease-in",
+        "blendNoise": true,
+        "blendGradients": false
+      }
+    },
+    {
+      "id": "tower-top",
+      "name": "Вершина башни",
+      "position": "top",
+      "cubeConfig": {
+        "id": "wooden_tower_layer_3",
+        "base": {
+          "color": [0.58, 0.40, 0.28],
+          "roughness": 0.65,
+          "transparency": 1.0
+        },
+        "gradients": [
+          {
+            "axis": "radial",
+            "factor": 0.35,
+            "color_shift": [0.20, 0.12, 0.06]
+          },
+          {
+            "axis": "y",
+            "factor": 0.15,
+            "color_shift": [0.08, 0.05, 0.03]
+          }
+        ],
+        "noise": {
+          "type": "perlin",
+          "scale": 16.0,
+          "octaves": 3,
+          "persistence": 0.5,
+          "mask": "top_50%"
+        },
+        "physics": {
+          "material": "wood",
+          "density": 0.65,
+          "break_pattern": "splinter"
+        }
+      },
+      "height": 0.8
+    }
+  ],
+  "totalHeight": 4.0,
+  "physics": {
+    "material": "wood",
+    "density": 0.72,
+    "break_pattern": "splinter",
+    "isStable": true,
+    "totalWeight": 2.9,
+    "weightDistribution": 0.55,
+    "structuralIntegrity": 0.85
+  },
+  "boundaryMode": "smooth",
+  "neighborInfluence": 0.4,
+  "meta": {
+    "name": "Деревянная башня",
+    "tags": ["wood", "tower", "stack", "construction", "medieval", "log"],
+    "author": "isocubic"
+  }
+}

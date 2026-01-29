@@ -1,0 +1,212 @@
+{
+  "id": "stack_layered_earth_001",
+  "prompt": "многослойная земля с разными геологическими слоями",
+  "layers": [
+    {
+      "id": "earth-bedrock",
+      "name": "Коренная порода",
+      "position": "bottom",
+      "cubeConfig": {
+        "id": "layered_earth_layer_0",
+        "base": {
+          "color": [0.25, 0.22, 0.20],
+          "roughness": 0.95,
+          "transparency": 1.0
+        },
+        "gradients": [
+          {
+            "axis": "y",
+            "factor": 0.1,
+            "color_shift": [0.05, 0.04, 0.03]
+          }
+        ],
+        "noise": {
+          "type": "crackle",
+          "scale": 4.0,
+          "octaves": 2,
+          "persistence": 0.4
+        },
+        "physics": {
+          "material": "stone",
+          "density": 3.2,
+          "break_pattern": "crumble"
+        }
+      },
+      "height": 0.8,
+      "transitionToNext": {
+        "type": "noise",
+        "blendHeight": 0.25,
+        "easing": "smooth",
+        "blendNoise": true,
+        "blendGradients": true
+      }
+    },
+    {
+      "id": "earth-clay",
+      "name": "Глинистый слой",
+      "position": "middle",
+      "cubeConfig": {
+        "id": "layered_earth_layer_1",
+        "base": {
+          "color": [0.55, 0.38, 0.25],
+          "roughness": 0.75,
+          "transparency": 1.0
+        },
+        "gradients": [
+          {
+            "axis": "y",
+            "factor": 0.18,
+            "color_shift": [0.10, 0.05, 0.02]
+          }
+        ],
+        "noise": {
+          "type": "worley",
+          "scale": 6.0,
+          "octaves": 3,
+          "persistence": 0.5
+        },
+        "physics": {
+          "material": "stone",
+          "density": 2.2,
+          "break_pattern": "crumble"
+        }
+      },
+      "height": 0.6,
+      "transitionToNext": {
+        "type": "blend",
+        "blendHeight": 0.2,
+        "easing": "smooth",
+        "blendNoise": true,
+        "blendGradients": true
+      }
+    },
+    {
+      "id": "earth-sand",
+      "name": "Песчаный слой",
+      "position": "middle",
+      "cubeConfig": {
+        "id": "layered_earth_layer_2",
+        "base": {
+          "color": [0.78, 0.68, 0.52],
+          "roughness": 0.6,
+          "transparency": 1.0
+        },
+        "gradients": [
+          {
+            "axis": "y",
+            "factor": 0.12,
+            "color_shift": [0.05, 0.08, 0.05]
+          }
+        ],
+        "noise": {
+          "type": "perlin",
+          "scale": 10.0,
+          "octaves": 4,
+          "persistence": 0.55
+        },
+        "physics": {
+          "material": "stone",
+          "density": 1.8,
+          "break_pattern": "crumble"
+        }
+      },
+      "height": 0.5,
+      "transitionToNext": {
+        "type": "blend",
+        "blendHeight": 0.3,
+        "easing": "ease-out",
+        "blendNoise": true,
+        "blendGradients": true
+      }
+    },
+    {
+      "id": "earth-soil",
+      "name": "Почвенный слой",
+      "position": "middle",
+      "cubeConfig": {
+        "id": "layered_earth_layer_3",
+        "base": {
+          "color": [0.35, 0.28, 0.20],
+          "roughness": 0.85,
+          "transparency": 1.0
+        },
+        "gradients": [
+          {
+            "axis": "y",
+            "factor": 0.2,
+            "color_shift": [0.08, 0.10, 0.05]
+          }
+        ],
+        "noise": {
+          "type": "perlin",
+          "scale": 8.0,
+          "octaves": 5,
+          "persistence": 0.6
+        },
+        "physics": {
+          "material": "organic",
+          "density": 1.5,
+          "break_pattern": "crumble"
+        }
+      },
+      "height": 0.4,
+      "transitionToNext": {
+        "type": "gradient",
+        "blendHeight": 0.15,
+        "easing": "smooth",
+        "blendNoise": false,
+        "blendGradients": true
+      }
+    },
+    {
+      "id": "earth-topsoil",
+      "name": "Плодородный слой",
+      "position": "top",
+      "cubeConfig": {
+        "id": "layered_earth_layer_4",
+        "base": {
+          "color": [0.28, 0.22, 0.15],
+          "roughness": 0.9,
+          "transparency": 1.0
+        },
+        "gradients": [
+          {
+            "axis": "y",
+            "factor": 0.25,
+            "color_shift": [0.12, 0.18, 0.08]
+          }
+        ],
+        "noise": {
+          "type": "perlin",
+          "scale": 12.0,
+          "octaves": 4,
+          "persistence": 0.65,
+          "mask": "top_60%"
+        },
+        "physics": {
+          "material": "organic",
+          "density": 1.2,
+          "break_pattern": "crumble"
+        }
+      },
+      "height": 0.3
+    }
+  ],
+  "totalHeight": 2.6,
+  "physics": {
+    "material": "stone",
+    "density": 2.0,
+    "break_pattern": "crumble",
+    "isStable": true,
+    "totalWeight": 5.2,
+    "weightDistribution": 0.7,
+    "structuralIntegrity": 0.9
+  },
+  "boundaryMode": "smooth",
+  "neighborInfluence": 0.6,
+  "meta": {
+    "name": "Многослойная земля",
+    "tags": ["earth", "soil", "geological", "stack", "terrain", "layers"],
+    "author": "isocubic"
+  }
+}
