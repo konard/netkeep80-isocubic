@@ -3,6 +3,7 @@
  * Provides UI for editing vertical stacks of cubes (CubeStackConfig)
  *
  * ISSUE 29: Редактор стопок кубиков (Stack Editor)
+ * ISSUE 30: Шаблоны стопок (Stack Presets) - Added preset picker integration
  *
  * Features:
  * - Visual representation of layers (vertical list)
@@ -11,6 +12,8 @@
  * - Layer editing (name, height, cube config reference)
  * - Transition editing (type, blend height, easing)
  * - Stack physics display (stability, weight, integrity)
+ * - Load preset from gallery (ISSUE 30)
+ * - Save current stack as preset (ISSUE 30)
  */
 
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
@@ -29,6 +32,7 @@ import {
 } from '../types/stack'
 import type { SpectralCube, Color3 } from '../types/cube'
 import { createDefaultCube } from '../types/cube'
+import { StackPresetPicker } from './StackPresetPicker'
 
 /**
  * Props for StackEditor component
@@ -118,6 +122,7 @@ export function StackEditor({
     draggedIndex: null,
     dropTargetIndex: null,
   })
+  const [showPresetPicker, setShowPresetPicker] = useState(false)
 
   // Ref for drag ghost element
   const dragGhostRef = useRef<HTMLDivElement | null>(null)
@@ -457,6 +462,17 @@ export function StackEditor({
     return { status: 'Stable', color: '#22c55e' }
   }, [localStack?.physics])
 
+  // Handle applying a preset from the picker
+  // NOTE: This hook must be defined BEFORE the early return to maintain hook order
+  const handleApplyPreset = useCallback(
+    (presetConfig: CubeStackConfig) => {
+      setLocalStack(presetConfig)
+      onStackUpdate?.(presetConfig)
+      setShowPresetPicker(false)
+    },
+    [onStackUpdate]
+  )
+
   // If no stack is selected
   if (!localStack) {
     return (
@@ -487,14 +503,24 @@ export function StackEditor({
     <div className={`stack-editor ${className}`}>
       <div className="stack-editor__header">
         <h2 className="stack-editor__title">Stack Editor</h2>
-        <button
-          type="button"
-          className="stack-editor__reset-btn"
-          onClick={handleReset}
-          title="Reset to default stack"
-        >
-          Reset
-        </button>
+        <div className="stack-editor__header-actions">
+          <button
+            type="button"
+            className="stack-editor__preset-btn"
+            onClick={() => setShowPresetPicker(true)}
+            title="Load from preset gallery"
+          >
+            Load Preset
+          </button>
+          <button
+            type="button"
+            className="stack-editor__reset-btn"
+            onClick={handleReset}
+            title="Reset to default stack"
+          >
+            Reset
+          </button>
+        </div>
       </div>
 
       {/* Stack Name */}
@@ -887,6 +913,19 @@ export function StackEditor({
           </div>
         )}
       </section>
+
+      {/* Preset Picker Modal (ISSUE 30) */}
+      {showPresetPicker && (
+        <div className="stack-editor__preset-picker-overlay">
+          <StackPresetPicker
+            currentStack={localStack}
+            onApplyPreset={handleApplyPreset}
+            onClose={() => setShowPresetPicker(false)}
+            isOpen={showPresetPicker}
+            className="stack-editor__preset-picker"
+          />
+        </div>
+      )}
     </div>
   )
 }

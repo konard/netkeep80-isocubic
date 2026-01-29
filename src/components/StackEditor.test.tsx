@@ -87,7 +87,8 @@ describe('StackEditor', () => {
 
     it('renders reset button', () => {
       render(<StackEditor currentStack={testStack} />)
-      expect(screen.getByRole('button', { name: /reset/i })).toBeInTheDocument()
+      // Use exact text to avoid matching "Load Preset" which contains "reset"
+      expect(screen.getByRole('button', { name: 'Reset' })).toBeInTheDocument()
     })
 
     it('renders section headers', () => {
@@ -546,7 +547,8 @@ describe('StackEditor', () => {
     it('resets stack to default when reset button is clicked', () => {
       render(<StackEditor currentStack={testStack} onStackUpdate={mockOnStackUpdate} />)
 
-      const resetButton = screen.getByRole('button', { name: /reset/i })
+      // Use exact text to avoid matching "Load Preset" which contains "reset"
+      const resetButton = screen.getByRole('button', { name: 'Reset' })
       fireEvent.click(resetButton)
 
       expect(mockOnStackUpdate).toHaveBeenCalled()
