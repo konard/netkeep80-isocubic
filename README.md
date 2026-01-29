@@ -201,8 +201,6 @@ isocubic/
 
 ## Roadmap
 
-Подробный план развития проекта: **[docs/phases/roadmap.md](docs/phases/roadmap.md)**
-
 **Фазы разработки:**
 
 | Фаза | Название | Статус |
@@ -245,7 +243,6 @@ npm run preview
 
 - [API Reference](docs/API.md) — полное описание компонентов и модулей
 - [ANALYSIS.md](ANALYSIS.md) — анализ подходов к реализации
-- [docs/phases/roadmap.md](docs/phases/roadmap.md) — дорожная карта проекта
 
 ## Тестирование
 
