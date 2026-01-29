@@ -1021,12 +1021,12 @@ import {
 } from './websocket-client'
 import type {
   WebSocketClientConfig,
-  RealtimeClientConfig,
   IncomingMessage,
   SyncActionMessage,
   FullSyncMessage,
   PresenceUpdateMessage,
 } from '../types/websocket'
+import type { RealtimeClientConfig } from './websocket-client'
 
 /**
  * Configuration for networked collaboration
@@ -1062,7 +1062,6 @@ export class NetworkedCollaborationManager extends CollaborationManager {
   private wsClient: WebSocketClient | null = null
   private realtimeClient: RealtimeClient | null = null
   private syncDebounceTimer: ReturnType<typeof setTimeout> | null = null
-  private pendingSyncActions: CollaborativeAction[] = []
 
   constructor(config?: Partial<NetworkedCollaborationConfig>) {
     super(config)

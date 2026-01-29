@@ -151,7 +151,7 @@ describe('Message creation functions', () => {
         participantId: 'p-1',
         sessionId: 's-1',
         timestamp: new Date().toISOString(),
-        payload: { cube: { id: 'cube-1' } },
+        payload: { cube: { id: 'cube-1', base: { color: [1, 0, 0] } } },
       }
 
       const message = createSyncActionMessage(action, 's-123')
@@ -290,7 +290,7 @@ describe('parseWebSocketMessage', () => {
           participantId: 'p-1',
           sessionId: 's-1',
           timestamp: new Date().toISOString(),
-          payload: { cube: { id: 'c-1' } },
+          payload: { cube: { id: 'c-1', base: { color: [1, 0, 0] } } },
         },
         's-1'
       ),
@@ -427,7 +427,7 @@ describe('Message type validation', () => {
         participantId: 'p-1',
         sessionId: 's-1',
         timestamp: new Date().toISOString(),
-        payload: { cube: { id: 'c-1' } },
+        payload: { cube: { id: 'c-1', base: { color: [1, 0, 0] } } },
       },
       's-1'
     )
@@ -463,7 +463,7 @@ describe('Message timestamps', () => {
           participantId: 'p-1',
           sessionId: 's-1',
           timestamp: new Date().toISOString(),
-          payload: { cube: { id: 'c-1' } },
+          payload: { cube: { id: 'c-1', base: { color: [1, 0, 0] } } },
         },
         's-1'
       ),

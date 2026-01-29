@@ -2,7 +2,7 @@
  * Unit tests for WebSocket client module
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi, Mock } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest'
 import {
   WebSocketClient,
   PollingClient,
@@ -182,7 +182,12 @@ describe('WebSocket message helpers', () => {
         participantId: 'p-1',
         sessionId: 's-1',
         timestamp: new Date().toISOString(),
-        payload: { cube: { id: 'cube-1' } },
+        payload: {
+          cube: {
+            id: 'cube-1',
+            base: { color: [1, 0, 0] },
+          },
+        },
       }
       const message = createSyncActionMessage(action, 'session-1')
       expect(message.type).toBe('sync_action')
@@ -506,7 +511,12 @@ describe('PollingClient', () => {
         participantId: 'participant-1',
         sessionId: 'session-1',
         timestamp: new Date().toISOString(),
-        payload: { cube: { id: 'cube-1' } },
+        payload: {
+          cube: {
+            id: 'cube-1',
+            base: { color: [1, 0, 0] },
+          },
+        },
       }
 
       fetchMock.mockResolvedValue({ ok: true })
@@ -523,7 +533,12 @@ describe('PollingClient', () => {
         participantId: 'participant-1',
         sessionId: 'session-1',
         timestamp: new Date().toISOString(),
-        payload: { cube: { id: 'cube-1' } },
+        payload: {
+          cube: {
+            id: 'cube-1',
+            base: { color: [1, 0, 0] },
+          },
+        },
       }
 
       await expect(client.sendAction(action)).rejects.toThrow('Not connected')

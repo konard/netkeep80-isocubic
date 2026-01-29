@@ -3,7 +3,7 @@
  * Provides types for WebSocket messages, events, and protocol
  */
 
-import type { CollaborativeAction, SessionId, ParticipantId } from './collaboration'
+import type { CollaborativeAction, Participant, SessionId, ParticipantId } from './collaboration'
 import type { SerializableSession } from './collaboration'
 
 // ============================================================================
