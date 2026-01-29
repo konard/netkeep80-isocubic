@@ -100,7 +100,7 @@ export const SHARE_PANEL_META: ComponentMeta = {
     },
     {
       name: '../types/share',
-      type: 'type',
+      type: 'lib',
       purpose: 'Share link type definitions',
     },
   ],

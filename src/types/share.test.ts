@@ -2,7 +2,7 @@
  * Unit tests for share link types and utility functions (TASK 46)
  */
 
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import type { ShareLink, ShareLinkVisibility, LinkExpiration, QRCodeConfig } from './share'
 import {
   generateShortCode,
@@ -288,7 +288,7 @@ describe('generateOGTags', () => {
   it('generates OG tags with cube name', () => {
     const cube = {
       id: 'cube-1',
-      base: { color: [1, 1, 1], roughness: 0.5, transparency: 1 },
+      base: { color: [1, 1, 1] as [number, number, number], roughness: 0.5, transparency: 1 },
       meta: { name: 'My Cube' },
       prompt: 'A beautiful cube',
     }
@@ -303,7 +303,7 @@ describe('generateOGTags', () => {
   it('uses cube id when name is missing', () => {
     const cube = {
       id: 'cube-123',
-      base: { color: [1, 1, 1], roughness: 0.5, transparency: 1 },
+      base: { color: [1, 1, 1] as [number, number, number], roughness: 0.5, transparency: 1 },
     }
     const tags = generateOGTags(cube, 'https://isocubic.app')
 
@@ -314,7 +314,7 @@ describe('generateOGTags', () => {
     const longPrompt = 'A'.repeat(200)
     const cube = {
       id: 'cube-1',
-      base: { color: [1, 1, 1], roughness: 0.5, transparency: 1 },
+      base: { color: [1, 1, 1] as [number, number, number], roughness: 0.5, transparency: 1 },
       prompt: longPrompt,
     }
     const tags = generateOGTags(cube, 'https://isocubic.app')
@@ -325,7 +325,7 @@ describe('generateOGTags', () => {
   it('generates preview image URL', () => {
     const cube = {
       id: 'cube-1',
-      base: { color: [1, 1, 1], roughness: 0.5, transparency: 1 },
+      base: { color: [1, 1, 1] as [number, number, number], roughness: 0.5, transparency: 1 },
     }
     const tags = generateOGTags(cube, 'https://isocubic.app')
 
@@ -453,6 +453,3 @@ describe('Type correctness', () => {
     })
   })
 })
-
-// Import vi for fake timers
-import { vi } from 'vitest'
