@@ -147,6 +147,7 @@ isocubic/
 │   ├── lib/               # Утилиты
 │   │   ├── shader-utils.ts    # Утилиты для шейдеров (с поддержкой LOD)
 │   │   ├── lod-system.ts      # LOD-система для оптимизации рендеринга
+│   │   ├── webgpu-compute.ts  # WebGPU compute-шейдеры для параллельной генерации текстур
 │   │   ├── tinyLLM.ts         # ИИ-генератор (TODO)
 │   │   ├── storage.ts         # Работа с хранилищем
 │   │   ├── validation.ts      # Валидация схемы
@@ -221,7 +222,7 @@ isocubic/
 ### Фаза 3: Оптимизация (текущая)
 
 - [x] LOD-система (ISSUE 17)
-- [ ] WebGPU compute-шейдеры
+- [x] WebGPU compute-шейдеры (ISSUE 18)
 - [ ] Расширенный ИИ
 - [ ] Система "стопок кубиков"
 
