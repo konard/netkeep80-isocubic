@@ -8,6 +8,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { UnifiedEditor } from './UnifiedEditor'
 import type { SpectralCube, FFTCubeConfig } from '../types/cube'
 import type { CubeStackConfig } from '../types/stack'
+import type { LODConfig } from '../types/lod'
+import { DEFAULT_LOD_CONFIG } from '../types/lod'
 import { createDefaultCube, createDefaultFFTCube } from '../types/cube'
 import { createCubeStack, createStackLayer } from '../types/stack'
 
@@ -104,14 +106,14 @@ vi.mock('./LODConfigEditor', () => ({
     config,
     onConfigChange,
   }: {
-    config?: { maxLevel?: number }
-    onConfigChange?: (cfg: { maxLevel: number }) => void
+    config?: LODConfig
+    onConfigChange?: (cfg: LODConfig) => void
   }) => (
     <div data-testid="lod-config-editor">
       <span>LODConfigEditor</span>
       <button
         data-testid="update-lod-btn"
-        onClick={() => onConfigChange?.({ ...config, maxLevel: 5 })}
+        onClick={() => config && onConfigChange?.({ ...config, enabled: !config.enabled })}
       >
         Update LOD
       </button>
@@ -120,19 +122,25 @@ vi.mock('./LODConfigEditor', () => ({
 }))
 
 vi.mock('./EnergyVisualizationEditor', () => ({
-  EnergyVisualizationEditor: ({ config }: { config: FFTCubeConfig | null }) => (
+  EnergyVisualizationEditor: ({
+    settings,
+  }: {
+    settings?: { visualization?: { visualizationMode?: string } }
+  }) => (
     <div data-testid="energy-visualization-editor">
       <span>EnergyVisualizationEditor</span>
-      {config && <span data-testid="energy-cube-id">{config.id}</span>}
+      {settings && (
+        <span data-testid="visualization-mode">{settings.visualization?.visualizationMode}</span>
+      )}
     </div>
   ),
 }))
 
 vi.mock('./FFTChannelEditor', () => ({
-  FFTChannelEditor: ({ cube }: { cube: FFTCubeConfig | null }) => (
+  FFTChannelEditor: ({ currentCube }: { currentCube: FFTCubeConfig | null }) => (
     <div data-testid="fft-channel-editor">
       <span>FFTChannelEditor</span>
-      {cube && <span data-testid="channel-cube-id">{cube.id}</span>}
+      {currentCube && <span data-testid="channel-cube-id">{currentCube.id}</span>}
     </div>
   ),
 }))
@@ -360,7 +368,7 @@ describe('UnifiedEditor', () => {
 
   describe('Tab navigation', () => {
     it('switches between tabs', async () => {
-      render(<UnifiedEditor currentCube={testCube} lodConfig={{ maxLevel: 3 }} />)
+      render(<UnifiedEditor currentCube={testCube} lodConfig={DEFAULT_LOD_CONFIG} />)
 
       await waitFor(() => {
         const lodTab = screen.getByRole('tab', { name: /lod/i })
@@ -523,7 +531,9 @@ describe('UnifiedEditor', () => {
     })
 
     it('switches tabs via select on mobile', async () => {
-      render(<UnifiedEditor currentCube={testCube} isMobile={true} lodConfig={{ maxLevel: 3 }} />)
+      render(
+        <UnifiedEditor currentCube={testCube} isMobile={true} lodConfig={DEFAULT_LOD_CONFIG} />
+      )
 
       await waitFor(() => {
         const select = screen.getByRole('combobox')
@@ -611,7 +621,7 @@ describe('UnifiedEditor', () => {
       render(
         <UnifiedEditor
           currentCube={testCube}
-          lodConfig={{ maxLevel: 3 }}
+          lodConfig={DEFAULT_LOD_CONFIG}
           onLODConfigChange={mockOnLODConfigChange}
         />
       )
@@ -630,7 +640,7 @@ describe('UnifiedEditor', () => {
       render(
         <UnifiedEditor
           currentCube={testCube}
-          lodConfig={{ maxLevel: 3 }}
+          lodConfig={DEFAULT_LOD_CONFIG}
           onLODConfigChange={mockOnLODConfigChange}
         />
       )
@@ -645,7 +655,10 @@ describe('UnifiedEditor', () => {
         fireEvent.click(updateLodBtn)
       })
 
-      expect(mockOnLODConfigChange).toHaveBeenCalledWith({ maxLevel: 5 })
+      expect(mockOnLODConfigChange).toHaveBeenCalledWith({
+        ...DEFAULT_LOD_CONFIG,
+        enabled: !DEFAULT_LOD_CONFIG.enabled,
+      })
     })
   })
 

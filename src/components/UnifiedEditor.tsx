@@ -19,9 +19,11 @@ import type { SpectralCube, FFTCubeConfig } from '../types/cube'
 import type { CubeStackConfig } from '../types/stack'
 import type { LODConfig, LODStatistics } from '../types/lod'
 import type { Participant, CollaborativeAction, ParticipantId } from '../types/collaboration'
+import type { EnergyVisualizationEditorSettings } from '../lib/energy-visualization-defaults'
 import { createDefaultCube, createDefaultFFTCube } from '../types/cube'
 import { createCubeStack } from '../types/stack'
 import { CollaborationManager } from '../lib/collaboration'
+import { DEFAULT_EDITOR_SETTINGS } from '../lib/energy-visualization-defaults'
 
 // Lazy load heavy editor components for better performance
 const ParamEditor = lazy(() => import('./ParamEditor').then((m) => ({ default: m.ParamEditor })))
@@ -247,6 +249,8 @@ export function UnifiedEditor({
   const [localCube, setLocalCube] = useState<SpectralCube | null>(currentCube)
   const [localFFTCube, setLocalFFTCube] = useState<FFTCubeConfig | null>(currentFFTCube)
   const [localStack, setLocalStack] = useState<CubeStackConfig | null>(currentStack)
+  const [visualizationSettings, setVisualizationSettings] =
+    useState<EnergyVisualizationEditorSettings>(DEFAULT_EDITOR_SETTINGS)
 
   // Sync local state with props
   useEffect(() => {
@@ -323,10 +327,11 @@ export function UnifiedEditor({
 
   // Quick actions
   const quickActions = useMemo<QuickAction[]>(() => {
-    const hasContent =
+    const hasContent = Boolean(
       (editorMode === 'spectral' && localCube) ||
       (editorMode === 'fft' && localFFTCube) ||
       (editorMode === 'stack' && localStack)
+    )
 
     return [
       {
@@ -611,8 +616,8 @@ export function UnifiedEditor({
       return (
         <div className="unified-editor__tab-content">
           <EnergyVisualizationEditor
-            config={localFFTCube}
-            onConfigChange={handleFFTCubeUpdate}
+            settings={visualizationSettings}
+            onSettingsChange={setVisualizationSettings}
             className="unified-editor__embedded-editor"
           />
         </div>
@@ -672,13 +677,13 @@ export function UnifiedEditor({
     return (
       <div className="unified-editor__tab-content">
         <FFTChannelEditor
-          cube={localFFTCube}
-          onCubeChange={handleFFTCubeUpdate}
+          currentCube={localFFTCube}
+          onCubeUpdate={handleFFTCubeUpdate}
           className="unified-editor__embedded-editor"
         />
         <EnergyVisualizationEditor
-          config={localFFTCube}
-          onConfigChange={handleFFTCubeUpdate}
+          settings={visualizationSettings}
+          onSettingsChange={setVisualizationSettings}
           className="unified-editor__embedded-editor"
         />
       </div>
