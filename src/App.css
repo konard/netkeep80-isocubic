@@ -4093,3 +4093,461 @@
     transition: none;
   }
 }
+
+/* ==========================================================================
+   LOD Config Editor Styles
+   ISSUE 31: Настройки LOD в редакторе (LOD Settings Editor)
+   ========================================================================== */
+
+.lod-config-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lod-config-editor__field {
+  margin-bottom: 12px;
+}
+
+.lod-config-editor__field:last-child {
+  margin-bottom: 0;
+}
+
+.lod-config-editor__field--half {
+  flex: 1;
+  min-width: 80px;
+}
+
+.lod-config-editor__field-row {
+  display: flex;
+  gap: 12px;
+}
+
+.lod-config-editor__label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #ccc;
+  margin-bottom: 6px;
+}
+
+.lod-config-editor__value {
+  color: #646cff;
+  font-weight: 500;
+  font-family: monospace;
+}
+
+.lod-config-editor__checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #ccc;
+  cursor: pointer;
+}
+
+.lod-config-editor__checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: #646cff;
+  cursor: pointer;
+}
+
+.lod-config-editor__hint {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.lod-config-editor__description {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.lod-config-editor__select {
+  width: 100%;
+  padding: 8px 12px;
+  background: #2a2a2a;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.lod-config-editor__select:hover {
+  border-color: #555;
+}
+
+.lod-config-editor__select:focus {
+  outline: none;
+  border-color: #646cff;
+}
+
+.lod-config-editor__select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lod-config-editor__slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #333;
+  appearance: none;
+  cursor: pointer;
+}
+
+.lod-config-editor__slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #646cff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.lod-config-editor__slider::-webkit-slider-thumb:hover {
+  background: #7c82ff;
+}
+
+.lod-config-editor__slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #646cff;
+  border: none;
+  cursor: pointer;
+}
+
+.lod-config-editor__slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 4px;
+}
+
+.lod-config-editor__number-input {
+  width: 100%;
+  padding: 8px 12px;
+  background: #2a2a2a;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+
+.lod-config-editor__number-input:focus {
+  outline: none;
+  border-color: #646cff;
+}
+
+/* Statistics Section */
+.lod-config-editor__stats {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 8px;
+}
+
+.lod-config-editor__stats-header {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #aaa;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lod-config-editor__stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.lod-config-editor__stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lod-config-editor__stat-label {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.lod-config-editor__stat-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  font-family: monospace;
+}
+
+/* Distribution Bar */
+.lod-config-editor__distribution {
+  margin-top: 8px;
+}
+
+.lod-config-editor__distribution-label {
+  font-size: 0.75rem;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.lod-config-editor__distribution-bar {
+  display: flex;
+  height: 16px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #222;
+}
+
+.lod-config-editor__distribution-segment {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.lod-config-editor__distribution-segment--level-0 {
+  background: linear-gradient(135deg, #4caf50, #2e7d32);
+}
+
+.lod-config-editor__distribution-segment--level-1 {
+  background: linear-gradient(135deg, #8bc34a, #558b2f);
+}
+
+.lod-config-editor__distribution-segment--level-2 {
+  background: linear-gradient(135deg, #ffeb3b, #f9a825);
+}
+
+.lod-config-editor__distribution-segment--level-3 {
+  background: linear-gradient(135deg, #ff9800, #ef6c00);
+}
+
+.lod-config-editor__distribution-segment--level-4 {
+  background: linear-gradient(135deg, #f44336, #c62828);
+}
+
+.lod-config-editor__distribution-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.lod-config-editor__legend-item {
+  font-size: 0.7rem;
+  font-family: monospace;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.lod-config-editor__legend-item--level-0 {
+  color: #4caf50;
+}
+
+.lod-config-editor__legend-item--level-1 {
+  color: #8bc34a;
+}
+
+.lod-config-editor__legend-item--level-2 {
+  color: #ffeb3b;
+}
+
+.lod-config-editor__legend-item--level-3 {
+  color: #ff9800;
+}
+
+.lod-config-editor__legend-item--level-4 {
+  color: #f44336;
+}
+
+/* Advanced Toggle */
+.lod-config-editor__advanced-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #ccc;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lod-config-editor__advanced-toggle:hover:not(:disabled) {
+  background: #242424;
+  border-color: #444;
+}
+
+.lod-config-editor__advanced-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lod-config-editor__chevron {
+  font-size: 0.75rem;
+  color: #666;
+  transition: transform 0.2s;
+}
+
+/* Advanced Section */
+.lod-config-editor__advanced {
+  padding: 12px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  margin-top: -1px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+/* Levels Section */
+.lod-config-editor__levels {
+  margin-top: 16px;
+}
+
+.lod-config-editor__levels-header {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #aaa;
+  margin-bottom: 10px;
+}
+
+.lod-config-editor__level {
+  margin-bottom: 8px;
+  border: 1px solid #333;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.lod-config-editor__level:last-child {
+  margin-bottom: 0;
+}
+
+.lod-config-editor__level-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  background: #242424;
+  border: none;
+  color: #ccc;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.lod-config-editor__level-header:hover {
+  background: #2a2a2a;
+}
+
+.lod-config-editor__level-header--expanded {
+  background: #2a2a2a;
+  border-bottom: 1px solid #333;
+}
+
+.lod-config-editor__level-title {
+  font-weight: 500;
+  flex: 1;
+  text-align: left;
+}
+
+.lod-config-editor__level-summary {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #666;
+  margin-right: 12px;
+}
+
+.lod-config-editor__level-content {
+  padding: 12px;
+  background: #1e1e1e;
+}
+
+/* Reset Button */
+.lod-config-editor__reset-btn {
+  margin-top: 16px;
+  padding: 10px 16px;
+  background: #333;
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: #ccc;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lod-config-editor__reset-btn:hover {
+  background: #444;
+  border-color: #555;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .lod-config-editor__stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .lod-config-editor__field-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .lod-config-editor__field--half {
+    width: 100%;
+  }
+
+  .lod-config-editor__distribution-legend {
+    font-size: 0.65rem;
+  }
+}
+
+/* Touch-friendly styling for mobile */
+@media (hover: none) and (pointer: coarse) {
+  .lod-config-editor__advanced-toggle,
+  .lod-config-editor__level-header,
+  .lod-config-editor__reset-btn,
+  .lod-config-editor__checkbox-label {
+    min-height: 44px;
+  }
+
+  .lod-config-editor__slider {
+    height: 10px;
+  }
+
+  .lod-config-editor__slider::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+  }
+
+  .lod-config-editor__slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .lod-config-editor__distribution-segment,
+  .lod-config-editor__advanced-toggle,
+  .lod-config-editor__level-header,
+  .lod-config-editor__chevron,
+  .lod-config-editor__slider::-webkit-slider-thumb {
+    transition: none;
+  }
+}

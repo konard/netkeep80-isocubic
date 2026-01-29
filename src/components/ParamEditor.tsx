@@ -1,6 +1,8 @@
 /**
  * ParamEditor component for manual parameter editing of cube configurations
- * Provides UI for editing base properties, gradients, noise, and physics settings
+ * Provides UI for editing base properties, gradients, noise, physics, and LOD settings
+ *
+ * ISSUE 31: Added LOD Settings section to ParamEditor
  */
 
 import { useState, useCallback, useEffect } from 'react'
@@ -20,6 +22,8 @@ import type {
   ColorShift3,
 } from '../types/cube'
 import { CUBE_DEFAULTS, createDefaultCube } from '../types/cube'
+import type { LODConfig, LODStatistics } from '../types/lod'
+import { LODConfigEditor } from './LODConfigEditor'
 
 /**
  * Props for ParamEditor component
@@ -29,6 +33,12 @@ export interface ParamEditorProps {
   currentCube: SpectralCube | null
   /** Callback when cube is updated */
   onCubeUpdate?: (cube: SpectralCube) => void
+  /** Current LOD configuration (optional, for global LOD settings) */
+  lodConfig?: LODConfig
+  /** Callback when LOD configuration changes */
+  onLODConfigChange?: (config: LODConfig) => void
+  /** Current LOD statistics (optional, for display) */
+  lodStatistics?: LODStatistics
   /** Custom class name */
   className?: string
 }
@@ -121,11 +131,18 @@ function hexToColorShift(hex: string): ColorShift3 {
  * ParamEditor component
  * Provides a comprehensive UI for editing all cube parameters
  */
-export function ParamEditor({ currentCube, onCubeUpdate, className = '' }: ParamEditorProps) {
+export function ParamEditor({
+  currentCube,
+  onCubeUpdate,
+  lodConfig,
+  onLODConfigChange,
+  lodStatistics,
+  className = '',
+}: ParamEditorProps) {
   // Use local state for editing
   const [localCube, setLocalCube] = useState<SpectralCube | null>(currentCube)
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['base', 'gradients', 'noise', 'physics', 'boundary'])
+    new Set(['base', 'gradients', 'noise', 'physics', 'boundary', 'lod'])
   )
 
   // Sync local state with prop
@@ -767,6 +784,37 @@ export function ParamEditor({ currentCube, onCubeUpdate, className = '' }: Param
                 How much neighboring cubes affect the color and gradient blending at edges.
               </p>
             </div>
+          </div>
+        )}
+      </section>
+
+      {/* LOD Settings Section - ISSUE 31 */}
+      <section className="param-editor__section">
+        <button
+          type="button"
+          className={`param-editor__section-header ${expandedSections.has('lod') ? 'param-editor__section-header--expanded' : ''}`}
+          onClick={() => toggleSection('lod')}
+          aria-expanded={expandedSections.has('lod')}
+        >
+          <span>LOD Settings</span>
+          <span className="param-editor__chevron">{expandedSections.has('lod') ? '▼' : '▶'}</span>
+        </button>
+
+        {expandedSections.has('lod') && (
+          <div className="param-editor__section-content">
+            {/* Info about LOD settings */}
+            <p className="param-editor__hint">
+              Level of Detail settings for performance optimization. Distant objects use fewer
+              resources to maintain high frame rates.
+            </p>
+
+            {/* LOD Config Editor */}
+            <LODConfigEditor
+              config={lodConfig}
+              onConfigChange={onLODConfigChange}
+              statistics={lodStatistics}
+              showAdvanced={false}
+            />
           </div>
         )}
       </section>
