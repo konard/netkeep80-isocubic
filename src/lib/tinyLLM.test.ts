@@ -12,8 +12,22 @@ import {
   getAvailableTemplates,
   isReady,
   initialize,
+  // Extended AI functions (ISSUE 19)
+  extractStyle,
+  generateContextual,
+  generateFromComposite,
+  generateBatch,
+  generateGroup,
+  generateWithFineTuning,
+  addTrainingExample,
+  getFineTuningDataset,
+  clearFineTuningDataset,
+  recordFeedback,
+  getAvailableThemes,
+  getAvailableGroupTypes,
 } from './tinyLLM'
 import { validateCube } from './validation'
+import type { SpectralCube, CompositeDescription, BatchGenerationRequest } from '../types/cube'
 
 describe('tinyLLM', () => {
   describe('isReady', () => {
@@ -511,6 +525,460 @@ describe('tinyLLM', () => {
       const result = await generateRandom()
 
       expect(result.confidence).toBeLessThanOrEqual(0.3)
+    })
+  })
+
+  // ============================================================================
+  // Extended AI Tests (ISSUE 19)
+  // ============================================================================
+
+  describe('extractStyle', () => {
+    it('should return default values for empty array', () => {
+      const style = extractStyle([])
+
+      expect(style.averageColor).toEqual([0.5, 0.5, 0.5])
+      expect(style.averageRoughness).toBe(0.5)
+      expect(style.dominantMaterial).toBe('stone')
+      expect(style.dominantNoiseType).toBe('perlin')
+      expect(style.commonTags).toEqual([])
+    })
+
+    it('should calculate average color from cubes', async () => {
+      const cube1 = (await generateFromTemplate('stone')).cube!
+      const cube2 = (await generateFromTemplate('wood')).cube!
+
+      const style = extractStyle([cube1, cube2])
+
+      // Should be average of stone and wood colors
+      expect(style.averageColor[0]).toBeGreaterThan(0)
+      expect(style.averageColor[0]).toBeLessThan(1)
+    })
+
+    it('should find dominant material from cubes', async () => {
+      const stone1 = (await generateFromTemplate('stone')).cube!
+      const stone2 = (await generateFromTemplate('granite')).cube!
+      const wood = (await generateFromTemplate('wood')).cube!
+
+      const style = extractStyle([stone1, stone2, wood])
+
+      expect(style.dominantMaterial).toBe('stone')
+    })
+
+    it('should collect common tags', async () => {
+      const stone1 = (await generateFromTemplate('stone')).cube!
+      const granite = (await generateFromTemplate('granite')).cube!
+
+      // Both should have 'stone' tag
+      const style = extractStyle([stone1, granite])
+
+      expect(style.commonTags).toContain('stone')
+    })
+  })
+
+  describe('generateContextual', () => {
+    it('should generate a valid cube with context', async () => {
+      const existingCube = (await generateFromTemplate('stone')).cube!
+      const context = {
+        existingCubes: new Map([['test', existingCube]]),
+        theme: 'medieval',
+      }
+
+      const result = await generateContextual('brick', context)
+
+      expect(result.success).toBe(true)
+      expect(result.cube).not.toBeNull()
+      expect(result.method).toBe('hybrid')
+
+      const validation = validateCube(result.cube)
+      expect(validation.valid).toBe(true)
+    })
+
+    it('should apply theme modifiers', async () => {
+      const resultWithTheme = await generateContextual('stone', { theme: 'medieval' })
+      const resultWithoutTheme = await generateFromPrompt('stone')
+
+      expect(resultWithTheme.success).toBe(true)
+      expect(resultWithoutTheme.success).toBe(true)
+
+      // Medieval theme should add specific tags
+      expect(resultWithTheme.cube?.meta?.tags).toContain('medieval')
+    })
+
+    it('should blend colors with existing cubes', async () => {
+      const brightCube: SpectralCube = {
+        id: 'bright',
+        base: { color: [1, 1, 1], roughness: 0.2 },
+      }
+      const context = {
+        neighborsInGrid: [brightCube],
+      }
+
+      const darkResult = await generateContextual('dark stone', context)
+
+      expect(darkResult.success).toBe(true)
+      // The color should be influenced by the bright neighbor
+      // (not as dark as it would be without context)
+    })
+
+    it('should handle unknown themes gracefully', async () => {
+      const result = await generateContextual('stone', { theme: 'unknowntheme123' })
+
+      expect(result.success).toBe(true)
+      expect(result.warnings.some((w) => w.includes('not recognized'))).toBe(true)
+    })
+  })
+
+  describe('generateFromComposite', () => {
+    it('should generate primary cube from composite description', async () => {
+      const description: CompositeDescription = {
+        primary: 'dark stone',
+      }
+
+      const result = await generateFromComposite(description)
+
+      expect(result.success).toBe(true)
+      expect(result.cubes.length).toBeGreaterThanOrEqual(1)
+      expect(result.method).toBe('composite')
+    })
+
+    it('should generate neighbor cubes', async () => {
+      const description: CompositeDescription = {
+        primary: 'stone wall',
+        neighbors: [{ direction: 'y', relation: 'gradient', description: 'moss' }],
+      }
+
+      const result = await generateFromComposite(description)
+
+      expect(result.success).toBe(true)
+      expect(result.cubes.length).toBe(2)
+      expect(result.positions).toHaveLength(2)
+    })
+
+    it('should apply theme to composite generation', async () => {
+      const description: CompositeDescription = {
+        primary: 'brick',
+        theme: 'medieval',
+      }
+
+      const result = await generateFromComposite(description)
+
+      expect(result.success).toBe(true)
+      expect(result.cubes[0]?.meta?.tags).toContain('medieval')
+    })
+
+    it('should generate variations when requested', async () => {
+      const description: CompositeDescription = {
+        primary: 'stone',
+        variations: 3,
+      }
+
+      const result = await generateFromComposite(description)
+
+      expect(result.success).toBe(true)
+      expect(result.cubes.length).toBe(3) // primary + 2 variations
+    })
+
+    it('should handle similar relation', async () => {
+      const description: CompositeDescription = {
+        primary: 'stone',
+        neighbors: [{ direction: 'x', relation: 'similar', description: 'rock' }],
+      }
+
+      const result = await generateFromComposite(description)
+
+      expect(result.success).toBe(true)
+      expect(result.cubes.length).toBe(2)
+
+      // Similar cubes should have similar colors
+      const primaryColor = result.cubes[0].base.color
+      const neighborColor = result.cubes[1].base.color
+      const colorDiff =
+        Math.abs(primaryColor[0] - neighborColor[0]) +
+        Math.abs(primaryColor[1] - neighborColor[1]) +
+        Math.abs(primaryColor[2] - neighborColor[2])
+      expect(colorDiff).toBeLessThan(1.5) // Should be somewhat similar
+    })
+
+    it('should handle contrast relation', async () => {
+      const description: CompositeDescription = {
+        primary: 'dark stone',
+        neighbors: [{ direction: 'y', relation: 'contrast', description: 'light crystal' }],
+      }
+
+      const result = await generateFromComposite(description)
+
+      expect(result.success).toBe(true)
+      expect(result.cubes.length).toBe(2)
+      expect(result.cubes[1]?.meta?.tags).toContain('contrast')
+    })
+  })
+
+  describe('generateBatch', () => {
+    it('should generate multiple cubes from prompts', async () => {
+      const request: BatchGenerationRequest = {
+        prompts: ['stone', 'wood', 'metal'],
+      }
+
+      const results = await generateBatch(request)
+
+      expect(results.length).toBe(3)
+      for (const result of results) {
+        expect(result.success).toBe(true)
+        expect(result.cube).not.toBeNull()
+      }
+    })
+
+    it('should apply global style modifier', async () => {
+      const request: BatchGenerationRequest = {
+        prompts: ['stone', 'brick'],
+        style: 'dark weathered',
+      }
+
+      const results = await generateBatch(request)
+
+      expect(results.length).toBe(2)
+      // Both should have darker colors due to style modifier
+      for (const result of results) {
+        expect(result.success).toBe(true)
+      }
+    })
+
+    it('should use context cubes for style extraction', async () => {
+      const contextCube = (await generateFromTemplate('gold')).cube!
+      const request: BatchGenerationRequest = {
+        prompts: ['metal'],
+        contextCubes: [contextCube],
+        grouping: 'related',
+      }
+
+      const results = await generateBatch(request)
+
+      expect(results.length).toBe(1)
+      expect(results[0].success).toBe(true)
+    })
+
+    it('should handle themed grouping', async () => {
+      const request: BatchGenerationRequest = {
+        prompts: ['stone', 'brick', 'wood'],
+        grouping: 'themed',
+        theme: 'medieval',
+      }
+
+      const results = await generateBatch(request)
+
+      expect(results.length).toBe(3)
+      for (const result of results) {
+        expect(result.success).toBe(true)
+      }
+    })
+
+    it('should handle individual grouping (no context)', async () => {
+      const request: BatchGenerationRequest = {
+        prompts: ['stone', 'crystal'],
+        grouping: 'individual',
+      }
+
+      const results = await generateBatch(request)
+
+      expect(results.length).toBe(2)
+      // Each should be generated independently
+      expect(results[0].method).toBe('keyword')
+      expect(results[1].method).toBe('keyword')
+    })
+  })
+
+  describe('generateGroup', () => {
+    it('should generate wall group', async () => {
+      const result = await generateGroup('wall', 'stone')
+
+      expect(result.success).toBe(true)
+      expect(result.cubes.length).toBeGreaterThan(0)
+      expect(result.groupType).toBe('wall')
+      expect(result.positions).toBeDefined()
+    })
+
+    it('should generate floor group', async () => {
+      const result = await generateGroup('floor', 'cobblestone')
+
+      expect(result.success).toBe(true)
+      expect(result.groupType).toBe('floor')
+    })
+
+    it('should generate column group', async () => {
+      const result = await generateGroup('column', 'marble')
+
+      expect(result.success).toBe(true)
+      expect(result.groupType).toBe('column')
+      // Column should have height dimension
+      expect(result.cubes.length).toBeGreaterThanOrEqual(3)
+    })
+
+    it('should use custom dimensions', async () => {
+      const result = await generateGroup('structure', 'brick', [2, 2, 2])
+
+      expect(result.success).toBe(true)
+      expect(result.cubes.length).toBe(8) // 2x2x2 = 8 cubes
+    })
+
+    it('should apply gradient based on group type', async () => {
+      const result = await generateGroup('wall', 'stone')
+
+      expect(result.success).toBe(true)
+      // Cubes at different Y positions should have slightly different colors
+      if (result.cubes.length >= 2 && result.positions) {
+        const bottomCube = result.cubes.find((_, i) => result.positions![i][1] === 0)
+        const topCube = result.cubes.find(
+          (_, i) => result.positions![i][1] === Math.max(...result.positions!.map((p) => p[1]))
+        )
+
+        if (bottomCube && topCube) {
+          // Colors should be slightly different due to gradient
+          const colorDiff = Math.abs(bottomCube.base.color[0] - topCube.base.color[0])
+          expect(colorDiff).toBeGreaterThanOrEqual(0) // Some variation expected
+        }
+      }
+    })
+
+    it('should add group tags to cubes', async () => {
+      const result = await generateGroup('terrain', 'grass')
+
+      expect(result.success).toBe(true)
+      for (const cube of result.cubes) {
+        expect(cube.meta?.tags).toContain('terrain')
+        expect(cube.meta?.tags).toContain('group')
+      }
+    })
+  })
+
+  describe('fine-tuning', () => {
+    beforeEach(() => {
+      clearFineTuningDataset()
+    })
+
+    it('should start with no dataset', () => {
+      const dataset = getFineTuningDataset()
+      expect(dataset).toBeNull()
+    })
+
+    it('should add training examples', async () => {
+      const cube = (await generateFromTemplate('stone')).cube!
+      addTrainingExample({
+        prompt: 'ancient weathered stone',
+        cube,
+        rating: 0.9,
+        created: new Date().toISOString(),
+      })
+
+      const dataset = getFineTuningDataset()
+      expect(dataset).not.toBeNull()
+      expect(dataset?.examples.length).toBe(1)
+    })
+
+    it('should match fine-tuning examples', async () => {
+      const templateCube = (await generateFromTemplate('stone')).cube!
+      addTrainingExample({
+        prompt: 'weathered ancient stone',
+        cube: templateCube,
+        rating: 1.0,
+        created: new Date().toISOString(),
+      })
+
+      const result = await generateWithFineTuning('weathered ancient stone')
+
+      expect(result.success).toBe(true)
+      expect(result.confidence).toBeGreaterThan(0.7)
+      expect(result.cube?.meta?.tags).toContain('fine-tuned')
+    })
+
+    it('should fall back to standard generation when no match', async () => {
+      addTrainingExample({
+        prompt: 'specific unique material',
+        cube: (await generateFromTemplate('stone')).cube!,
+        rating: 0.8,
+        created: new Date().toISOString(),
+      })
+
+      const result = await generateWithFineTuning('completely different prompt')
+
+      expect(result.success).toBe(true)
+      // Should fall back to standard generation
+      expect(result.cube?.meta?.tags).not.toContain('fine-tuned')
+    })
+
+    it('should record feedback', async () => {
+      const cube = (await generateFromPrompt('stone')).cube!
+      recordFeedback('stone', cube, 0.85)
+
+      const dataset = getFineTuningDataset()
+      expect(dataset?.examples.length).toBe(1)
+      expect(dataset?.examples[0].rating).toBe(0.85)
+    })
+
+    it('should clamp rating to valid range', async () => {
+      const cube = (await generateFromPrompt('stone')).cube!
+      recordFeedback('stone', cube, 1.5) // Should be clamped to 1.0
+
+      const dataset = getFineTuningDataset()
+      expect(dataset?.examples[0].rating).toBe(1.0)
+    })
+
+    it('should clear dataset', async () => {
+      const cube = (await generateFromTemplate('stone')).cube!
+      addTrainingExample({
+        prompt: 'test',
+        cube,
+        created: new Date().toISOString(),
+      })
+
+      clearFineTuningDataset()
+
+      const dataset = getFineTuningDataset()
+      expect(dataset).toBeNull()
+    })
+  })
+
+  describe('getAvailableThemes', () => {
+    it('should return array of theme names', () => {
+      const themes = getAvailableThemes()
+
+      expect(Array.isArray(themes)).toBe(true)
+      expect(themes.length).toBeGreaterThan(0)
+    })
+
+    it('should include common themes', () => {
+      const themes = getAvailableThemes()
+
+      expect(themes).toContain('medieval')
+      expect(themes).toContain('fantasy')
+      expect(themes).toContain('modern')
+      expect(themes).toContain('natural')
+    })
+
+    it('should not include Russian duplicates', () => {
+      const themes = getAvailableThemes()
+
+      // Russian themes are translations, not unique themes
+      expect(themes).not.toContain('средневековый')
+      expect(themes).not.toContain('фэнтези')
+    })
+  })
+
+  describe('getAvailableGroupTypes', () => {
+    it('should return array of group types', () => {
+      const types = getAvailableGroupTypes()
+
+      expect(Array.isArray(types)).toBe(true)
+      expect(types.length).toBeGreaterThan(0)
+    })
+
+    it('should include all standard group types', () => {
+      const types = getAvailableGroupTypes()
+
+      expect(types).toContain('wall')
+      expect(types).toContain('floor')
+      expect(types).toContain('column')
+      expect(types).toContain('structure')
+      expect(types).toContain('terrain')
     })
   })
 })

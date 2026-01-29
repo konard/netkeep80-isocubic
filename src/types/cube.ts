@@ -335,3 +335,147 @@ export function createDefaultFFTCube(
     },
   }
 }
+
+// ============================================================================
+// Extended AI Types (ISSUE 19)
+// ============================================================================
+
+/** Direction for neighbor relations */
+export type NeighborDirection = 'x' | '-x' | 'y' | '-y' | 'z' | '-z'
+
+/** Relation type between cubes */
+export type NeighborRelation = 'similar' | 'contrast' | 'gradient' | 'complement'
+
+/** Group types for bulk generation */
+export type CubeGroupType = 'wall' | 'floor' | 'column' | 'structure' | 'terrain'
+
+/**
+ * Neighbor description for composite prompts
+ */
+export interface NeighborDescription {
+  /** Direction of the neighbor relative to the primary cube */
+  direction: NeighborDirection
+  /** Type of relationship with the neighbor */
+  relation: NeighborRelation
+  /** Text description for the neighbor cube */
+  description: string
+}
+
+/**
+ * Composite description for generating related cubes
+ * Supports multi-cube generation from a single structured prompt
+ */
+export interface CompositeDescription {
+  /** Primary cube description */
+  primary: string
+  /** Descriptions for neighboring cubes */
+  neighbors?: NeighborDescription[]
+  /** Type of group being generated */
+  groupType?: CubeGroupType
+  /** Stylistic theme for the entire group */
+  theme?: string
+  /** Number of variations to generate */
+  variations?: number
+}
+
+/**
+ * Batch generation request for generating multiple cubes at once
+ */
+export interface BatchGenerationRequest {
+  /** Array of prompts to generate cubes from */
+  prompts: string[]
+  /** Global style modifier applied to all prompts */
+  style?: string
+  /** Existing cubes for contextual consistency */
+  contextCubes?: SpectralCube[]
+  /** How to group/relate the generated cubes */
+  grouping?: 'individual' | 'related' | 'themed'
+  /** Theme for themed grouping */
+  theme?: string
+}
+
+/**
+ * Generation context for contextual/neighbor-aware generation
+ */
+export interface GenerationContext {
+  /** Map of existing cubes by ID */
+  existingCubes?: Map<string, SpectralCube>
+  /** Position in the global grid (if applicable) */
+  gridPosition?: [number, number, number]
+  /** Neighboring cubes in the grid */
+  neighborsInGrid?: SpectralCube[]
+  /** Theme for stylistic consistency */
+  theme?: string
+  /** Style extracted from context cubes */
+  extractedStyle?: ExtractedStyle
+}
+
+/**
+ * Style extracted from existing cubes for consistency
+ */
+export interface ExtractedStyle {
+  /** Average color */
+  averageColor: Color3
+  /** Average roughness */
+  averageRoughness: number
+  /** Dominant material type */
+  dominantMaterial: MaterialType
+  /** Dominant noise type */
+  dominantNoiseType: NoiseType
+  /** Common tags */
+  commonTags: string[]
+}
+
+/**
+ * Training example for fine-tuning
+ */
+export interface TrainingExample {
+  /** Input prompt */
+  prompt: string
+  /** Expected output cube configuration */
+  cube: SpectralCube
+  /** Quality rating (0-1) from user feedback */
+  rating?: number
+  /** Timestamp of when the example was created */
+  created: string
+}
+
+/**
+ * Fine-tuning dataset
+ */
+export interface FineTuningDataset {
+  /** Unique identifier for the dataset */
+  id: string
+  /** Human-readable name */
+  name: string
+  /** Description of the dataset */
+  description?: string
+  /** Training examples */
+  examples: TrainingExample[]
+  /** Version of the dataset */
+  version: string
+  /** Creation timestamp */
+  created: string
+  /** Last modified timestamp */
+  modified: string
+}
+
+/**
+ * Result of generating a group of cubes
+ */
+export interface CubeGroupResult {
+  /** Whether the generation was successful */
+  success: boolean
+  /** Generated cubes */
+  cubes: SpectralCube[]
+  /** Generation method used */
+  method: string
+  /** Overall confidence score */
+  confidence: number
+  /** Any warnings during generation */
+  warnings: string[]
+  /** Group type that was generated */
+  groupType?: CubeGroupType
+  /** Positions of cubes in the group (for structured groups) */
+  positions?: [number, number, number][]
+}
