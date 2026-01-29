@@ -66,16 +66,28 @@
 
 **Заголовок**: `Реализация контекста Developer Mode`
 
+**Статус**: ✅ Завершено
+
 **Описание**:
 Создать React контекст для управления режимом разработчика с персистентностью в localStorage.
 
 **Задачи**:
-- [ ] DevModeProvider с состоянием и настройками
-- [ ] Персистентность в localStorage
-- [ ] Клавиатурное сокращение Ctrl+Shift+D
-- [ ] Уровни verbosity (minimal, normal, verbose)
-- [ ] Настраиваемые категории отображения
+- [x] DevModeProvider с состоянием и настройками
+- [x] Персистентность в localStorage
+- [x] Клавиатурное сокращение Ctrl+Shift+D
+- [x] Уровни verbosity (minimal, normal, verbose)
+- [x] Настраиваемые категории отображения
 
+**Критерии приёмки**:
+- ✅ DevModeProvider предоставляет контекст для всего приложения
+- ✅ Настройки сохраняются в localStorage между сессиями
+- ✅ Клавиатурное сокращение Ctrl+Shift+D (и Cmd+Shift+D для Mac) работает
+- ✅ Три уровня verbosity: minimal, normal, verbose
+- ✅ Семь настраиваемых категорий: basic, history, features, dependencies, relatedFiles, props, tips
+
+**Реализовано**:
+- `src/lib/devmode.tsx` — DevModeProvider, хуки useDevMode, useIsDevModeEnabled, useDevModeSettings
+- `src/lib/devmode.test.tsx` — полное покрытие тестами (19 тестов проходят)
 
 **Метки**: `devmode`, `context`, `settings`, `dx`
 
@@ -85,16 +97,29 @@
 
 **Заголовок**: `Создание визуального компонента для отображения метаинформации`
 
+**Статус**: ✅ Завершено
+
 **Описание**:
 Создать overlay-компонент, который оборачивает другие компоненты и показывает их метаинформацию.
 
 **Задачи**:
-- [ ] ComponentInfo wrapper с floating panel
-- [ ] DevModeIndicator для отображения статуса
-- [ ] Collapsible секции для разных типов информации
-- [ ] Hover и Ctrl+Click для закрепления панели
-- [ ] Визуальный outline для компонентов в DevMode
+- [x] ComponentInfo wrapper с floating panel
+- [x] DevModeIndicator для отображения статуса
+- [x] Collapsible секции для разных типов информации
+- [x] Hover и Ctrl+Click для закрепления панели
+- [x] Визуальный outline для компонентов в DevMode
 
+**Критерии приёмки**:
+- ✅ ComponentInfo оборачивает компоненты и показывает floating panel
+- ✅ DevModeIndicator позволяет переключать режим
+- ✅ Collapsible секции для истории, функций, зависимостей и т.д.
+- ✅ Ctrl+Click закрепляет панель, hover показывает информацию
+- ✅ Настраиваемые позиции панели (top-left, top-right, bottom-left, bottom-right)
+- ✅ DevModeSettingsPanel для настройки отображения
+
+**Реализовано**:
+- `src/components/ComponentInfo.tsx` — ComponentInfo, DevModeIndicator, DevModeSettingsPanel
+- `src/components/ComponentInfo.test.tsx` — полное покрытие тестами (20 тестов проходят)
 
 **Метки**: `devmode`, `ui`, `overlay`, `dx`
 
@@ -181,8 +206,8 @@ return isDevModeEnabled ? (
 | TASK | Сложность | Приоритет | Статус |
 |------|-----------|-----------|--------|
 | 40. Система метаданных | Средняя | Критический | ✅ Завершено |
-| 41. DevMode Context | Средняя | Критический | Планируется |
-| 42. ComponentInfo Overlay | Средняя | Критический | Планируется |
+| 41. DevMode Context | Средняя | Критический | ✅ Завершено |
+| 42. ComponentInfo Overlay | Средняя | Критический | ✅ Завершено |
 | 43. Интеграция в компоненты | Низкая | Высокий | Планируется |
 
 ---
