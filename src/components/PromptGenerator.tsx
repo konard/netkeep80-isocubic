@@ -9,13 +9,19 @@
  */
 
 import { useState, useCallback } from 'react'
-import type { SpectralCube } from '../types/cube'
+import type { SpectralCube, CompositeDescription, BatchGenerationRequest } from '../types/cube'
 import {
-  generateFromPrompt,
   generateFromTemplate,
   generateRandom,
   getAvailableTemplates,
+  getAvailableThemes,
+  getAvailableGroupTypes,
   isReady,
+  generateFromComposite,
+  generateBatch,
+  generateGroup,
+  generateWithFineTuning,
+  recordFeedback,
   type GenerationResult,
 } from '../lib/tinyLLM'
 
@@ -25,12 +31,21 @@ import {
 export interface PromptGeneratorProps {
   /** Callback when a cube is generated */
   onCubeGenerated?: (cube: SpectralCube) => void
+  /** Callback when multiple cubes are generated (batch/group mode) */
+  onCubesGenerated?: (cubes: SpectralCube[]) => void
+  /** Existing cubes for contextual generation */
+  contextCubes?: SpectralCube[]
+  /** Whether to enable advanced features (batch, group, fine-tuning) */
+  enableAdvanced?: boolean
   /** Custom class name */
   className?: string
 }
 
 /** Generation status states */
 type GenerationStatus = 'idle' | 'generating' | 'success' | 'error'
+
+/** Generation modes */
+type GenerationMode = 'single' | 'batch' | 'group' | 'composite'
 
 /** Preset template categories for organized display */
 const TEMPLATE_CATEGORIES: Record<string, string[]> = {
@@ -58,7 +73,13 @@ const EXAMPLE_PROMPTS = [
  * PromptGenerator component
  * Provides UI for generating cube configurations from text prompts
  */
-export function PromptGenerator({ onCubeGenerated, className = '' }: PromptGeneratorProps) {
+export function PromptGenerator({
+  onCubeGenerated,
+  onCubesGenerated,
+  contextCubes,
+  enableAdvanced = false,
+  className = '',
+}: PromptGeneratorProps) {
   // Input state
   const [prompt, setPrompt] = useState('')
   const [status, setStatus] = useState<GenerationStatus>('idle')
@@ -69,33 +90,168 @@ export function PromptGenerator({ onCubeGenerated, className = '' }: PromptGener
   // Initialize llmReady with the actual value immediately
   const [llmReady] = useState(() => isReady())
 
-  // Handle prompt generation
-  const handleGenerate = useCallback(async () => {
-    if (!prompt.trim()) {
-      setError('Please enter a description')
-      return
-    }
+  // Advanced mode state
+  const [mode, setMode] = useState<GenerationMode>('single')
+  const [selectedTheme, setSelectedTheme] = useState<string>('')
+  const [selectedGroupType, setSelectedGroupType] = useState<string>('')
+  const [batchPrompts, setBatchPrompts] = useState<string>('')
+  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [lastGeneratedCube, setLastGeneratedCube] = useState<SpectralCube | null>(null)
+  const [feedbackRating, setFeedbackRating] = useState<number>(0)
 
+  // Handle prompt generation (supports multiple modes)
+  const handleGenerate = useCallback(async () => {
     setStatus('generating')
     setError(null)
     setResult(null)
 
     try {
-      const generationResult = await generateFromPrompt(prompt.trim())
+      switch (mode) {
+        case 'single': {
+          if (!prompt.trim()) {
+            setError('Please enter a description')
+            setStatus('idle')
+            return
+          }
 
-      if (generationResult.success && generationResult.cube) {
-        setResult(generationResult)
-        setStatus('success')
-        onCubeGenerated?.(generationResult.cube)
-      } else {
-        setError('Generation failed. Try a different description.')
-        setStatus('error')
+          // Use fine-tuning if available, otherwise standard generation
+          const generationResult = await generateWithFineTuning(prompt.trim())
+
+          if (generationResult.success && generationResult.cube) {
+            setResult(generationResult)
+            setStatus('success')
+            setLastGeneratedCube(generationResult.cube)
+            onCubeGenerated?.(generationResult.cube)
+          } else {
+            setError('Generation failed. Try a different description.')
+            setStatus('error')
+          }
+          break
+        }
+
+        case 'batch': {
+          if (!batchPrompts.trim()) {
+            setError('Please enter prompts (one per line)')
+            setStatus('idle')
+            return
+          }
+
+          const prompts = batchPrompts.split('\n').filter((p) => p.trim())
+          if (prompts.length === 0) {
+            setError('No valid prompts found')
+            setStatus('idle')
+            return
+          }
+
+          const request: BatchGenerationRequest = {
+            prompts,
+            style: selectedTheme || undefined,
+            contextCubes: contextCubes,
+            grouping: selectedTheme ? 'themed' : 'related',
+            theme: selectedTheme || undefined,
+          }
+
+          const results = await generateBatch(request)
+          const successfulCubes = results.filter((r) => r.success && r.cube).map((r) => r.cube!)
+
+          if (successfulCubes.length > 0) {
+            setResult(results[0])
+            setStatus('success')
+            onCubesGenerated?.(successfulCubes)
+            if (successfulCubes[0]) {
+              setLastGeneratedCube(successfulCubes[0])
+              onCubeGenerated?.(successfulCubes[0])
+            }
+          } else {
+            setError('Batch generation failed. Try different prompts.')
+            setStatus('error')
+          }
+          break
+        }
+
+        case 'group': {
+          if (!prompt.trim() || !selectedGroupType) {
+            setError('Please enter a description and select a group type')
+            setStatus('idle')
+            return
+          }
+
+          const groupResult = await generateGroup(
+            selectedGroupType as 'wall' | 'floor' | 'column' | 'structure' | 'terrain',
+            prompt.trim()
+          )
+
+          if (groupResult.success && groupResult.cubes.length > 0) {
+            setResult({
+              success: true,
+              cube: groupResult.cubes[0],
+              method: 'hybrid',
+              confidence: groupResult.confidence,
+              warnings: groupResult.warnings,
+            })
+            setStatus('success')
+            onCubesGenerated?.(groupResult.cubes)
+            if (groupResult.cubes[0]) {
+              setLastGeneratedCube(groupResult.cubes[0])
+              onCubeGenerated?.(groupResult.cubes[0])
+            }
+          } else {
+            setError('Group generation failed. Try a different description.')
+            setStatus('error')
+          }
+          break
+        }
+
+        case 'composite': {
+          if (!prompt.trim()) {
+            setError('Please enter a primary description')
+            setStatus('idle')
+            return
+          }
+
+          const description: CompositeDescription = {
+            primary: prompt.trim(),
+            theme: selectedTheme || undefined,
+            variations: 3,
+          }
+
+          const compositeResult = await generateFromComposite(description)
+
+          if (compositeResult.success && compositeResult.cubes.length > 0) {
+            setResult({
+              success: true,
+              cube: compositeResult.cubes[0],
+              method: 'hybrid',
+              confidence: compositeResult.confidence,
+              warnings: compositeResult.warnings,
+            })
+            setStatus('success')
+            onCubesGenerated?.(compositeResult.cubes)
+            if (compositeResult.cubes[0]) {
+              setLastGeneratedCube(compositeResult.cubes[0])
+              onCubeGenerated?.(compositeResult.cubes[0])
+            }
+          } else {
+            setError('Composite generation failed. Try a different description.')
+            setStatus('error')
+          }
+          break
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred')
       setStatus('error')
     }
-  }, [prompt, onCubeGenerated])
+  }, [
+    prompt,
+    mode,
+    batchPrompts,
+    selectedTheme,
+    selectedGroupType,
+    contextCubes,
+    onCubeGenerated,
+    onCubesGenerated,
+  ])
 
   // Handle template selection
   const handleTemplateSelect = useCallback(
@@ -185,12 +341,30 @@ export function PromptGenerator({ onCubeGenerated, className = '' }: PromptGener
         return 'Random'
       case 'hybrid':
         return 'Hybrid'
+      case 'composite':
+        return 'Composite'
+      case 'batch':
+        return 'Batch'
+      case 'group':
+        return 'Group'
+      case 'contextual':
+        return 'Contextual'
       default:
         return method
     }
   }
 
+  // Handle feedback submission for fine-tuning
+  const handleFeedback = useCallback(() => {
+    if (lastGeneratedCube && prompt && feedbackRating > 0) {
+      recordFeedback(prompt, lastGeneratedCube, feedbackRating / 5) // Convert 1-5 to 0-1
+      setFeedbackRating(0)
+    }
+  }, [lastGeneratedCube, prompt, feedbackRating])
+
   const availableTemplates = getAvailableTemplates()
+  const availableThemes = getAvailableThemes()
+  const availableGroupTypes = getAvailableGroupTypes()
 
   return (
     <div className={`prompt-generator ${className}`}>
@@ -270,7 +444,144 @@ export function PromptGenerator({ onCubeGenerated, className = '' }: PromptGener
         >
           🎲 Random
         </button>
+        {enableAdvanced && (
+          <button
+            type="button"
+            className="prompt-generator__action-btn prompt-generator__action-btn--advanced"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+          >
+            {showAdvanced ? '× Close' : '⚙️ Advanced'}
+          </button>
+        )}
       </div>
+
+      {/* Advanced mode panel */}
+      {enableAdvanced && showAdvanced && (
+        <div className="prompt-generator__advanced">
+          <div className="prompt-generator__advanced-section">
+            <label className="prompt-generator__label">Generation Mode</label>
+            <div className="prompt-generator__mode-buttons">
+              <button
+                type="button"
+                className={`prompt-generator__mode-btn ${mode === 'single' ? 'prompt-generator__mode-btn--active' : ''}`}
+                onClick={() => setMode('single')}
+              >
+                Single
+              </button>
+              <button
+                type="button"
+                className={`prompt-generator__mode-btn ${mode === 'batch' ? 'prompt-generator__mode-btn--active' : ''}`}
+                onClick={() => setMode('batch')}
+              >
+                Batch
+              </button>
+              <button
+                type="button"
+                className={`prompt-generator__mode-btn ${mode === 'group' ? 'prompt-generator__mode-btn--active' : ''}`}
+                onClick={() => setMode('group')}
+              >
+                Group
+              </button>
+              <button
+                type="button"
+                className={`prompt-generator__mode-btn ${mode === 'composite' ? 'prompt-generator__mode-btn--active' : ''}`}
+                onClick={() => setMode('composite')}
+              >
+                Composite
+              </button>
+            </div>
+          </div>
+
+          {/* Theme selector */}
+          <div className="prompt-generator__advanced-section">
+            <label htmlFor="theme-select" className="prompt-generator__label">
+              Theme (optional)
+            </label>
+            <select
+              id="theme-select"
+              className="prompt-generator__select"
+              value={selectedTheme}
+              onChange={(e) => setSelectedTheme(e.target.value)}
+            >
+              <option value="">No theme</option>
+              {availableThemes.map((theme) => (
+                <option key={theme} value={theme}>
+                  {theme.charAt(0).toUpperCase() + theme.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Group type selector (only for group mode) */}
+          {mode === 'group' && (
+            <div className="prompt-generator__advanced-section">
+              <label htmlFor="group-type-select" className="prompt-generator__label">
+                Group Type
+              </label>
+              <select
+                id="group-type-select"
+                className="prompt-generator__select"
+                value={selectedGroupType}
+                onChange={(e) => setSelectedGroupType(e.target.value)}
+              >
+                <option value="">Select type...</option>
+                {availableGroupTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Batch prompts textarea (only for batch mode) */}
+          {mode === 'batch' && (
+            <div className="prompt-generator__advanced-section">
+              <label htmlFor="batch-prompts" className="prompt-generator__label">
+                Batch Prompts (one per line)
+              </label>
+              <textarea
+                id="batch-prompts"
+                className="prompt-generator__textarea"
+                value={batchPrompts}
+                onChange={(e) => setBatchPrompts(e.target.value)}
+                placeholder="stone&#10;brick&#10;wood&#10;..."
+                rows={4}
+              />
+            </div>
+          )}
+
+          {/* Feedback section for fine-tuning */}
+          {lastGeneratedCube && (
+            <div className="prompt-generator__advanced-section">
+              <label className="prompt-generator__label">
+                Rate this result (improves future generations)
+              </label>
+              <div className="prompt-generator__feedback">
+                {[1, 2, 3, 4, 5].map((rating) => (
+                  <button
+                    key={rating}
+                    type="button"
+                    className={`prompt-generator__feedback-btn ${feedbackRating >= rating ? 'prompt-generator__feedback-btn--active' : ''}`}
+                    onClick={() => setFeedbackRating(rating)}
+                    aria-label={`Rate ${rating} stars`}
+                  >
+                    {feedbackRating >= rating ? '★' : '☆'}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className="prompt-generator__feedback-submit"
+                  onClick={handleFeedback}
+                  disabled={feedbackRating === 0}
+                >
+                  Submit
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Template selector */}
       {showTemplates && (

@@ -19,6 +19,16 @@ import type {
   BreakPattern,
   GradientAxis,
   CubeGradient,
+  CompositeDescription,
+  BatchGenerationRequest,
+  GenerationContext,
+  ExtractedStyle,
+  TrainingExample,
+  FineTuningDataset,
+  CubeGroupResult,
+  CubeGroupType,
+  NeighborDescription,
+  NeighborRelation,
 } from '../types/cube'
 import { validateCube } from './validation'
 
@@ -934,4 +944,828 @@ export function isReady(): boolean {
 export async function initialize(): Promise<void> {
   // No initialization needed for rule-based generation
   return Promise.resolve()
+}
+
+// ============================================================================
+// Extended AI Functions (ISSUE 19)
+// ============================================================================
+
+/** Theme keyword mappings for thematic generation */
+const THEME_KEYWORDS: Record<string, Partial<MaterialKeywords> & { colorShift?: ColorShift3 }> = {
+  medieval: {
+    roughness: 0.7,
+    material: 'stone',
+    tags: ['medieval', 'old', 'castle'],
+  },
+  fantasy: {
+    transparency: 0.4,
+    material: 'crystal',
+    tags: ['fantasy', 'magic'],
+  },
+  modern: {
+    roughness: 0.3,
+    material: 'metal',
+    tags: ['modern', 'sleek'],
+  },
+  natural: {
+    roughness: 0.75,
+    material: 'organic',
+    tags: ['natural', 'organic'],
+  },
+  industrial: {
+    roughness: 0.6,
+    material: 'metal',
+    tags: ['industrial', 'factory'],
+  },
+  ancient: {
+    roughness: 0.85,
+    material: 'stone',
+    tags: ['ancient', 'weathered'],
+    colorShift: [-0.1, -0.1, -0.05],
+  },
+  magical: {
+    roughness: 0.15,
+    transparency: 0.35,
+    material: 'crystal',
+    tags: ['magical', 'glowing'],
+  },
+  rustic: {
+    roughness: 0.8,
+    material: 'wood',
+    tags: ['rustic', 'rural'],
+  },
+  // Russian theme keywords
+  средневековый: {
+    roughness: 0.7,
+    material: 'stone',
+    tags: ['medieval', 'old'],
+  },
+  фэнтези: {
+    transparency: 0.4,
+    material: 'crystal',
+    tags: ['fantasy', 'magic'],
+  },
+  современный: {
+    roughness: 0.3,
+    material: 'metal',
+    tags: ['modern', 'sleek'],
+  },
+}
+
+/** Group type configurations for different construction types */
+const GROUP_CONFIGS: Record<
+  CubeGroupType,
+  { dimensions: [number, number, number]; gradientDirection: GradientAxis }
+> = {
+  wall: { dimensions: [3, 3, 1], gradientDirection: 'y' },
+  floor: { dimensions: [3, 3, 1], gradientDirection: 'radial' },
+  column: { dimensions: [1, 3, 1], gradientDirection: 'y' },
+  structure: { dimensions: [2, 2, 2], gradientDirection: 'radial' },
+  terrain: { dimensions: [3, 3, 1], gradientDirection: 'y' },
+}
+
+/** Relation type color/property modifiers */
+const RELATION_MODIFIERS: Record<NeighborRelation, { colorShift: ColorShift3; factor: number }> = {
+  similar: { colorShift: [0.05, 0.05, 0.05], factor: 0.9 },
+  contrast: { colorShift: [-0.3, -0.2, 0.3], factor: 0.5 },
+  gradient: { colorShift: [0.15, 0.1, 0.05], factor: 0.75 },
+  complement: { colorShift: [0.2, -0.15, 0.1], factor: 0.6 },
+}
+
+/**
+ * In-memory fine-tuning dataset storage
+ */
+let fineTuningDataset: FineTuningDataset | null = null
+
+/**
+ * Extracts style characteristics from a set of cubes
+ * Used for maintaining stylistic consistency in contextual generation
+ *
+ * @param cubes - Array of cubes to analyze
+ * @returns ExtractedStyle object with averaged properties
+ */
+export function extractStyle(cubes: SpectralCube[]): ExtractedStyle {
+  if (cubes.length === 0) {
+    return {
+      averageColor: [0.5, 0.5, 0.5],
+      averageRoughness: 0.5,
+      dominantMaterial: 'stone',
+      dominantNoiseType: 'perlin',
+      commonTags: [],
+    }
+  }
+
+  // Calculate average color
+  const colorSum: [number, number, number] = cubes.reduce<[number, number, number]>(
+    (sum, cube) => {
+      return [sum[0] + cube.base.color[0], sum[1] + cube.base.color[1], sum[2] + cube.base.color[2]]
+    },
+    [0, 0, 0]
+  )
+  const averageColor: Color3 = [
+    colorSum[0] / cubes.length,
+    colorSum[1] / cubes.length,
+    colorSum[2] / cubes.length,
+  ]
+
+  // Calculate average roughness
+  const roughnessSum = cubes.reduce((sum, cube) => sum + (cube.base.roughness ?? 0.5), 0)
+  const averageRoughness = roughnessSum / cubes.length
+
+  // Find dominant material
+  const materialCounts: Record<string, number> = {}
+  for (const cube of cubes) {
+    const material = cube.physics?.material || 'stone'
+    materialCounts[material] = (materialCounts[material] || 0) + 1
+  }
+  const dominantMaterial = (Object.entries(materialCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ||
+    'stone') as MaterialType
+
+  // Find dominant noise type
+  const noiseCounts: Record<string, number> = {}
+  for (const cube of cubes) {
+    const noiseType = cube.noise?.type || 'perlin'
+    noiseCounts[noiseType] = (noiseCounts[noiseType] || 0) + 1
+  }
+  const dominantNoiseType = (Object.entries(noiseCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ||
+    'perlin') as NoiseType
+
+  // Collect common tags
+  const tagCounts: Record<string, number> = {}
+  for (const cube of cubes) {
+    for (const tag of cube.meta?.tags || []) {
+      tagCounts[tag] = (tagCounts[tag] || 0) + 1
+    }
+  }
+  const commonTags = Object.entries(tagCounts)
+    .filter(([, count]) => count >= Math.ceil(cubes.length / 2))
+    .map(([tag]) => tag)
+
+  return {
+    averageColor,
+    averageRoughness,
+    dominantMaterial,
+    dominantNoiseType,
+    commonTags,
+  }
+}
+
+/**
+ * Generates a cube with contextual awareness of surrounding cubes
+ *
+ * @param prompt - Text description for generation
+ * @param context - Generation context with existing cubes and position
+ * @returns GenerationResult with contextually-aware cube
+ */
+export async function generateContextual(
+  prompt: string,
+  context: GenerationContext
+): Promise<GenerationResult> {
+  const warnings: string[] = []
+
+  // Extract style from context if not already provided
+  let extractedStyle = context.extractedStyle
+  if (!extractedStyle && context.existingCubes && context.existingCubes.size > 0) {
+    extractedStyle = extractStyle(Array.from(context.existingCubes.values()))
+  }
+  if (!extractedStyle && context.neighborsInGrid && context.neighborsInGrid.length > 0) {
+    extractedStyle = extractStyle(context.neighborsInGrid)
+  }
+
+  // Apply theme if specified
+  let themeModifiers: Partial<MaterialKeywords> = {}
+  if (context.theme) {
+    const normalizedTheme = context.theme.toLowerCase()
+    themeModifiers = THEME_KEYWORDS[normalizedTheme] || {}
+    if (Object.keys(themeModifiers).length === 0) {
+      warnings.push(`Theme "${context.theme}" not recognized, using default`)
+    }
+  }
+
+  // Generate base cube from prompt
+  const baseResult = await generateFromPrompt(prompt)
+  if (!baseResult.success || !baseResult.cube) {
+    return baseResult
+  }
+
+  // Apply extracted style for consistency
+  let cube = baseResult.cube
+  if (extractedStyle) {
+    const styleInfluence = 0.4 // 40% influence from context
+    const blendedColor = applyColorShift(cube.base.color, [
+      (extractedStyle.averageColor[0] - cube.base.color[0]) * styleInfluence,
+      (extractedStyle.averageColor[1] - cube.base.color[1]) * styleInfluence,
+      (extractedStyle.averageColor[2] - cube.base.color[2]) * styleInfluence,
+    ])
+    cube = {
+      ...cube,
+      base: {
+        ...cube.base,
+        color: blendedColor,
+        roughness: clamp(
+          (cube.base.roughness ?? 0.5) * (1 - styleInfluence) +
+            extractedStyle.averageRoughness * styleInfluence,
+          0,
+          1
+        ),
+      },
+      meta: {
+        ...cube.meta,
+        tags: [...(cube.meta?.tags || []), ...extractedStyle.commonTags, 'contextual'],
+      },
+    }
+    warnings.push('Applied contextual style from existing cubes')
+  }
+
+  // Apply theme modifiers
+  if (Object.keys(themeModifiers).length > 0) {
+    const themeShift = (themeModifiers as { colorShift?: ColorShift3 }).colorShift || [0, 0, 0]
+    cube = {
+      ...cube,
+      base: {
+        ...cube.base,
+        color: applyColorShift(cube.base.color, themeShift),
+        roughness: clamp(cube.base.roughness ?? 0.5, 0, 1),
+        transparency: themeModifiers.transparency ?? cube.base.transparency,
+      },
+      physics: {
+        ...cube.physics,
+        material: themeModifiers.material || cube.physics?.material,
+      },
+      meta: {
+        ...cube.meta,
+        tags: [...(cube.meta?.tags || []), ...(themeModifiers.tags || [])],
+      },
+    }
+  }
+
+  // Calculate confidence boost for contextual generation
+  const confidence = Math.min(baseResult.confidence + 0.1, 0.98)
+
+  return {
+    success: true,
+    cube,
+    method: 'hybrid',
+    confidence,
+    warnings: [...baseResult.warnings, ...warnings],
+  }
+}
+
+/**
+ * Generates cubes from a composite description
+ * Supports primary cube with related neighbors
+ *
+ * @param description - Composite description with primary and neighbor definitions
+ * @param context - Optional generation context
+ * @returns CubeGroupResult with all generated cubes
+ */
+export async function generateFromComposite(
+  description: CompositeDescription,
+  context?: GenerationContext
+): Promise<CubeGroupResult> {
+  const warnings: string[] = []
+  const cubes: SpectralCube[] = []
+  const positions: [number, number, number][] = []
+
+  // Apply theme to context if specified
+  const effectiveContext: GenerationContext = {
+    ...context,
+    theme: description.theme || context?.theme,
+  }
+
+  // Generate primary cube - use contextual generation if we have theme or context
+  const useContextual = effectiveContext.theme || context
+  const primaryResult = useContextual
+    ? await generateContextual(description.primary, effectiveContext)
+    : await generateFromPrompt(description.primary)
+
+  if (!primaryResult.success || !primaryResult.cube) {
+    return {
+      success: false,
+      cubes: [],
+      method: 'composite',
+      confidence: 0,
+      warnings: ['Failed to generate primary cube', ...primaryResult.warnings],
+    }
+  }
+
+  cubes.push(primaryResult.cube)
+  positions.push([0, 0, 0])
+  warnings.push(...primaryResult.warnings)
+
+  // Generate neighbor cubes
+  if (description.neighbors && description.neighbors.length > 0) {
+    for (const neighbor of description.neighbors) {
+      const neighborCube = await generateNeighborCube(
+        primaryResult.cube,
+        neighbor,
+        effectiveContext
+      )
+      if (neighborCube) {
+        cubes.push(neighborCube)
+        positions.push(getPositionFromDirection(neighbor.direction))
+      } else {
+        warnings.push(`Failed to generate neighbor in direction ${neighbor.direction}`)
+      }
+    }
+  }
+
+  // Generate variations if requested
+  if (description.variations && description.variations > 1) {
+    const variationPrompts = generateVariationPrompts(
+      description.primary,
+      description.variations - 1
+    )
+    for (const varPrompt of variationPrompts) {
+      const varResult = context
+        ? await generateContextual(varPrompt, {
+            ...effectiveContext,
+            extractedStyle: extractStyle(cubes),
+          })
+        : await generateFromPrompt(varPrompt)
+
+      if (varResult.success && varResult.cube) {
+        cubes.push(varResult.cube)
+      }
+    }
+  }
+
+  const avgConfidence = cubes.length > 0 ? primaryResult.confidence : 0
+
+  return {
+    success: cubes.length > 0,
+    cubes,
+    method: 'composite',
+    confidence: avgConfidence,
+    warnings,
+    groupType: description.groupType,
+    positions,
+  }
+}
+
+/**
+ * Generates a neighbor cube based on the primary cube and relation
+ */
+async function generateNeighborCube(
+  primary: SpectralCube,
+  neighbor: NeighborDescription,
+  context?: GenerationContext
+): Promise<SpectralCube | null> {
+  const relationMod = RELATION_MODIFIERS[neighbor.relation]
+
+  // Generate base neighbor cube
+  const baseResult = context
+    ? await generateContextual(neighbor.description, context)
+    : await generateFromPrompt(neighbor.description)
+
+  if (!baseResult.success || !baseResult.cube) {
+    return null
+  }
+
+  // Apply relation-based modifications
+  const neighborCube = baseResult.cube
+  const primaryColor = primary.base.color
+
+  // Blend color based on relation
+  let finalColor: Color3
+  switch (neighbor.relation) {
+    case 'similar':
+      finalColor = [
+        clamp(neighborCube.base.color[0] * 0.3 + primaryColor[0] * 0.7, 0, 1),
+        clamp(neighborCube.base.color[1] * 0.3 + primaryColor[1] * 0.7, 0, 1),
+        clamp(neighborCube.base.color[2] * 0.3 + primaryColor[2] * 0.7, 0, 1),
+      ]
+      break
+    case 'contrast':
+      finalColor = [
+        clamp(1 - primaryColor[0] * 0.5 + neighborCube.base.color[0] * 0.5, 0, 1),
+        clamp(1 - primaryColor[1] * 0.5 + neighborCube.base.color[1] * 0.5, 0, 1),
+        clamp(1 - primaryColor[2] * 0.5 + neighborCube.base.color[2] * 0.5, 0, 1),
+      ]
+      break
+    case 'gradient':
+      finalColor = applyColorShift(primaryColor, relationMod.colorShift)
+      break
+    case 'complement':
+      finalColor = [
+        clamp(primaryColor[0] + relationMod.colorShift[0], 0, 1),
+        clamp(primaryColor[1] + relationMod.colorShift[1], 0, 1),
+        clamp(primaryColor[2] + relationMod.colorShift[2], 0, 1),
+      ]
+      break
+    default:
+      finalColor = neighborCube.base.color
+  }
+
+  return {
+    ...neighborCube,
+    base: {
+      ...neighborCube.base,
+      color: finalColor,
+    },
+    meta: {
+      ...neighborCube.meta,
+      tags: [...(neighborCube.meta?.tags || []), 'neighbor', neighbor.relation],
+    },
+  }
+}
+
+/**
+ * Gets grid position from direction
+ */
+function getPositionFromDirection(direction: string): [number, number, number] {
+  switch (direction) {
+    case 'x':
+      return [1, 0, 0]
+    case '-x':
+      return [-1, 0, 0]
+    case 'y':
+      return [0, 1, 0]
+    case '-y':
+      return [0, -1, 0]
+    case 'z':
+      return [0, 0, 1]
+    case '-z':
+      return [0, 0, -1]
+    default:
+      return [0, 0, 0]
+  }
+}
+
+/**
+ * Generates variation prompts by adding modifiers to base prompt
+ */
+function generateVariationPrompts(basePrompt: string, count: number): string[] {
+  const variationModifiers = [
+    'slightly darker',
+    'slightly lighter',
+    'weathered',
+    'fresh',
+    'mossy',
+    'dusty',
+    'wet',
+    'dry',
+    'old',
+    'new',
+  ]
+
+  const prompts: string[] = []
+  for (let i = 0; i < count && i < variationModifiers.length; i++) {
+    prompts.push(`${variationModifiers[i]} ${basePrompt}`)
+  }
+  return prompts
+}
+
+/**
+ * Batch generation - generates multiple cubes from an array of prompts
+ *
+ * @param request - Batch generation request with prompts and options
+ * @returns Array of GenerationResults
+ */
+export async function generateBatch(request: BatchGenerationRequest): Promise<GenerationResult[]> {
+  const results: GenerationResult[] = []
+  const generatedCubes: SpectralCube[] = []
+
+  // Extract style from context cubes if provided
+  let extractedStyle: ExtractedStyle | undefined
+  if (request.contextCubes && request.contextCubes.length > 0) {
+    extractedStyle = extractStyle(request.contextCubes)
+  }
+
+  for (let i = 0; i < request.prompts.length; i++) {
+    let prompt = request.prompts[i]
+
+    // Apply global style modifier if specified
+    if (request.style) {
+      prompt = `${request.style} ${prompt}`
+    }
+
+    // Build context based on grouping mode
+    const context: GenerationContext = {
+      theme: request.theme,
+      extractedStyle,
+    }
+
+    // For related/themed grouping, include previously generated cubes
+    if (
+      (request.grouping === 'related' || request.grouping === 'themed') &&
+      generatedCubes.length > 0
+    ) {
+      context.extractedStyle = extractStyle([...(request.contextCubes || []), ...generatedCubes])
+    }
+
+    // Generate with or without context
+    const result =
+      request.grouping === 'individual'
+        ? await generateFromPrompt(prompt)
+        : await generateContextual(prompt, context)
+
+    results.push(result)
+    if (result.success && result.cube) {
+      generatedCubes.push(result.cube)
+    }
+  }
+
+  return results
+}
+
+/**
+ * Generates a group of cubes for a specific structure type
+ *
+ * @param groupType - Type of group (wall, floor, column, etc.)
+ * @param description - Text description for the group
+ * @param dimensions - Optional custom dimensions [width, height, depth]
+ * @returns CubeGroupResult with positioned cubes
+ */
+export async function generateGroup(
+  groupType: CubeGroupType,
+  description: string,
+  dimensions?: [number, number, number]
+): Promise<CubeGroupResult> {
+  const config = GROUP_CONFIGS[groupType]
+  const [width, height, depth] = dimensions || config.dimensions
+  const cubes: SpectralCube[] = []
+  const positions: [number, number, number][] = []
+  const warnings: string[] = []
+
+  // Generate base cube
+  const baseResult = await generateFromPrompt(description)
+  if (!baseResult.success || !baseResult.cube) {
+    return {
+      success: false,
+      cubes: [],
+      method: 'group',
+      confidence: 0,
+      warnings: ['Failed to generate base cube for group'],
+      groupType,
+    }
+  }
+
+  const baseCube = baseResult.cube
+  const extractedStyle = extractStyle([baseCube])
+
+  // Generate cubes for all positions in the group
+  for (let x = 0; x < width; x++) {
+    for (let y = 0; y < height; y++) {
+      for (let z = 0; z < depth; z++) {
+        // Calculate position-based variation
+        const positionFactor = calculatePositionFactor(
+          x,
+          y,
+          z,
+          width,
+          height,
+          depth,
+          config.gradientDirection
+        )
+
+        // Generate variation with position context
+        const variationPrompt = `${description}`
+        const result = await generateContextual(variationPrompt, {
+          extractedStyle,
+          gridPosition: [x, y, z],
+        })
+
+        if (result.success && result.cube) {
+          // Apply position-based gradient
+          const gradientShift: ColorShift3 = [
+            positionFactor * 0.15,
+            positionFactor * 0.1,
+            positionFactor * 0.05,
+          ]
+          const modifiedCube: SpectralCube = {
+            ...result.cube,
+            base: {
+              ...result.cube.base,
+              color: applyColorShift(result.cube.base.color, gradientShift),
+            },
+            meta: {
+              ...result.cube.meta,
+              tags: [...(result.cube.meta?.tags || []), groupType, 'group'],
+            },
+          }
+          cubes.push(modifiedCube)
+          positions.push([x, y, z])
+        } else {
+          warnings.push(`Failed to generate cube at position [${x}, ${y}, ${z}]`)
+        }
+      }
+    }
+  }
+
+  const avgConfidence =
+    cubes.length > 0
+      ? cubes.reduce((sum, _, idx) => sum + (idx === 0 ? baseResult.confidence : 0.8), 0) /
+        cubes.length
+      : 0
+
+  return {
+    success: cubes.length > 0,
+    cubes,
+    method: 'group',
+    confidence: Math.min(avgConfidence, 0.95),
+    warnings,
+    groupType,
+    positions,
+  }
+}
+
+/**
+ * Calculates position-based factor for gradient effects in groups
+ */
+function calculatePositionFactor(
+  x: number,
+  y: number,
+  z: number,
+  width: number,
+  height: number,
+  depth: number,
+  direction: GradientAxis
+): number {
+  switch (direction) {
+    case 'y':
+      return height > 1 ? y / (height - 1) : 0
+    case 'x':
+      return width > 1 ? x / (width - 1) : 0
+    case 'z':
+      return depth > 1 ? z / (depth - 1) : 0
+    case 'radial': {
+      const cx = (width - 1) / 2
+      const cy = (height - 1) / 2
+      const cz = (depth - 1) / 2
+      const maxDist = Math.sqrt(cx * cx + cy * cy + cz * cz) || 1
+      const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2 + (z - cz) ** 2)
+      return dist / maxDist
+    }
+    default:
+      return 0
+  }
+}
+
+// ============================================================================
+// Fine-tuning Functions
+// ============================================================================
+
+/**
+ * Adds a training example to the fine-tuning dataset
+ *
+ * @param example - Training example with prompt and expected cube
+ */
+export function addTrainingExample(example: TrainingExample): void {
+  if (!fineTuningDataset) {
+    fineTuningDataset = {
+      id: `dataset_${Date.now().toString(36)}`,
+      name: 'User Training Data',
+      examples: [],
+      version: '1.0.0',
+      created: new Date().toISOString(),
+      modified: new Date().toISOString(),
+    }
+  }
+
+  fineTuningDataset.examples.push(example)
+  fineTuningDataset.modified = new Date().toISOString()
+}
+
+/**
+ * Gets the current fine-tuning dataset
+ */
+export function getFineTuningDataset(): FineTuningDataset | null {
+  return fineTuningDataset
+}
+
+/**
+ * Loads a fine-tuning dataset
+ *
+ * @param dataset - Dataset to load
+ */
+export function loadFineTuningDataset(dataset: FineTuningDataset): void {
+  fineTuningDataset = dataset
+}
+
+/**
+ * Clears the fine-tuning dataset
+ */
+export function clearFineTuningDataset(): void {
+  fineTuningDataset = null
+}
+
+/**
+ * Exports the fine-tuning dataset as JSON
+ */
+export function exportFineTuningDataset(): string | null {
+  if (!fineTuningDataset) return null
+  return JSON.stringify(fineTuningDataset, null, 2)
+}
+
+/**
+ * Generates a cube using fine-tuning examples for improved matching
+ * Falls back to standard generation if no relevant examples found
+ *
+ * @param prompt - Text prompt for generation
+ * @returns GenerationResult with potentially improved matching
+ */
+export async function generateWithFineTuning(prompt: string): Promise<GenerationResult> {
+  if (!fineTuningDataset || fineTuningDataset.examples.length === 0) {
+    // Fall back to standard generation
+    return generateFromPrompt(prompt)
+  }
+
+  // Find similar examples
+  const tokens = translateTokens(tokenizePrompt(prompt))
+  let bestMatch: TrainingExample | null = null
+  let bestScore = 0
+
+  for (const example of fineTuningDataset.examples) {
+    const exampleTokens = translateTokens(tokenizePrompt(example.prompt))
+    const score = calculateSimilarity(tokens, exampleTokens)
+
+    // Weight by rating if available
+    const weightedScore = score * (example.rating ?? 0.7)
+
+    if (weightedScore > bestScore) {
+      bestScore = weightedScore
+      bestMatch = example
+    }
+  }
+
+  // If we have a good match, use it as a template
+  if (bestMatch && bestScore > 0.5) {
+    const cube = {
+      ...bestMatch.cube,
+      id: generateCubeId(),
+      prompt: prompt,
+      meta: {
+        ...bestMatch.cube.meta,
+        author: 'TinyLLM-FineTuned',
+        created: new Date().toISOString(),
+        tags: [...(bestMatch.cube.meta?.tags || []), 'fine-tuned'],
+      },
+    }
+
+    return {
+      success: true,
+      cube,
+      method: 'template',
+      confidence: Math.min(0.7 + bestScore * 0.3, 0.98),
+      warnings: [
+        `Matched fine-tuning example: "${bestMatch.prompt}" (score: ${bestScore.toFixed(2)})`,
+      ],
+    }
+  }
+
+  // Fall back to standard generation
+  return generateFromPrompt(prompt)
+}
+
+/**
+ * Calculates similarity between two token arrays
+ */
+function calculateSimilarity(tokens1: string[], tokens2: string[]): number {
+  if (tokens1.length === 0 || tokens2.length === 0) return 0
+
+  const set1 = new Set(tokens1)
+  const set2 = new Set(tokens2)
+
+  let intersection = 0
+  for (const token of set1) {
+    if (set2.has(token)) intersection++
+  }
+
+  // Jaccard similarity
+  const union = set1.size + set2.size - intersection
+  return union > 0 ? intersection / union : 0
+}
+
+/**
+ * Records user feedback for a generation to improve future results
+ *
+ * @param prompt - Original prompt
+ * @param cube - Generated cube
+ * @param rating - User rating (0-1)
+ */
+export function recordFeedback(prompt: string, cube: SpectralCube, rating: number): void {
+  addTrainingExample({
+    prompt,
+    cube,
+    rating: clamp(rating, 0, 1),
+    created: new Date().toISOString(),
+  })
+}
+
+/**
+ * Gets available theme names (excluding Russian translations)
+ */
+export function getAvailableThemes(): string[] {
+  // Filter out Russian keywords (those with Cyrillic characters)
+  return Object.keys(THEME_KEYWORDS).filter(
+    (key) => !/[а-яёА-ЯЁ]/.test(key) // Filter out Russian themes by checking for Cyrillic
+  )
+}
+
+/**
+ * Gets available group types
+ */
+export function getAvailableGroupTypes(): CubeGroupType[] {
+  return Object.keys(GROUP_CONFIGS) as CubeGroupType[]
 }
