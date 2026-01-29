@@ -48,12 +48,15 @@ describe('App', () => {
       expect(screen.getByText('Save')).toBeInTheDocument()
     })
 
-    it('should display the parameter editor', () => {
+    it('should display the unified editor', () => {
       render(<App />)
 
-      expect(screen.getByText('Edit Parameters')).toBeInTheDocument()
-      expect(screen.getByText('Base Properties')).toBeInTheDocument()
-      expect(screen.getByText('Noise Settings')).toBeInTheDocument()
+      // UnifiedEditor displays a title and mode selector
+      expect(screen.getByText('Unified Editor')).toBeInTheDocument()
+      // Mode selector buttons
+      expect(screen.getByRole('button', { name: /Spectral/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /FFT/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Stack/i })).toBeInTheDocument()
     })
 
     it('should display undo/redo buttons', () => {

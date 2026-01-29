@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 import './App.css'
 import { Gallery } from './components/Gallery'
 import { ExportPanel } from './components/ExportPanel'
-import { ParamEditor } from './components/ParamEditor'
+import { UnifiedEditor } from './components/UnifiedEditor'
 import { CubePreview } from './components/CubePreview'
 import { PromptGenerator } from './components/PromptGenerator'
 import type { SpectralCube } from './types/cube'
@@ -70,7 +70,7 @@ function App() {
     setCurrentCube(cube)
   }, [])
 
-  // Handle cube update from ParamEditor
+  // Handle cube update from UnifiedEditor
   const handleCubeUpdate = useCallback((cube: SpectralCube) => {
     setCurrentCube(cube)
   }, [])
@@ -217,7 +217,11 @@ function App() {
 
           {activeTab === 'editor' && (
             <section className="app__mobile-panel">
-              <ParamEditor currentCube={currentCube} onCubeUpdate={handleCubeUpdate} />
+              <UnifiedEditor
+                currentCube={currentCube}
+                onCubeUpdate={handleCubeUpdate}
+                isMobile={true}
+              />
             </section>
           )}
 
@@ -295,7 +299,7 @@ function App() {
                 contextCubes={currentCube ? [currentCube] : undefined}
                 enableAdvanced={true}
               />
-              <ParamEditor currentCube={currentCube} onCubeUpdate={handleCubeUpdate} />
+              <UnifiedEditor currentCube={currentCube} onCubeUpdate={handleCubeUpdate} />
               <ExportPanel
                 currentCube={currentCube}
                 onCubeLoad={handleCubeLoad}
@@ -332,7 +336,7 @@ function App() {
             contextCubes={currentCube ? [currentCube] : undefined}
             enableAdvanced={true}
           />
-          <ParamEditor currentCube={currentCube} onCubeUpdate={handleCubeUpdate} />
+          <UnifiedEditor currentCube={currentCube} onCubeUpdate={handleCubeUpdate} />
           <ExportPanel
             currentCube={currentCube}
             onCubeLoad={handleCubeLoad}
