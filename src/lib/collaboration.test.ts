@@ -297,7 +297,9 @@ describe('CollaborationManager', () => {
       })
 
       expect(result.success).toBe(true)
-      const updatedCube = manager.getCube('test-cube') as { base: { color: [number, number, number] } }
+      const updatedCube = manager.getCube('test-cube') as {
+        base: { color: [number, number, number] }
+      }
       expect(updatedCube?.base.color).toEqual([0, 1, 0])
     })
 
@@ -499,7 +501,9 @@ describe('CollaborationManager', () => {
 
       // External action should win due to later timestamp
       expect(conflictListener).toHaveBeenCalled()
-      const resolvedCube = manager.getCube('test-cube') as { base: { color: [number, number, number] } }
+      const resolvedCube = manager.getCube('test-cube') as {
+        base: { color: [number, number, number] }
+      }
       expect(resolvedCube?.base.color).toEqual([0, 0, 1])
     })
   })
