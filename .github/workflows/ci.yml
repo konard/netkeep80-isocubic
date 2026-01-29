@@ -3,7 +3,7 @@
 #
 # Key improvements:
 # - Cross-platform testing (Ubuntu, macOS, Windows)
-# - Multiple Node.js versions (18, 20, 22)
+# - Multiple Node.js versions (20, 22) - Node.js 18 excluded due to dependency requirements
 # - File size limits enforcement (max 1500 lines)
 # - Code coverage reporting to Codecov
 # - Format checking with Prettier
@@ -89,6 +89,8 @@ jobs:
 
   # === TEST MATRIX ===
   # Cross-platform testing on multiple OS and Node.js versions
+  # Note: Node.js 18 is excluded because project dependencies require Node.js 20+
+  # (e.g., @vitejs/plugin-react, lru-cache, jsdom/cssstyle, etc.)
   test:
     name: Test (Node ${{ matrix.node-version }} on ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -97,7 +99,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        node-version: ['18', '20', '22']
+        node-version: ['20', '22']
     steps:
       - uses: actions/checkout@v4
 
