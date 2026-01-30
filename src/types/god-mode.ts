@@ -85,9 +85,9 @@ export const GOD_MODE_TABS: GodModeTabInfo[] = [
     labelRu: 'Задачи',
     labelEn: 'Issues',
     icon: '📝',
-    available: false,
-    descriptionRu: 'Черновики GitHub Issues (TASK 56)',
-    descriptionEn: 'GitHub Issue drafts (TASK 56)',
+    available: true,
+    descriptionRu: 'Черновики GitHub Issues',
+    descriptionEn: 'GitHub Issue drafts',
   },
 ]
 
@@ -206,7 +206,7 @@ export interface GodModeConfig {
 export const DEFAULT_GOD_MODE_CONFIG: GodModeConfig = {
   position: DEFAULT_WINDOW_POSITION,
   size: DEFAULT_WINDOW_SIZE,
-  tabs: ['query', 'context', 'search'],
+  tabs: ['query', 'context', 'search', 'issues'],
   shortcuts: DEFAULT_KEYBOARD_SHORTCUTS,
   preferredLanguage: 'ru',
   persistState: true,
@@ -440,6 +440,373 @@ export function matchesShortcut(event: KeyboardEvent, shortcut: string): boolean
     event.key.toLowerCase() === parsed.key
   )
 }
+
+// =============================================================================
+// TASK 56: Issue Draft Generator Types
+// =============================================================================
+
+/**
+ * Priority levels for GitHub issues
+ */
+export type IssuePriority = 'low' | 'medium' | 'high' | 'critical'
+
+/**
+ * Types of GitHub issues
+ */
+export type IssueType = 'bug' | 'feature' | 'improvement' | 'documentation' | 'question'
+
+/**
+ * Screenshot data attached to an issue
+ */
+export interface IssueScreenshot {
+  /** Unique screenshot ID */
+  id: string
+  /** Base64 encoded image data */
+  imageData: string
+  /** Optional filename */
+  filename?: string
+  /** Component ID related to screenshot */
+  componentId?: string
+  /** Timestamp when screenshot was taken */
+  timestamp: string
+  /** Optional annotations on the screenshot */
+  annotations?: IssueAnnotation[]
+}
+
+/**
+ * Annotation on a screenshot
+ */
+export interface IssueAnnotation {
+  /** Type of annotation */
+  type: 'arrow' | 'circle' | 'rectangle' | 'text' | 'highlight'
+  /** Position coordinates */
+  x: number
+  y: number
+  /** End position for arrows and rectangles */
+  x2?: number
+  y2?: number
+  /** Color of the annotation */
+  color?: string
+  /** Text for text annotations */
+  text?: string
+  /** Width for lines and rectangles */
+  width?: number
+  /** Font size for text annotations */
+  fontSize?: number
+}
+
+/**
+ * Template for different issue types
+ */
+export interface IssueTemplate {
+  /** Template identifier */
+  id: string
+  /** Type of issue this template is for */
+  type: IssueType
+  /** Default title template (with placeholders) */
+  titleTemplate: string
+  /** Default body template (with placeholders) */
+  bodyTemplate: string
+  /** Default labels for this template */
+  defaultLabels: string[]
+  /** Default priority */
+  defaultPriority: IssuePriority
+  /** Template name in Russian */
+  nameRu: string
+  /** Template name in English */
+  nameEn: string
+  /** Template description in Russian */
+  descriptionRu: string
+  /** Template description in English */
+  descriptionEn: string
+  /** Example prompts that would use this template */
+  examplePrompts: {
+    ru: string[]
+    en: string[]
+  }
+}
+
+/**
+ * Draft of a GitHub issue
+ */
+export interface IssueDraft {
+  /** Unique draft ID */
+  id: string
+  /** Issue title */
+  title: string
+  /** Issue body description */
+  body: string
+  /** Type of issue */
+  type: IssueType
+  /** Priority level */
+  priority: IssuePriority
+  /** Labels to apply */
+  labels: string[]
+  /** Screenshots attached to the issue */
+  screenshots: IssueScreenshot[]
+  /** Related component IDs */
+  relatedComponents: string[]
+  /** Conversation messages that led to this draft */
+  conversationContext?: ConversationMessage[]
+  /** When draft was created */
+  createdAt: string
+  /** When draft was last updated */
+  updatedAt: string
+  /** Whether draft is ready for publication */
+  isReady: boolean
+  /** Notes from the user */
+  userNotes?: string
+}
+
+/**
+ * Settings for the Issue Draft Panel
+ */
+export interface IssueDraftSettings {
+  /** Whether to show preview before creating issue */
+  showPreview: boolean
+  /** Whether to auto-detect issue type from conversation */
+  autoDetectType: boolean
+  /** Whether to auto-suggest priority */
+  autoSuggestPriority: boolean
+  /** Whether to include conversation context */
+  includeConversationContext: boolean
+  /** Default labels to always include */
+  defaultLabels: string[]
+  /** Maximum number of drafts to keep */
+  maxDrafts: number
+  /** Whether to persist drafts across sessions */
+  persistDrafts: boolean
+}
+
+/**
+ * Default issue draft settings
+ */
+export const DEFAULT_ISSUE_DRAFT_SETTINGS: IssueDraftSettings = {
+  showPreview: true,
+  autoDetectType: true,
+  autoSuggestPriority: true,
+  includeConversationContext: true,
+  defaultLabels: [],
+  maxDrafts: 10,
+  persistDrafts: true,
+}
+
+/**
+ * Default issue templates
+ */
+export const ISSUE_TEMPLATES: IssueTemplate[] = [
+  {
+    id: 'bug-report',
+    type: 'bug',
+    titleTemplate: 'Bug: {summary}',
+    bodyTemplate: `## Description
+{description}
+
+## Steps to Reproduce
+{steps}
+
+## Expected Behavior
+{expected}
+
+## Actual Behavior
+{actual}
+
+## Environment
+- Browser: {browser}
+- OS: {os}
+- Component: {component}
+
+## Screenshots
+{screenshots}`,
+    defaultLabels: ['bug', 'needs-triage'],
+    defaultPriority: 'medium',
+    nameRu: 'Сообщение об ошибке',
+    nameEn: 'Bug Report',
+    descriptionRu: 'Шаблон для сообщения об ошибке или некорректном поведении',
+    descriptionEn: 'Template for reporting bugs or incorrect behavior',
+    examplePrompts: {
+      ru: ['нашёл баг', 'ошибка', 'не работает', 'неправильное поведение', 'проблема'],
+      en: ['found a bug', 'error', 'not working', 'incorrect behavior', 'problem'],
+    },
+  },
+  {
+    id: 'feature-request',
+    type: 'feature',
+    titleTemplate: 'Feature: {summary}',
+    bodyTemplate: `## Summary
+{summary}
+
+## Motivation
+{motivation}
+
+## Proposed Solution
+{solution}
+
+## Alternatives Considered
+{alternatives}
+
+## Additional Context
+{context}`,
+    defaultLabels: ['enhancement', 'feature-request'],
+    defaultPriority: 'medium',
+    nameRu: 'Запрос функции',
+    nameEn: 'Feature Request',
+    descriptionRu: 'Шаблон для предложения новой функциональности',
+    descriptionEn: 'Template for proposing new functionality',
+    examplePrompts: {
+      ru: ['хочу добавить', 'новая функция', 'предлагаю', 'было бы здорово'],
+      en: ['want to add', 'new feature', 'propose', 'it would be great'],
+    },
+  },
+  {
+    id: 'improvement',
+    type: 'improvement',
+    titleTemplate: 'Improvement: {summary}',
+    bodyTemplate: `## Current State
+{currentState}
+
+## Proposed Improvement
+{improvement}
+
+## Benefits
+{benefits}
+
+## Implementation Notes
+{notes}`,
+    defaultLabels: ['enhancement', 'improvement'],
+    defaultPriority: 'low',
+    nameRu: 'Улучшение',
+    nameEn: 'Improvement',
+    descriptionRu: 'Шаблон для предложения улучшений существующей функциональности',
+    descriptionEn: 'Template for suggesting improvements to existing functionality',
+    examplePrompts: {
+      ru: ['улучшить', 'оптимизировать', 'сделать лучше', 'предлагаю улучшение'],
+      en: ['improve', 'optimize', 'make better', 'suggest improvement'],
+    },
+  },
+  {
+    id: 'documentation',
+    type: 'documentation',
+    titleTemplate: 'Docs: {summary}',
+    bodyTemplate: `## Documentation Area
+{area}
+
+## Issue
+{issue}
+
+## Suggested Changes
+{changes}
+
+## Additional Information
+{info}`,
+    defaultLabels: ['documentation'],
+    defaultPriority: 'low',
+    nameRu: 'Документация',
+    nameEn: 'Documentation',
+    descriptionRu: 'Шаблон для проблем или улучшений в документации',
+    descriptionEn: 'Template for documentation issues or improvements',
+    examplePrompts: {
+      ru: ['документация', 'описание', 'пояснение', 'руководство'],
+      en: ['documentation', 'description', 'explanation', 'guide'],
+    },
+  },
+  {
+    id: 'question',
+    type: 'question',
+    titleTemplate: 'Question: {summary}',
+    bodyTemplate: `## Question
+{question}
+
+## What I've Tried
+{tried}
+
+## Expected Answer
+{expected}`,
+    defaultLabels: ['question'],
+    defaultPriority: 'low',
+    nameRu: 'Вопрос',
+    nameEn: 'Question',
+    descriptionRu: 'Шаблон для вопросов по использованию или реализации',
+    descriptionEn: 'Template for questions about usage or implementation',
+    examplePrompts: {
+      ru: ['как', 'почему', 'объясните', 'вопрос', 'непонятно'],
+      en: ['how', 'why', 'explain', 'question', 'unclear'],
+    },
+  },
+]
+
+/**
+ * Generates a unique draft ID
+ */
+export function generateDraftId(): string {
+  return `draft_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+}
+
+/**
+ * Creates a new issue draft
+ */
+export function createIssueDraft(
+  title: string,
+  type: IssueType = 'bug',
+  priority: IssuePriority = 'medium'
+): IssueDraft {
+  const now = new Date().toISOString()
+  const template = ISSUE_TEMPLATES.find((t) => t.type === type)
+  
+  return {
+    id: generateDraftId(),
+    title: title || (template ? template.titleTemplate.replace('{summary}', 'New issue') : 'New issue'),
+    body: template ? template.bodyTemplate : '',
+    type,
+    priority,
+    labels: template ? [...template.defaultLabels] : [],
+    screenshots: [],
+    relatedComponents: [],
+    createdAt: now,
+    updatedAt: now,
+    isReady: false,
+  }
+}
+
+/**
+ * Gets priority weight for sorting
+ */
+export function getPriorityWeight(priority: IssuePriority): number {
+  switch (priority) {
+    case 'critical':
+      return 4
+    case 'high':
+      return 3
+    case 'medium':
+      return 2
+    case 'low':
+      return 1
+    default:
+      return 0
+  }
+}
+
+/**
+ * Checks if a draft is valid for publication
+ */
+export function isValidDraft(draft: IssueDraft): boolean {
+  return (
+    draft.title.trim().length > 0 &&
+    draft.body.trim().length > 0 &&
+    draft.type !== undefined &&
+    draft.priority !== undefined
+  )
+}
+
+/**
+ * LocalStorage key for issue drafts
+ */
+export const ISSUE_DRAFTS_STORAGE_KEY = 'isocubic_god_mode_issue_drafts'
+
+/**
+ * LocalStorage key for issue draft settings
+ */
+export const ISSUE_DRAFT_SETTINGS_STORAGE_KEY = 'isocubic_god_mode_issue_draft_settings'
 
 // =============================================================================
 // TASK 55: AI Conversation Agent Types
