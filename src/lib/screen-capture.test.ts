@@ -7,7 +7,7 @@
  * TASK 58: Screen Capture & Annotation (Phase 9 - GOD MODE)
  */
 
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import {
   generateScreenshotId,
   getExtensionFromFormat,
@@ -25,8 +25,6 @@ import {
   SCREENSHOTS_STORAGE_KEY,
   MAX_STORED_SCREENSHOTS,
   type CaptureFormat,
-  type ScreenCaptureConfig,
-  type CaptureResult,
 } from './screen-capture'
 import type { IssueScreenshot, IssueAnnotation } from '../types/issue-generator'
 
@@ -44,22 +42,54 @@ function createMockCanvasContext(): CanvasRenderingContext2D {
     stroke: vi.fn(),
     ellipse: vi.fn(),
     fillText: vi.fn(),
-    set globalAlpha(_: number) { /* no-op */ },
-    get globalAlpha() { return 1 },
-    set strokeStyle(_: string) { /* no-op */ },
-    get strokeStyle() { return '#000000' },
-    set fillStyle(_: string) { /* no-op */ },
-    get fillStyle() { return '#000000' },
-    set lineWidth(_: number) { /* no-op */ },
-    get lineWidth() { return 1 },
-    set lineCap(_: CanvasLineCap) { /* no-op */ },
-    get lineCap() { return 'butt' as CanvasLineCap },
-    set lineJoin(_: CanvasLineJoin) { /* no-op */ },
-    get lineJoin() { return 'miter' as CanvasLineJoin },
-    set font(_: string) { /* no-op */ },
-    get font() { return '10px sans-serif' },
-    set textBaseline(_: CanvasTextBaseline) { /* no-op */ },
-    get textBaseline() { return 'alphabetic' as CanvasTextBaseline },
+    set globalAlpha(_: number) {
+      /* no-op */
+    },
+    get globalAlpha() {
+      return 1
+    },
+    set strokeStyle(_: string) {
+      /* no-op */
+    },
+    get strokeStyle() {
+      return '#000000'
+    },
+    set fillStyle(_: string) {
+      /* no-op */
+    },
+    get fillStyle() {
+      return '#000000'
+    },
+    set lineWidth(_: number) {
+      /* no-op */
+    },
+    get lineWidth() {
+      return 1
+    },
+    set lineCap(_: CanvasLineCap) {
+      /* no-op */
+    },
+    get lineCap() {
+      return 'butt' as CanvasLineCap
+    },
+    set lineJoin(_: CanvasLineJoin) {
+      /* no-op */
+    },
+    get lineJoin() {
+      return 'miter' as CanvasLineJoin
+    },
+    set font(_: string) {
+      /* no-op */
+    },
+    get font() {
+      return '10px sans-serif'
+    },
+    set textBaseline(_: CanvasTextBaseline) {
+      /* no-op */
+    },
+    get textBaseline() {
+      return 'alphabetic' as CanvasTextBaseline
+    },
   } as unknown as CanvasRenderingContext2D
 }
 
@@ -726,9 +756,7 @@ describe('Screen Capture Library', () => {
 
   describe('loadScreenshots', () => {
     it('should load screenshots from localStorage', () => {
-      const screenshots = [
-        { id: 'test1', imageData: 'data1', timestamp: '2024-01-01' },
-      ]
+      const screenshots = [{ id: 'test1', imageData: 'data1', timestamp: '2024-01-01' }]
       localStorageMock.getItem.mockReturnValueOnce(JSON.stringify(screenshots))
 
       const loaded = loadScreenshots()

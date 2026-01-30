@@ -11,7 +11,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { AnnotationCanvas } from './AnnotationCanvas'
-import type { IssueScreenshot, IssueAnnotation } from '../types/issue-generator'
+import type { IssueScreenshot } from '../types/issue-generator'
 
 // Mock the screen-capture module
 vi.mock('../lib/screen-capture', () => ({
@@ -29,9 +29,12 @@ const mockImage = {
   crossOrigin: '',
 }
 
-vi.stubGlobal('Image', vi.fn().mockImplementation(() => {
-  return { ...mockImage }
-}))
+vi.stubGlobal(
+  'Image',
+  vi.fn().mockImplementation(() => {
+    return { ...mockImage }
+  })
+)
 
 // Mock canvas context
 const mockCtx = {
@@ -62,7 +65,8 @@ HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue(mockCtx)
 describe('AnnotationCanvas', () => {
   const baseScreenshot: IssueScreenshot = {
     id: 'screenshot-1',
-    imageData: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+    imageData:
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
     timestamp: new Date().toISOString(),
     resolution: { width: 400, height: 300 },
     viewport: { width: 1920, height: 1080 },
@@ -238,48 +242,29 @@ describe('AnnotationCanvas', () => {
   // ==========================================================================
   describe('Annotation List', () => {
     it('should not render annotation list when no annotations', () => {
-      render(<AnnotationCanvas {...defaultProps} />)
+      render(<AnnotationCanvas {...defaultProps} screenshot={baseScreenshot} />)
       expect(screen.queryByTestId('annotation-list')).not.toBeInTheDocument()
     })
 
     it('should render annotation list when annotations exist', () => {
-      render(
-        <AnnotationCanvas
-          {...defaultProps}
-          screenshot={screenshotWithAnnotations}
-        />
-      )
+      render(<AnnotationCanvas {...defaultProps} screenshot={screenshotWithAnnotations} />)
       expect(screen.getByTestId('annotation-list')).toBeInTheDocument()
     })
 
     it('should show annotation count in Russian', () => {
-      render(
-        <AnnotationCanvas
-          {...defaultProps}
-          screenshot={screenshotWithAnnotations}
-        />
-      )
+      render(<AnnotationCanvas {...defaultProps} screenshot={screenshotWithAnnotations} />)
       expect(screen.getByText('Аннотации (2)')).toBeInTheDocument()
     })
 
     it('should show annotation count in English', () => {
       render(
-        <AnnotationCanvas
-          {...defaultProps}
-          language="en"
-          screenshot={screenshotWithAnnotations}
-        />
+        <AnnotationCanvas {...defaultProps} language="en" screenshot={screenshotWithAnnotations} />
       )
       expect(screen.getByText('Annotations (2)')).toBeInTheDocument()
     })
 
     it('should show delete buttons for each annotation', () => {
-      render(
-        <AnnotationCanvas
-          {...defaultProps}
-          screenshot={screenshotWithAnnotations}
-        />
-      )
+      render(<AnnotationCanvas {...defaultProps} screenshot={screenshotWithAnnotations} />)
       expect(screen.getByTestId('annotation-delete-ann-1')).toBeInTheDocument()
       expect(screen.getByTestId('annotation-delete-ann-2')).toBeInTheDocument()
     })
@@ -303,12 +288,7 @@ describe('AnnotationCanvas', () => {
     })
 
     it('should show text content for text annotations', () => {
-      render(
-        <AnnotationCanvas
-          {...defaultProps}
-          screenshot={screenshotWithAnnotations}
-        />
-      )
+      render(<AnnotationCanvas {...defaultProps} screenshot={screenshotWithAnnotations} />)
       // The text annotation shows "Bug here" (truncated display)
       expect(screen.getByText('"Bug here"')).toBeInTheDocument()
     })
@@ -331,12 +311,7 @@ describe('AnnotationCanvas', () => {
     })
 
     it('should enable clear when annotations exist', () => {
-      render(
-        <AnnotationCanvas
-          {...defaultProps}
-          screenshot={screenshotWithAnnotations}
-        />
-      )
+      render(<AnnotationCanvas {...defaultProps} screenshot={screenshotWithAnnotations} />)
       const clearBtn = screen.getByTestId('annotation-clear')
       expect(clearBtn).not.toBeDisabled()
     })
