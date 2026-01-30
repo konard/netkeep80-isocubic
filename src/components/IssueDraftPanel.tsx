@@ -30,11 +30,14 @@ import type {
   IssueType,
   IssuePriority,
   IssueDraftSettings,
+  IssueScreenshot,
 } from '../types/issue-generator'
 import { createIssueGenerator, type IssueGenerationResult } from '../lib/issue-generator'
 import { validateIssueDraft } from '../types/issue-generator'
 import { createGitHubClient, type GitHubApiClient, type GitHubIssueResult } from '../lib/github-api'
+import { captureViewport, type CaptureResult } from '../lib/screen-capture'
 import { GitHubAuthButton } from './GitHubAuthButton'
+import { AnnotationCanvas } from './AnnotationCanvas'
 
 /**
  * Props for IssueDraftPanel
@@ -371,6 +374,11 @@ export function IssueDraftPanel({
     IssueGenerationResult['insights'] | null
   >(null)
 
+  // Screenshot & annotation state
+  const [screenshots, setScreenshots] = useState<IssueScreenshot[]>([])
+  const [activeScreenshot, setActiveScreenshot] = useState<IssueScreenshot | null>(null)
+  const [isCapturing, setIsCapturing] = useState(false)
+
   // GitHub state
   const [githubClient] = useState<GitHubApiClient>(
     () =>
@@ -490,6 +498,61 @@ export function IssueDraftPanel({
       onIssuePublished?.(result)
     }
   }, [draft, validation.isValid, githubClient, onIssuePublished])
+
+  // Handle screenshot capture
+  const handleCaptureScreenshot = useCallback(async () => {
+    setIsCapturing(true)
+    try {
+      const result: CaptureResult = await captureViewport()
+      if (result.success && result.screenshot) {
+        setScreenshots((prev) => [...prev, result.screenshot!])
+        // Attach to draft if exists
+        if (draft) {
+          handleDraftChange('screenshots', [...(draft.screenshots || []), result.screenshot])
+        }
+      }
+    } catch (error) {
+      console.error('Failed to capture screenshot:', error)
+    } finally {
+      setIsCapturing(false)
+    }
+  }, [draft, handleDraftChange])
+
+  // Handle screenshot annotation save
+  const handleAnnotationSave = useCallback(
+    (imageData: string) => {
+      if (!activeScreenshot) return
+      const updatedScreenshot: IssueScreenshot = {
+        ...activeScreenshot,
+        imageData,
+      }
+      setScreenshots((prev) =>
+        prev.map((s) => (s.id === updatedScreenshot.id ? updatedScreenshot : s))
+      )
+      if (draft) {
+        const updatedScreenshots = (draft.screenshots || []).map((s) =>
+          s.id === updatedScreenshot.id ? updatedScreenshot : s
+        )
+        handleDraftChange('screenshots', updatedScreenshots)
+      }
+      setActiveScreenshot(null)
+    },
+    [activeScreenshot, draft, handleDraftChange]
+  )
+
+  // Handle screenshot removal
+  const handleRemoveScreenshot = useCallback(
+    (id: string) => {
+      setScreenshots((prev) => prev.filter((s) => s.id !== id))
+      if (draft) {
+        handleDraftChange(
+          'screenshots',
+          (draft.screenshots || []).filter((s) => s.id !== id)
+        )
+      }
+    },
+    [draft, handleDraftChange]
+  )
 
   // Get confidence color class
   const getConfidenceColor = useCallback((confidence: number) => {
@@ -795,6 +858,155 @@ export function IssueDraftPanel({
             <div style={styles.previewContent}>
               **{draft.title}**
               {draft.body}
+            </div>
+          </div>
+        )}
+
+        {/* Screenshot Section */}
+        {draft && (
+          <div
+            style={{
+              padding: '12px 16px',
+              borderTop: '1px solid rgba(139, 92, 246, 0.2)',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '12px',
+                fontWeight: 600,
+                color: '#c4b5fd',
+                marginBottom: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <span>
+                {language === 'ru' ? '📸 Скриншоты' : '📸 Screenshots'}
+                {screenshots.length > 0 && ` (${screenshots.length})`}
+              </span>
+              <button
+                type="button"
+                onClick={handleCaptureScreenshot}
+                disabled={isCapturing}
+                style={{
+                  ...styles.button,
+                  opacity: isCapturing ? 0.5 : 1,
+                  cursor: isCapturing ? 'not-allowed' : 'pointer',
+                }}
+                data-testid="capture-screenshot-button"
+              >
+                {isCapturing
+                  ? language === 'ru'
+                    ? '⏳ Захват...'
+                    : '⏳ Capturing...'
+                  : language === 'ru'
+                    ? '📷 Сделать скриншот'
+                    : '📷 Capture screenshot'}
+              </button>
+            </div>
+            {screenshots.length > 0 && (
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '8px',
+                  flexWrap: 'wrap',
+                  marginTop: '8px',
+                }}
+              >
+                {screenshots.map((screenshot) => (
+                  <div
+                    key={screenshot.id}
+                    style={{
+                      position: 'relative',
+                      border: '1px solid rgba(139, 92, 246, 0.2)',
+                      borderRadius: '6px',
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      width: '80px',
+                      height: '60px',
+                    }}
+                    onClick={() => setActiveScreenshot(screenshot)}
+                    data-testid={`screenshot-thumb-${screenshot.id}`}
+                  >
+                    <img
+                      src={screenshot.imageData}
+                      alt={screenshot.title || 'Screenshot'}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleRemoveScreenshot(screenshot.id)
+                      }}
+                      style={{
+                        position: 'absolute',
+                        top: '2px',
+                        right: '2px',
+                        background: 'rgba(0, 0, 0, 0.6)',
+                        border: 'none',
+                        color: '#fff',
+                        borderRadius: '50%',
+                        width: '16px',
+                        height: '16px',
+                        fontSize: '10px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: 0,
+                      }}
+                      data-testid={`screenshot-remove-${screenshot.id}`}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Annotation Canvas Modal */}
+        {activeScreenshot && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              zIndex: 20000,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '20px',
+            }}
+            data-testid="annotation-modal"
+          >
+            <div
+              style={{
+                maxWidth: '900px',
+                maxHeight: '700px',
+                width: '100%',
+                height: '100%',
+              }}
+            >
+              <AnnotationCanvas
+                screenshot={activeScreenshot}
+                language={language}
+                onAnnotationsChange={(annotations) => {
+                  setActiveScreenshot((prev) => (prev ? { ...prev, annotations } : null))
+                }}
+                onExport={handleAnnotationSave}
+                onClose={() => setActiveScreenshot(null)}
+              />
             </div>
           </div>
         )}

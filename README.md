@@ -150,7 +150,8 @@ isocubic/
 │   │   ├── GodModeWindow.tsx     # Единое окно GOD MODE (Phase 9)
 │   │   ├── ConversationPanel.tsx # AI-диалог для GOD MODE (Phase 9)
 │   │   ├── IssueDraftPanel.tsx   # Генератор черновиков issues (Phase 9)
-│   │   └── GitHubAuthButton.tsx  # Авторизация GitHub (Phase 9)
+│   │   ├── GitHubAuthButton.tsx  # Авторизация GitHub (Phase 9)
+│   │   └── AnnotationCanvas.tsx  # Аннотирование скриншотов (Phase 9)
 │   ├── shaders/           # GLSL-шейдеры
 │   │   ├── parametric-cube.glsl  # Исходный GLSL код
 │   │   ├── parametric-cube.ts    # TypeScript модуль для Three.js
@@ -166,6 +167,7 @@ isocubic/
 │   │   ├── conversation-agent.ts # AI-агент для диалогов в GOD MODE (Phase 9)
 │   │   ├── issue-generator.ts   # Генератор черновиков issues (Phase 9)
 │   │   ├── github-api.ts        # GitHub API клиент (Phase 9)
+│   │   ├── screen-capture.ts   # Захват экрана и аннотации (Phase 9)
 │   │   ├── storage.ts         # Работа с хранилищем
 │   │   ├── validation.ts      # Валидация схемы
 │   │   ├── fft-wasm.ts        # FFT модуль (WASM + JS fallback)
@@ -286,7 +288,7 @@ npm run test:coverage
 ```
 
 **Текущее покрытие:**
-- 2710+ тестов
+- 2800+ тестов
 - Unit-тесты для типов, валидации, хранилища, производительности, физики энергии
 - Тесты модуля коллаборации (сессии, участники, синхронизация, конфликты)
 - Тесты WebSocket клиента (подключение, сообщения, реконнект, fallback на polling)
@@ -305,6 +307,7 @@ npm run test:coverage
 - Тесты AI Conversation Agent (ConversationPanel, intent detection, session management, multi-language support)
 - Тесты Issue Draft Generator (IssueDraftPanel, генерация черновиков, шаблоны, валидация)
 - Тесты GitHub Integration (GitHub API клиент, авторизация PAT/OAuth, создание issues, метки)
+- Тесты Screen Capture & Annotation (захват экрана, Canvas API, аннотации, ScreenCaptureManager)
 - E2E тесты для полных workflow редактирования
 
 ## Вклад в проект
