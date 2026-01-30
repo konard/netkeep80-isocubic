@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { publishingApiService } from './publishing-api'
 import type { UserProfile } from '../types/auth'
 import type { SpectralCube } from '../types/cube'
-import type { PublishedCube } from '../types/community'
+import type { CubeCategory, PublishedCube } from '../types/community'
 import type {
   CreateCubeRequest,
   UpdateCubeRequest,

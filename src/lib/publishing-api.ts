@@ -850,7 +850,7 @@ export const publishingApiService = {
   async getModerationQueue(
     page: number = 1,
     pageSize: number = 20,
-    userId: string,
+    _userId: string,
     userRole?: UserRole
   ): Promise<ApiResponse<ModerationQueueResponse>> {
     await simulateNetworkDelay(200)

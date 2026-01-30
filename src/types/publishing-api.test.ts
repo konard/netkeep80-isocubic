@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import type { SpectralCube } from './cube'
+import type { SpectralCube, CubeBase } from './cube'
 import type { CubeCategory, CubeVisibility } from './community'
 import type {
   ApiErrorCode,
@@ -223,7 +223,7 @@ describe('Publishing API Types', () => {
       const request: CreateCubeRequest = {
         cube: {
           id: 'test',
-          base: {} as { color: number[]; roughness: number; transparency: number },
+          base: {} as CubeBase,
         },
         visibility: 'public',
         category: 'abstract',
