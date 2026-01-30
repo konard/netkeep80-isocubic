@@ -143,7 +143,8 @@ isocubic/
 │   │   ├── Gallery.tsx        # Галерея примеров
 │   │   ├── CommunityGallery.tsx # Галерея сообщества
 │   │   ├── ExportPanel.tsx    # Экспорт/импорт
-│   │   └── SharePanel.tsx     # Шаринг кубиков с QR-кодами
+│   │   ├── SharePanel.tsx     # Шаринг кубиков с QR-кодами
+│   │   └── DevModeQueryPanel.tsx # AI-запросы в режиме разработки
 │   ├── shaders/           # GLSL-шейдеры
 │   │   ├── parametric-cube.glsl  # Исходный GLSL код
 │   │   ├── parametric-cube.ts    # TypeScript модуль для Three.js
@@ -170,7 +171,8 @@ isocubic/
 │   │   ├── collaboration.ts   # Типы для коллаборации и мультиплеера
 │   │   ├── community.ts       # Типы для галереи сообщества
 │   │   ├── share.ts           # Типы для share-ссылок
-│   │   └── publishing-api.ts  # Типы для REST API публикации
+│   │   ├── publishing-api.ts  # Типы для REST API публикации
+│   │   └── ai-query.ts        # Типы для AI-запросов в DevMode
 │   └── App.tsx
 ├── wasm-fft/              # Rust WASM модуль для FFT
 │   ├── Cargo.toml             # Rust конфигурация
