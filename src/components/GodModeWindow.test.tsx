@@ -152,7 +152,7 @@ describe('GodModeWindow', () => {
       expect(onTabChange).toHaveBeenCalledWith('search')
     })
 
-    it('should disable future tabs (conversation, issues)', () => {
+    it('should disable future tabs (issues), enable conversation', () => {
       render(
         <TestWrapper>
           <GodModeWindow />
@@ -162,17 +162,18 @@ describe('GodModeWindow', () => {
       const conversationTab = screen.getByTestId('god-mode-tab-conversation')
       const issuesTab = screen.getByTestId('god-mode-tab-issues')
 
-      expect(conversationTab).toBeDisabled()
+      // TASK 55 completed - conversation is now enabled
+      expect(conversationTab).not.toBeDisabled()
       expect(issuesTab).toBeDisabled()
     })
 
     it('should show placeholder for unavailable tabs', async () => {
-      // First, set the state to have conversation tab active (even though it's disabled)
+      // First, set the state to have issues tab active (still unavailable)
       localStorage.setItem(
         GOD_MODE_STORAGE_KEY,
         JSON.stringify({
           state: 'open',
-          activeTab: 'conversation',
+          activeTab: 'issues',
           position: { x: 20, y: 80 },
           size: {
             width: 500,
@@ -192,8 +193,8 @@ describe('GodModeWindow', () => {
         </TestWrapper>
       )
 
-      // Should show placeholder content for conversation tab
-      expect(screen.getByText(/TASK 55/)).toBeInTheDocument()
+      // Should show placeholder content for issues tab (TASK 56)
+      expect(screen.getByText(/TASK 56/)).toBeInTheDocument()
     })
   })
 

@@ -76,9 +76,9 @@ export const GOD_MODE_TABS: GodModeTabInfo[] = [
     labelRu: 'Диалог',
     labelEn: 'Chat',
     icon: '💬',
-    available: false,
-    descriptionRu: 'AI-диалог для обсуждения улучшений (TASK 55)',
-    descriptionEn: 'AI conversation for discussing improvements (TASK 55)',
+    available: true,
+    descriptionRu: 'AI-диалог для обсуждения улучшений',
+    descriptionEn: 'AI conversation for discussing improvements',
   },
   {
     id: 'issues',
@@ -439,4 +439,241 @@ export function matchesShortcut(event: KeyboardEvent, shortcut: string): boolean
     parsed.alt === event.altKey &&
     event.key.toLowerCase() === parsed.key
   )
+}
+
+// =============================================================================
+// TASK 55: AI Conversation Agent Types
+// =============================================================================
+
+/**
+ * Role of the message sender in a conversation
+ */
+export type ConversationRole = 'user' | 'assistant' | 'system'
+
+/**
+ * Context information attached to a conversation message
+ */
+export interface ConversationMessageContext {
+  /** ID of the component being discussed */
+  componentId?: string
+  /** Screenshot data (base64) */
+  screenshot?: string
+  /** Screen position where the user was looking */
+  screenPosition?: { x: number; y: number }
+  /** Current application state/view */
+  currentView?: string
+  /** Any selected text or code */
+  selectedText?: string
+}
+
+/**
+ * A single message in the conversation
+ */
+export interface ConversationMessage {
+  /** Unique message ID */
+  id: string
+  /** Who sent the message */
+  role: ConversationRole
+  /** Message content */
+  content: string
+  /** Timestamp when the message was created */
+  timestamp: string
+  /** Optional context information */
+  context?: ConversationMessageContext
+  /** Whether the message is still being generated */
+  isStreaming?: boolean
+  /** Error information if message generation failed */
+  error?: string
+}
+
+/**
+ * Conversation session state
+ */
+export interface ConversationSession {
+  /** Unique session ID */
+  id: string
+  /** Session title (auto-generated or user-set) */
+  title: string
+  /** All messages in the session */
+  messages: ConversationMessage[]
+  /** When the session was created */
+  createdAt: string
+  /** When the session was last updated */
+  updatedAt: string
+  /** Current processing status */
+  status: 'idle' | 'processing' | 'error'
+  /** Language used in the conversation */
+  language: QueryLanguage
+}
+
+/**
+ * Conversation panel settings
+ */
+export interface ConversationPanelSettings {
+  /** Maximum number of messages to keep in history */
+  maxHistoryMessages: number
+  /** Whether to auto-scroll to new messages */
+  autoScroll: boolean
+  /** Whether to show typing indicators */
+  showTypingIndicator: boolean
+  /** Whether to show message timestamps */
+  showTimestamps: boolean
+  /** Preferred language for AI responses */
+  preferredLanguage: QueryLanguage
+  /** Whether to persist conversation across sessions */
+  persistConversation: boolean
+  /** Prompt suggestions to show */
+  showSuggestions: boolean
+}
+
+/**
+ * Default conversation panel settings
+ */
+export const DEFAULT_CONVERSATION_SETTINGS: ConversationPanelSettings = {
+  maxHistoryMessages: 100,
+  autoScroll: true,
+  showTypingIndicator: true,
+  showTimestamps: true,
+  preferredLanguage: 'ru',
+  persistConversation: true,
+  showSuggestions: true,
+}
+
+/**
+ * Suggestion for conversation prompts
+ */
+export interface ConversationSuggestion {
+  /** Suggestion text (Russian) */
+  textRu: string
+  /** Suggestion text (English) */
+  textEn: string
+  /** Category of the suggestion */
+  category: 'improvement' | 'bug' | 'feature' | 'question' | 'general'
+  /** Icon for the suggestion */
+  icon: string
+}
+
+/**
+ * Default conversation suggestions
+ */
+export const CONVERSATION_SUGGESTIONS: ConversationSuggestion[] = [
+  {
+    textRu: 'Что можно улучшить в этом компоненте?',
+    textEn: 'What can be improved in this component?',
+    category: 'improvement',
+    icon: '✨',
+  },
+  {
+    textRu: 'Я вижу проблему с...',
+    textEn: 'I see a problem with...',
+    category: 'bug',
+    icon: '🐛',
+  },
+  {
+    textRu: 'Хочу добавить новую функцию...',
+    textEn: 'I want to add a new feature...',
+    category: 'feature',
+    icon: '🚀',
+  },
+  {
+    textRu: 'Как работает этот компонент?',
+    textEn: 'How does this component work?',
+    category: 'question',
+    icon: '❓',
+  },
+  {
+    textRu: 'Помоги сформулировать задачу',
+    textEn: 'Help me formulate a task',
+    category: 'general',
+    icon: '📝',
+  },
+]
+
+/**
+ * LocalStorage key for conversation history
+ */
+export const CONVERSATION_STORAGE_KEY = 'isocubic_god_mode_conversation'
+
+/**
+ * Generates a unique message ID
+ */
+export function generateMessageId(): string {
+  return `msg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+}
+
+/**
+ * Generates a unique session ID
+ */
+export function generateSessionId(): string {
+  return `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+}
+
+/**
+ * Creates a new conversation message
+ */
+export function createMessage(
+  role: ConversationRole,
+  content: string,
+  context?: ConversationMessageContext
+): ConversationMessage {
+  return {
+    id: generateMessageId(),
+    role,
+    content,
+    timestamp: new Date().toISOString(),
+    context,
+    isStreaming: false,
+  }
+}
+
+/**
+ * Creates a new conversation session
+ */
+export function createSession(language: QueryLanguage = 'ru'): ConversationSession {
+  return {
+    id: generateSessionId(),
+    title: language === 'ru' ? 'Новый диалог' : 'New conversation',
+    messages: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    status: 'idle',
+    language,
+  }
+}
+
+/**
+ * Loads conversation session from localStorage
+ */
+export function loadConversationSession(): ConversationSession | null {
+  try {
+    const stored = localStorage.getItem(CONVERSATION_STORAGE_KEY)
+    if (stored) {
+      return JSON.parse(stored)
+    }
+  } catch (e) {
+    console.warn('Failed to load conversation session:', e)
+  }
+  return null
+}
+
+/**
+ * Saves conversation session to localStorage
+ */
+export function saveConversationSession(session: ConversationSession): void {
+  try {
+    localStorage.setItem(CONVERSATION_STORAGE_KEY, JSON.stringify(session))
+  } catch (e) {
+    console.warn('Failed to save conversation session:', e)
+  }
+}
+
+/**
+ * Clears the conversation session from localStorage
+ */
+export function clearConversationSession(): void {
+  try {
+    localStorage.removeItem(CONVERSATION_STORAGE_KEY)
+  } catch (e) {
+    console.warn('Failed to clear conversation session:', e)
+  }
 }

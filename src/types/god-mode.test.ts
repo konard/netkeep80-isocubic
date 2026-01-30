@@ -62,13 +62,15 @@ describe('god-mode types', () => {
       expect(availableTabs.map((t) => t.id)).toContain('query')
       expect(availableTabs.map((t) => t.id)).toContain('context')
       expect(availableTabs.map((t) => t.id)).toContain('search')
+      expect(availableTabs.map((t) => t.id)).toContain('conversation')
     })
 
     it('should mark future tabs as unavailable', () => {
+      // TASK 55 completed - conversation is now available
       const conversationTab = GOD_MODE_TABS.find((t) => t.id === 'conversation')
       const issuesTab = GOD_MODE_TABS.find((t) => t.id === 'issues')
-      expect(conversationTab?.available).toBe(false)
-      expect(issuesTab?.available).toBe(false)
+      expect(conversationTab?.available).toBe(true) // Now implemented
+      expect(issuesTab?.available).toBe(false) // Still pending (TASK 56)
     })
   })
 
@@ -192,7 +194,7 @@ describe('god-mode types', () => {
 
     it('should not include unavailable tabs even if in config', () => {
       const config: GodModeConfig = {
-        tabs: ['query', 'conversation'], // conversation is unavailable
+        tabs: ['query', 'issues'], // issues is unavailable (TASK 56 pending)
       }
       const tabs = getAvailableTabs(config)
       expect(tabs.map((t) => t.id)).toEqual(['query'])

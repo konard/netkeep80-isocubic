@@ -51,6 +51,7 @@ import type { QueryLanguage } from '../types/ai-query'
 import { DevModeQueryPanel } from './DevModeQueryPanel'
 import { ComponentContextPanel } from './ComponentContextPanel'
 import { ExtendedSearchPanel } from './ExtendedSearchPanel'
+import { ConversationPanel } from './ConversationPanel'
 
 /**
  * Props for GodModeWindow
@@ -667,19 +668,12 @@ export function GodModeWindow({
 
       case 'conversation':
         return (
-          <div style={styles.placeholder}>
-            <div>
-              <div style={{ fontSize: '32px', marginBottom: '12px' }}>💬</div>
-              <div style={{ marginBottom: '8px' }}>
-                {language === 'ru'
-                  ? 'AI-диалог для обсуждения улучшений'
-                  : 'AI conversation for discussing improvements'}
-              </div>
-              <div style={{ fontSize: '11px', color: '#9ca3af' }}>
-                {language === 'ru' ? 'Будет реализовано в TASK 55' : 'Coming in TASK 55'}
-              </div>
-            </div>
-          </div>
+          <ConversationPanel
+            selectedComponentId={selectedComponentId}
+            onComponentSelect={handleComponentSelect}
+            settings={{ preferredLanguage: language }}
+            style={styles.embeddedPanel}
+          />
         )
 
       case 'issues':

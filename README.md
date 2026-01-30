@@ -147,7 +147,8 @@ isocubic/
 │   │   ├── DevModeQueryPanel.tsx # AI-запросы в режиме разработки
 │   │   ├── ComponentContextPanel.tsx # AI-контекст для компонентов в DevMode
 │   │   ├── ExtendedSearchPanel.tsx # Расширенный AI-поиск компонентов
-│   │   └── GodModeWindow.tsx     # Единое окно GOD MODE (Phase 9)
+│   │   ├── GodModeWindow.tsx     # Единое окно GOD MODE (Phase 9)
+│   │   └── ConversationPanel.tsx # AI-диалог для GOD MODE (Phase 9)
 │   ├── shaders/           # GLSL-шейдеры
 │   │   ├── parametric-cube.glsl  # Исходный GLSL код
 │   │   ├── parametric-cube.ts    # TypeScript модуль для Three.js
@@ -160,6 +161,7 @@ isocubic/
 │   │   ├── tinyLLM.ts         # ИИ-генератор с расширенными функциями
 │   │   ├── ai-metadata-processor.ts # Обработчик метаданных для AI-запросов
 │   │   ├── extended-search.ts    # Расширенный поиск компонентов с автодополнением
+│   │   ├── conversation-agent.ts # AI-агент для диалогов в GOD MODE (Phase 9)
 │   │   ├── storage.ts         # Работа с хранилищем
 │   │   ├── validation.ts      # Валидация схемы
 │   │   ├── fft-wasm.ts        # FFT модуль (WASM + JS fallback)
@@ -295,6 +297,7 @@ npm run test:coverage
 - Тесты расширенного поиска компонентов (ExtendedSearchPanel, семантический поиск, автодополнение)
 - Тесты интеграции TinyLLM с метаданными (metadata query mode, кеширование, fallback)
 - Тесты GOD MODE (GodModeWindow, типы, localStorage persistence, drag/resize)
+- Тесты AI Conversation Agent (ConversationPanel, intent detection, session management, multi-language support)
 - E2E тесты для полных workflow редактирования
 
 ## Вклад в проект
