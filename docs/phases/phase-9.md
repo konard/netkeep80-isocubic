@@ -164,33 +164,50 @@
 
 ---
 
-### TASK 57: GitHub Integration
+### TASK 57: GitHub Integration ✅
 
 **Заголовок**: `Интеграция с GitHub API`
+
+**Статус**: ✅ Завершено
 
 **Описание**:
 Реализовать интеграцию с GitHub API для автоматического создания issues в репозитории проекта.
 
-**Планируемые задачи**:
-- [ ] OAuth авторизация через GitHub
-- [ ] Получение информации о репозитории
-- [ ] Создание issues через GitHub API
-- [ ] Получение списка labels репозитория
-- [ ] Получение шаблонов issues (если есть)
-- [ ] Уведомление о созданном issue
-- [ ] Ссылка на созданный issue
+**Выполненные задачи**:
+- [x] OAuth авторизация через GitHub (Device Flow + PAT)
+- [x] Получение информации о репозитории
+- [x] Создание issues через GitHub API
+- [x] Получение списка labels репозитория
+- [x] Получение шаблонов issues (если есть)
+- [x] Уведомление о созданном issue
+- [x] Ссылка на созданный issue
 
 **Критерии приёмки**:
-- [ ] Пользователь может авторизоваться через GitHub
-- [ ] Issues создаются в выбранном репозитории
-- [ ] Labels автоматически применяются
-- [ ] После создания показывается ссылка на issue
+- [x] Пользователь может авторизоваться через GitHub
+- [x] Issues создаются в выбранном репозитории
+- [x] Labels автоматически применяются
+- [x] После создания показывается ссылка на issue
 
-**Файлы для создания**:
-- `src/lib/github-api.ts`
-- `src/lib/github-api.test.ts`
-- `src/components/GitHubAuthButton.tsx`
-- `src/components/GitHubAuthButton.test.tsx`
+**Созданные файлы**:
+- `src/lib/github-api.ts` — клиент GitHub API (auth, issues, labels, templates)
+- `src/lib/github-api.test.ts` — тесты клиента API
+- `src/components/GitHubAuthButton.tsx` — компонент авторизации GitHub
+- `src/components/GitHubAuthButton.test.tsx` — тесты компонента авторизации
+
+**Обновлённые файлы**:
+- `src/components/IssueDraftPanel.tsx` — интеграция публикации issues на GitHub
+- `src/components/GodModeWindow.tsx` — передача GitHub конфигурации в IssueDraftPanel
+
+**Особенности реализации**:
+- Два метода аутентификации: Personal Access Token (PAT) и OAuth Device Flow
+- Сохранение токена и метода аутентификации в localStorage
+- Получение информации о репозитории, метках и шаблонах issues
+- Создание issues с автоматическим применением меток
+- Создание меток (labels) в репозитории при их отсутствии
+- Парсинг GitHub issue templates (markdown frontmatter)
+- Компактный и полный режимы кнопки авторизации
+- Поддержка русского и английского языков
+- Отображение результата публикации (ссылка на issue, номер)
 
 **Зависимости**:
 - GitHub OAuth App (необходима настройка в репозитории)

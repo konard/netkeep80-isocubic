@@ -63,14 +63,16 @@ describe('god-mode types', () => {
       expect(availableTabs.map((t) => t.id)).toContain('context')
       expect(availableTabs.map((t) => t.id)).toContain('search')
       expect(availableTabs.map((t) => t.id)).toContain('conversation')
+      expect(availableTabs.map((t) => t.id)).toContain('issues')
     })
 
-    it('should mark future tabs as unavailable', () => {
-      // TASK 55 completed - conversation is now available
+    it('should have all tabs available after TASK 56 completion', () => {
+      // TASK 55 completed - conversation is available
+      // TASK 56 completed - issues is available
       const conversationTab = GOD_MODE_TABS.find((t) => t.id === 'conversation')
       const issuesTab = GOD_MODE_TABS.find((t) => t.id === 'issues')
-      expect(conversationTab?.available).toBe(true) // Now implemented
-      expect(issuesTab?.available).toBe(false) // Still pending (TASK 56)
+      expect(conversationTab?.available).toBe(true)
+      expect(issuesTab?.available).toBe(true)
     })
   })
 
@@ -192,12 +194,12 @@ describe('god-mode types', () => {
       expect(tabs.map((t) => t.id)).toEqual(['query', 'search'])
     })
 
-    it('should not include unavailable tabs even if in config', () => {
+    it('should include issues tab now that TASK 56 is complete', () => {
       const config: GodModeConfig = {
-        tabs: ['query', 'issues'], // issues is unavailable (TASK 56 pending)
+        tabs: ['query', 'issues'], // issues is now available (TASK 56 complete)
       }
       const tabs = getAvailableTabs(config)
-      expect(tabs.map((t) => t.id)).toEqual(['query'])
+      expect(tabs.map((t) => t.id)).toEqual(['query', 'issues'])
     })
   })
 

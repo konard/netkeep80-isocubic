@@ -148,7 +148,9 @@ isocubic/
 │   │   ├── ComponentContextPanel.tsx # AI-контекст для компонентов в DevMode
 │   │   ├── ExtendedSearchPanel.tsx # Расширенный AI-поиск компонентов
 │   │   ├── GodModeWindow.tsx     # Единое окно GOD MODE (Phase 9)
-│   │   └── ConversationPanel.tsx # AI-диалог для GOD MODE (Phase 9)
+│   │   ├── ConversationPanel.tsx # AI-диалог для GOD MODE (Phase 9)
+│   │   ├── IssueDraftPanel.tsx   # Генератор черновиков issues (Phase 9)
+│   │   └── GitHubAuthButton.tsx  # Авторизация GitHub (Phase 9)
 │   ├── shaders/           # GLSL-шейдеры
 │   │   ├── parametric-cube.glsl  # Исходный GLSL код
 │   │   ├── parametric-cube.ts    # TypeScript модуль для Three.js
@@ -162,6 +164,8 @@ isocubic/
 │   │   ├── ai-metadata-processor.ts # Обработчик метаданных для AI-запросов
 │   │   ├── extended-search.ts    # Расширенный поиск компонентов с автодополнением
 │   │   ├── conversation-agent.ts # AI-агент для диалогов в GOD MODE (Phase 9)
+│   │   ├── issue-generator.ts   # Генератор черновиков issues (Phase 9)
+│   │   ├── github-api.ts        # GitHub API клиент (Phase 9)
 │   │   ├── storage.ts         # Работа с хранилищем
 │   │   ├── validation.ts      # Валидация схемы
 │   │   ├── fft-wasm.ts        # FFT модуль (WASM + JS fallback)
@@ -180,7 +184,8 @@ isocubic/
 │   │   ├── share.ts           # Типы для share-ссылок
 │   │   ├── publishing-api.ts  # Типы для REST API публикации
 │   │   ├── ai-query.ts        # Типы для AI-запросов в DevMode
-│   │   └── god-mode.ts        # Типы для GOD MODE (Phase 9)
+│   │   ├── god-mode.ts        # Типы для GOD MODE (Phase 9)
+│   │   └── issue-generator.ts # Типы для генератора issues (Phase 9)
 │   └── App.tsx
 ├── wasm-fft/              # Rust WASM модуль для FFT
 │   ├── Cargo.toml             # Rust конфигурация
@@ -281,7 +286,7 @@ npm run test:coverage
 ```
 
 **Текущее покрытие:**
-- 2510+ тестов
+- 2710+ тестов
 - Unit-тесты для типов, валидации, хранилища, производительности, физики энергии
 - Тесты модуля коллаборации (сессии, участники, синхронизация, конфликты)
 - Тесты WebSocket клиента (подключение, сообщения, реконнект, fallback на polling)
@@ -298,6 +303,8 @@ npm run test:coverage
 - Тесты интеграции TinyLLM с метаданными (metadata query mode, кеширование, fallback)
 - Тесты GOD MODE (GodModeWindow, типы, localStorage persistence, drag/resize)
 - Тесты AI Conversation Agent (ConversationPanel, intent detection, session management, multi-language support)
+- Тесты Issue Draft Generator (IssueDraftPanel, генерация черновиков, шаблоны, валидация)
+- Тесты GitHub Integration (GitHub API клиент, авторизация PAT/OAuth, создание issues, метки)
 - E2E тесты для полных workflow редактирования
 
 ## Вклад в проект

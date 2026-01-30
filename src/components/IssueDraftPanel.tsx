@@ -20,26 +20,21 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useRef,
   type CSSProperties,
   type ChangeEvent,
-  type FormEvent,
 } from 'react'
 import type { QueryLanguage } from '../types/ai-query'
 import type { ConversationMessage } from '../types/god-mode'
 import type {
   IssueDraft,
-  IssueTemplate,
   IssueType,
   IssuePriority,
   IssueDraftSettings,
 } from '../types/issue-generator'
-import {
-  getDefaultIssueGenerator,
-  createIssueGenerator,
-  type IssueGenerationResult,
-} from '../lib/issue-generator'
+import { createIssueGenerator, type IssueGenerationResult } from '../lib/issue-generator'
 import { validateIssueDraft } from '../types/issue-generator'
+import { createGitHubClient, type GitHubApiClient, type GitHubIssueResult } from '../lib/github-api'
+import { GitHubAuthButton } from './GitHubAuthButton'
 
 /**
  * Props for IssueDraftPanel
@@ -61,6 +56,16 @@ export interface IssueDraftPanelProps {
   onDraftUpdated?: (draft: IssueDraft) => void
   /** Callback when draft is ready for publishing */
   onDraftReady?: (draft: IssueDraft) => void
+  /** Callback when issue is published to GitHub */
+  onIssuePublished?: (result: GitHubIssueResult) => void
+  /** GitHub API client (optional) */
+  githubClient?: GitHubApiClient
+  /** GitHub repository owner */
+  githubOwner?: string
+  /** GitHub repository name */
+  githubRepo?: string
+  /** GitHub OAuth Client ID (enables OAuth Device Flow) */
+  githubOAuthClientId?: string
   /** Settings for the panel */
   settings?: Partial<IssueDraftSettings>
 }
@@ -350,6 +355,11 @@ export function IssueDraftPanel({
   onDraftCreated,
   onDraftUpdated,
   onDraftReady,
+  onIssuePublished,
+  githubClient: externalGithubClient,
+  githubOwner,
+  githubRepo,
+  githubOAuthClientId,
   settings,
 }: IssueDraftPanelProps) {
   // State
@@ -357,7 +367,23 @@ export function IssueDraftPanel({
   const [isGenerating, setIsGenerating] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<string>('')
   const [hoveredButton, setHoveredButton] = useState<string | null>(null)
-  const [generationInsights, setGenerationInsights] = useState<IssueGenerationResult['insights'] | null>(null)
+  const [generationInsights, setGenerationInsights] = useState<
+    IssueGenerationResult['insights'] | null
+  >(null)
+
+  // GitHub state
+  const [githubClient] = useState<GitHubApiClient>(
+    () =>
+      externalGithubClient ||
+      createGitHubClient({
+        owner: githubOwner || '',
+        repo: githubRepo || '',
+        oauthClientId: githubOAuthClientId,
+      })
+  )
+  const [isGithubAuthenticated, setIsGithubAuthenticated] = useState(false)
+  const [isPublishing, setIsPublishing] = useState(false)
+  const [publishResult, setPublishResult] = useState<GitHubIssueResult | null>(null)
 
   // Generator instance
   const generator = useMemo(() => {
@@ -409,41 +435,61 @@ export function IssueDraftPanel({
   }, [conversationMessages, generator, onDraftCreated])
 
   // Handle draft generation from template
-  const handleGenerateFromTemplate = useCallback(async (templateId: string) => {
-    setIsGenerating(true)
-    try {
-      const templateDraft = generator.createFromTemplate(templateId)
-      setDraft(templateDraft)
-      setGenerationInsights(null)
-      onDraftCreated?.(templateDraft)
-    } catch (error) {
-      console.error('Failed to generate draft from template:', error)
-    } finally {
-      setIsGenerating(false)
-    }
-  }, [generator, onDraftCreated])
+  const handleGenerateFromTemplate = useCallback(
+    async (templateId: string) => {
+      setIsGenerating(true)
+      try {
+        const templateDraft = generator.createFromTemplate(templateId)
+        setDraft(templateDraft)
+        setGenerationInsights(null)
+        onDraftCreated?.(templateDraft)
+      } catch (error) {
+        console.error('Failed to generate draft from template:', error)
+      } finally {
+        setIsGenerating(false)
+      }
+    },
+    [generator, onDraftCreated]
+  )
 
   // Handle draft field changes
-  const handleDraftChange = useCallback((
-    field: keyof IssueDraft,
-    value: any
-  ) => {
-    if (!draft) return
+  const handleDraftChange = useCallback(
+    (field: keyof IssueDraft, value: IssueDraft[keyof IssueDraft]) => {
+      if (!draft) return
 
-    const updatedDraft = {
-      ...draft,
-      [field]: value,
-      updatedAt: new Date().toISOString(),
-    }
+      const updatedDraft = {
+        ...draft,
+        [field]: value,
+        updatedAt: new Date().toISOString(),
+      }
 
-    setDraft(updatedDraft)
-    onDraftUpdated?.(updatedDraft)
-  }, [draft, onDraftUpdated])
+      setDraft(updatedDraft)
+      onDraftUpdated?.(updatedDraft)
+    },
+    [draft, onDraftUpdated]
+  )
 
   // Handle draft validation
   const validation = useMemo(() => {
     return draft ? validateIssueDraft(draft) : { isValid: false, errors: [], warnings: [] }
   }, [draft])
+
+  // Handle publish to GitHub
+  const handlePublishToGitHub = useCallback(async () => {
+    if (!draft || !validation.isValid) return
+
+    setIsPublishing(true)
+    setPublishResult(null)
+
+    const result = await githubClient.createIssue(draft)
+    setPublishResult(result)
+    setIsPublishing(false)
+
+    if (result.success) {
+      setDraft({ ...draft, status: 'published', updatedAt: new Date().toISOString() })
+      onIssuePublished?.(result)
+    }
+  }, [draft, validation.isValid, githubClient, onIssuePublished])
 
   // Get confidence color class
   const getConfidenceColor = useCallback((confidence: number) => {
@@ -453,13 +499,16 @@ export function IssueDraftPanel({
   }, [])
 
   // Get button style
-  const getButtonStyle = useCallback((baseStyle: any, isDisabled = false) => {
-    return {
-      ...baseStyle,
-      ...(hoveredButton === baseStyle && !isDisabled ? styles.buttonHover : {}),
-      ...(isDisabled ? styles.buttonDisabled : {}),
-    }
-  }, [hoveredButton])
+  const getButtonStyle = useCallback(
+    (baseStyle: CSSProperties, isDisabled = false) => {
+      return {
+        ...baseStyle,
+        ...(hoveredButton === baseStyle && !isDisabled ? styles.buttonHover : {}),
+        ...(isDisabled ? styles.buttonDisabled : {}),
+      }
+    },
+    [hoveredButton]
+  )
 
   // Render template selection
   const renderTemplateSelection = () => {
@@ -528,9 +577,7 @@ export function IssueDraftPanel({
       <div style={styles.draftEditor}>
         {/* Title */}
         <div style={styles.formGroup}>
-          <label style={styles.formLabel}>
-            {language === 'ru' ? 'Заголовок' : 'Title'}
-          </label>
+          <label style={styles.formLabel}>{language === 'ru' ? 'Заголовок' : 'Title'}</label>
           <input
             type="text"
             style={styles.formInput}
@@ -545,9 +592,7 @@ export function IssueDraftPanel({
         {/* Type and Priority */}
         <div style={styles.formRow}>
           <div style={{ ...styles.formGroup, ...styles.formRowHalf }}>
-            <label style={styles.formLabel}>
-              {language === 'ru' ? 'Тип' : 'Type'}
-            </label>
+            <label style={styles.formLabel}>{language === 'ru' ? 'Тип' : 'Type'}</label>
             <select
               style={styles.formSelect}
               value={draft.type}
@@ -555,21 +600,15 @@ export function IssueDraftPanel({
                 handleDraftChange('type', e.target.value as IssueType)
               }}
             >
-              <option value="bug">
-                {language === 'ru' ? '🐛 Баг' : '🐛 Bug'}
-              </option>
-              <option value="feature">
-                {language === 'ru' ? '🚀 Фича' : '🚀 Feature'}
-              </option>
+              <option value="bug">{language === 'ru' ? '🐛 Баг' : '🐛 Bug'}</option>
+              <option value="feature">{language === 'ru' ? '🚀 Фича' : '🚀 Feature'}</option>
               <option value="improvement">
                 {language === 'ru' ? '✨ Улучшение' : '✨ Improvement'}
               </option>
               <option value="documentation">
                 {language === 'ru' ? '📚 Документация' : '📚 Documentation'}
               </option>
-              <option value="question">
-                {language === 'ru' ? '❓ Вопрос' : '❓ Question'}
-              </option>
+              <option value="question">{language === 'ru' ? '❓ Вопрос' : '❓ Question'}</option>
               <option value="maintenance">
                 {language === 'ru' ? '🔧 Поддержка' : '🔧 Maintenance'}
               </option>
@@ -577,9 +616,7 @@ export function IssueDraftPanel({
           </div>
 
           <div style={{ ...styles.formGroup, ...styles.formRowHalf }}>
-            <label style={styles.formLabel}>
-              {language === 'ru' ? 'Приоритет' : 'Priority'}
-            </label>
+            <label style={styles.formLabel}>{language === 'ru' ? 'Приоритет' : 'Priority'}</label>
             <select
               style={styles.formSelect}
               value={draft.priority}
@@ -587,15 +624,9 @@ export function IssueDraftPanel({
                 handleDraftChange('priority', e.target.value as IssuePriority)
               }}
             >
-              <option value="low">
-                {language === 'ru' ? '🟢 Низкий' : '🟢 Low'}
-              </option>
-              <option value="medium">
-                {language === 'ru' ? '🟡 Средний' : '🟡 Medium'}
-              </option>
-              <option value="high">
-                {language === 'ru' ? '🟠 Высокий' : '🟠 High'}
-              </option>
+              <option value="low">{language === 'ru' ? '🟢 Низкий' : '🟢 Low'}</option>
+              <option value="medium">{language === 'ru' ? '🟡 Средний' : '🟡 Medium'}</option>
+              <option value="high">{language === 'ru' ? '🟠 Высокий' : '🟠 High'}</option>
               <option value="critical">
                 {language === 'ru' ? '🔴 Критический' : '🔴 Critical'}
               </option>
@@ -605,16 +636,16 @@ export function IssueDraftPanel({
 
         {/* Description */}
         <div style={styles.formGroup}>
-          <label style={styles.formLabel}>
-            {language === 'ru' ? 'Описание' : 'Description'}
-          </label>
+          <label style={styles.formLabel}>{language === 'ru' ? 'Описание' : 'Description'}</label>
           <textarea
             style={styles.formTextarea}
             value={draft.body}
             onChange={(e: ChangeEvent<HTMLTextAreaElement>) => {
               handleDraftChange('body', e.target.value)
             }}
-            placeholder={language === 'ru' ? 'Подробное описание задачи...' : 'Detailed issue description...'}
+            placeholder={
+              language === 'ru' ? 'Подробное описание задачи...' : 'Detailed issue description...'
+            }
           />
         </div>
 
@@ -643,9 +674,7 @@ export function IssueDraftPanel({
                 <span style={styles.metadataLabel}>
                   {language === 'ru' ? 'Связанные компоненты:' : 'Related components:'}
                 </span>
-                <span style={styles.metadataValue}>
-                  {draft.relatedComponents.join(', ')}
-                </span>
+                <span style={styles.metadataValue}>{draft.relatedComponents.join(', ')}</span>
               </div>
             )}
           </div>
@@ -667,9 +696,7 @@ export function IssueDraftPanel({
 
         {validation.errors.length > 0 && (
           <div style={styles.warningsSection}>
-            <div style={styles.warningTitle}>
-              {language === 'ru' ? '❌ Ошибки' : '❌ Errors'}
-            </div>
+            <div style={styles.warningTitle}>{language === 'ru' ? '❌ Ошибки' : '❌ Errors'}</div>
             <ul style={styles.warningList}>
               {validation.errors.map((error, index) => (
                 <li key={index}>{error}</li>
@@ -696,11 +723,11 @@ export function IssueDraftPanel({
           </span>
         </div>
         <div style={styles.metadataItem}>
-          <span style={styles.metadataLabel}>
-            {language === 'ru' ? 'Приоритет:' : 'Priority:'}
-          </span>
+          <span style={styles.metadataLabel}>{language === 'ru' ? 'Приоритет:' : 'Priority:'}</span>
           <span style={styles.metadataValue}>
-            {language === 'ru' ? generationInsights.detectedPriority : generationInsights.detectedPriority}
+            {language === 'ru'
+              ? generationInsights.detectedPriority
+              : generationInsights.detectedPriority}
           </span>
         </div>
         {generationInsights.keyPhrases.length > 0 && (
@@ -764,14 +791,114 @@ export function IssueDraftPanel({
         {/* Preview */}
         {draft && (
           <div style={styles.previewSection}>
-            <div style={styles.previewTitle}>
-              {language === 'ru' ? 'Предпросмотр' : 'Preview'}
-            </div>
+            <div style={styles.previewTitle}>{language === 'ru' ? 'Предпросмотр' : 'Preview'}</div>
             <div style={styles.previewContent}>
               **{draft.title}**
-
               {draft.body}
             </div>
+          </div>
+        )}
+
+        {/* GitHub Integration Section */}
+        {draft && validation.isValid && (
+          <div
+            style={{
+              padding: '12px 16px',
+              borderTop: '1px solid rgba(139, 92, 246, 0.2)',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '12px',
+                fontWeight: 600,
+                color: '#c4b5fd',
+                marginBottom: '8px',
+              }}
+            >
+              {language === 'ru' ? '🐙 GitHub' : '🐙 GitHub'}
+            </div>
+
+            {/* Auth Button */}
+            <GitHubAuthButton
+              language={language}
+              client={githubClient}
+              owner={githubOwner}
+              repo={githubRepo}
+              oauthClientId={githubOAuthClientId}
+              compact={isGithubAuthenticated}
+              onAuthStateChange={(state) => {
+                setIsGithubAuthenticated(state.authenticated)
+              }}
+            />
+
+            {/* Publish Button */}
+            {isGithubAuthenticated && githubOwner && githubRepo && (
+              <div style={{ marginTop: '8px' }}>
+                {publishResult?.success ? (
+                  <div
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                      border: '1px solid rgba(34, 197, 94, 0.3)',
+                      fontSize: '12px',
+                    }}
+                  >
+                    <span style={{ color: '#86efac' }}>
+                      {language === 'ru'
+                        ? `✅ Issue #${publishResult.number} создан!`
+                        : `✅ Issue #${publishResult.number} created!`}
+                    </span>
+                    <br />
+                    <a
+                      href={publishResult.htmlUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        color: '#818cf8',
+                        textDecoration: 'underline',
+                        fontSize: '11px',
+                      }}
+                    >
+                      {publishResult.htmlUrl}
+                    </a>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handlePublishToGitHub}
+                    disabled={isPublishing || draft.status === 'published'}
+                    style={{
+                      ...styles.buttonPrimary,
+                      width: '100%',
+                      opacity: isPublishing || draft.status === 'published' ? 0.5 : 1,
+                      cursor:
+                        isPublishing || draft.status === 'published' ? 'not-allowed' : 'pointer',
+                    }}
+                    data-testid="publish-github-button"
+                  >
+                    {isPublishing
+                      ? language === 'ru'
+                        ? '⏳ Публикация...'
+                        : '⏳ Publishing...'
+                      : language === 'ru'
+                        ? '🚀 Опубликовать на GitHub'
+                        : '🚀 Publish to GitHub'}
+                  </button>
+                )}
+                {publishResult && !publishResult.success && (
+                  <div
+                    style={{
+                      color: '#fca5a5',
+                      fontSize: '11px',
+                      marginTop: '4px',
+                    }}
+                  >
+                    {publishResult.error}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -684,6 +684,8 @@ export function GodModeWindow({
             language={language}
             showAdvancedOptions={true}
             style={styles.embeddedPanel}
+            githubOwner={config.github?.owner}
+            githubRepo={config.github?.repo}
             onDraftCreated={(draft) => {
               console.log('Draft created:', draft)
             }}
@@ -693,13 +695,23 @@ export function GodModeWindow({
             onDraftReady={(draft) => {
               console.log('Draft ready for publishing:', draft)
             }}
+            onIssuePublished={(result) => {
+              console.log('Issue published:', result)
+            }}
           />
         )
 
       default:
         return null
     }
-  }, [windowState, selectedComponentId, handleComponentSelect, language])
+  }, [
+    windowState,
+    selectedComponentId,
+    handleComponentSelect,
+    language,
+    config.github?.owner,
+    config.github?.repo,
+  ])
 
   // Don't render if DevMode is not enabled or window is closed
   if (!isDevModeEnabled || windowState.state === 'closed') {

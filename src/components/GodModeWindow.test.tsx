@@ -152,7 +152,7 @@ describe('GodModeWindow', () => {
       expect(onTabChange).toHaveBeenCalledWith('search')
     })
 
-    it('should disable future tabs (issues), enable conversation', () => {
+    it('should enable all implemented tabs including issues', () => {
       render(
         <TestWrapper>
           <GodModeWindow />
@@ -164,11 +164,12 @@ describe('GodModeWindow', () => {
 
       // TASK 55 completed - conversation is now enabled
       expect(conversationTab).not.toBeDisabled()
-      expect(issuesTab).toBeDisabled()
+      // TASK 56 completed - issues is now enabled
+      expect(issuesTab).not.toBeDisabled()
     })
 
-    it('should show placeholder for unavailable tabs', async () => {
-      // First, set the state to have issues tab active (still unavailable)
+    it('should show IssueDraftPanel when issues tab is active', async () => {
+      // Set the state to have issues tab active
       localStorage.setItem(
         GOD_MODE_STORAGE_KEY,
         JSON.stringify({
@@ -193,8 +194,8 @@ describe('GodModeWindow', () => {
         </TestWrapper>
       )
 
-      // Should show placeholder content for issues tab (TASK 56)
-      expect(screen.getByText(/TASK 56/)).toBeInTheDocument()
+      // Should show IssueDraftPanel content (TASK 56 implemented, TASK 57 added GitHub)
+      expect(screen.getByText(/создать черновик|Create Draft/i)).toBeInTheDocument()
     })
   })
 

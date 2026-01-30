@@ -19,7 +19,13 @@ import type { ConversationMessage } from './god-mode'
 /**
  * Issue type categories
  */
-export type IssueType = 'bug' | 'feature' | 'improvement' | 'documentation' | 'question' | 'maintenance'
+export type IssueType =
+  | 'bug'
+  | 'feature'
+  | 'improvement'
+  | 'documentation'
+  | 'question'
+  | 'maintenance'
 
 /**
  * Issue priority levels
@@ -118,7 +124,7 @@ export interface IssueDraft {
   /** AI confidence in draft quality */
   confidence?: number
   /** Additional metadata */
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 /**
@@ -166,7 +172,7 @@ export interface IssueTemplatePlaceholder {
   /** Whether placeholder is required */
   required: boolean
   /** Default value */
-  defaultValue?: any
+  defaultValue?: string | number | boolean
   /** Options for select/multiselect types */
   options?: Array<{ value: string; label: string }>
   /** Validation pattern */
@@ -536,7 +542,7 @@ export const TYPE_LABELS: Record<IssueType, string> = {
  */
 export function getDefaultLabels(type: IssueType, priority: IssuePriority): string[] {
   const labels = [TYPE_LABELS[type], PRIORITY_LABELS[priority]]
-  
+
   // Add additional type-specific labels
   switch (type) {
     case 'bug':
@@ -549,7 +555,7 @@ export function getDefaultLabels(type: IssueType, priority: IssuePriority): stri
       labels.push('enhancement')
       break
   }
-  
+
   return labels
 }
 
@@ -603,9 +609,7 @@ export function generateDraftId(): string {
 /**
  * Creates a new issue draft with defaults
  */
-export function createIssueDraft(
-  overrides: Partial<IssueDraft> = {}
-): IssueDraft {
+export function createIssueDraft(overrides: Partial<IssueDraft> = {}): IssueDraft {
   const now = new Date().toISOString()
   const defaults: IssueDraft = {
     id: generateDraftId(),

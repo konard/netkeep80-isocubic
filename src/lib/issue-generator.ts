@@ -15,23 +15,22 @@
  */
 
 import type { QueryLanguage } from '../types/ai-query'
-import type {
-  ConversationMessage,
-  ConversationMessageContext,
-} from '../types/god-mode'
+import type { ConversationMessage, ConversationMessageContext } from '../types/god-mode'
 import type {
   IssueDraft,
   IssueTemplate,
   IssueType,
   IssuePriority,
   IssueDraftSettings,
+} from '../types/issue-generator'
+import {
   BUILTIN_ISSUE_TEMPLATES,
   createIssueDraft,
   getDefaultLabels,
   validateIssueDraft,
   DEFAULT_ISSUE_DRAFT_SETTINGS,
 } from '../types/issue-generator'
-import { searchComponentMeta, getAllComponentMeta } from '../types/component-meta'
+import { getAllComponentMeta } from '../types/component-meta'
 import type { ComponentMeta } from '../types/component-meta'
 
 /**
@@ -129,16 +128,7 @@ const TYPE_PATTERNS_RU: Record<IssueType, string[]> = {
     'справка',
     'объяснить',
   ],
-  question: [
-    'как',
-    'почему',
-    'зачем',
-    'объясни',
-    'расскажи',
-    'вопрос',
-    'непонятно',
-    'подскажи',
-  ],
+  question: ['как', 'почему', 'зачем', 'объясни', 'расскажи', 'вопрос', 'непонятно', 'подскажи'],
   maintenance: [
     'обновить',
     'поддержать',
@@ -199,16 +189,7 @@ const TYPE_PATTERNS_EN: Record<IssueType, string[]> = {
     'manual',
     'tutorial',
   ],
-  question: [
-    'how',
-    'why',
-    'what',
-    'explain',
-    'tell me',
-    'question',
-    'unclear',
-    'clarify',
-  ],
+  question: ['how', 'why', 'what', 'explain', 'tell me', 'question', 'unclear', 'clarify'],
   maintenance: [
     'update',
     'maintain',
@@ -234,70 +215,19 @@ const PRIORITY_PATTERNS_RU: Record<IssuePriority, string[]> = {
     'срочно',
     'немедленно',
   ],
-  high: [
-    'важно',
-    'срочно',
-    'приоритет',
-    'высокий',
-    'незамедлительно',
-    'проблема',
-  ],
-  medium: [
-    'важно',
-    'нужно',
-    'желательно',
-    'средний',
-    'обычный',
-    'стандартный',
-  ],
-  low: [
-    'желательно',
-    'незначительно',
-    'мелочь',
-    'когда будет время',
-    'низкий',
-    'непринципиально',
-  ],
+  high: ['важно', 'срочно', 'приоритет', 'высокий', 'незамедлительно', 'проблема'],
+  medium: ['важно', 'нужно', 'желательно', 'средний', 'обычный', 'стандартный'],
+  low: ['желательно', 'незначительно', 'мелочь', 'когда будет время', 'низкий', 'непринципиально'],
 }
 
 /**
  * Priority keyword patterns (English)
  */
 const PRIORITY_PATTERNS_EN: Record<IssuePriority, string[]> = {
-  critical: [
-    'critical',
-    'blocking',
-    'broken',
-    'emergency',
-    'urgent',
-    'immediately',
-    'showstopper',
-  ],
-  high: [
-    'important',
-    'urgent',
-    'priority',
-    'high',
-    'asap',
-    'soon',
-    'problem',
-  ],
-  medium: [
-    'important',
-    'needed',
-    'should',
-    'medium',
-    'normal',
-    'standard',
-  ],
-  low: [
-    'nice to have',
-    'minor',
-    'when you have time',
-    'low',
-    'optional',
-    'minor issue',
-  ],
+  critical: ['critical', 'blocking', 'broken', 'emergency', 'urgent', 'immediately', 'showstopper'],
+  high: ['important', 'urgent', 'priority', 'high', 'asap', 'soon', 'problem'],
+  medium: ['important', 'needed', 'should', 'medium', 'normal', 'standard'],
+  low: ['nice to have', 'minor', 'when you have time', 'low', 'optional', 'minor issue'],
 }
 
 /**
@@ -337,8 +267,8 @@ export class IssueGenerator {
       const suggestComponents = options.suggestComponents ?? this.settings.autoSuggestComponents
 
       // Extract user messages for analysis
-      const userMessages = messages.filter(msg => msg.role === 'user')
-      
+      const userMessages = messages.filter((msg) => msg.role === 'user')
+
       if (userMessages.length === 0) {
         return {
           draft: createIssueDraft(),
@@ -357,8 +287,8 @@ export class IssueGenerator {
       }
 
       // Combine user message content
-      const fullText = userMessages.map(msg => msg.content).join('\n\n')
-      
+      const fullText = userMessages.map((msg) => msg.content).join('\n\n')
+
       // Detect issue type and priority
       const detectedType = options.forceType || this.detectIssueType(fullText, language)
       const detectedPriority = options.forcePriority || this.detectPriority(fullText, language)
@@ -366,9 +296,9 @@ export class IssueGenerator {
       // Extract key information
       const keyPhrases = this.extractKeyPhrases(fullText, language)
       const requirements = this.extractRequirements(fullText, language)
-      
+
       // Find related components
-      const relatedComponents = suggestComponents 
+      const relatedComponents = suggestComponents
         ? this.findRelatedComponents(fullText, messages)
         : []
 
@@ -391,7 +321,7 @@ export class IssueGenerator {
         type: detectedType,
         priority: detectedPriority,
         labels: this.generateLabels(detectedType, detectedPriority),
-        relatedComponents: relatedComponents.map(c => c.id),
+        relatedComponents: relatedComponents.map((c) => c.id),
         conversationContext: includeContext ? messages : undefined,
         confidence: this.calculateConfidence(fullText, requirements, relatedComponents),
       })
@@ -504,25 +434,20 @@ export class IssueGenerator {
    */
   private extractKeyPhrases(text: string, language: QueryLanguage): string[] {
     const phrases: string[] = []
-    
+
     // Common issue-related phrases (simplified extraction)
-    const phrasePatterns = language === 'ru' ? [
-      /не работает/gi,
-      /улучшить/gi,
-      /добавить/gi,
-      /проблема/gi,
-      /ошибка/gi,
-      /нужно/gi,
-      /хочу/gi,
-    ] : [
-      /not working/gi,
-      /improve/gi,
-      /add/gi,
-      /problem/gi,
-      /error/gi,
-      /need/gi,
-      /want/gi,
-    ]
+    const phrasePatterns =
+      language === 'ru'
+        ? [
+            /не работает/gi,
+            /улучшить/gi,
+            /добавить/gi,
+            /проблема/gi,
+            /ошибка/gi,
+            /нужно/gi,
+            /хочу/gi,
+          ]
+        : [/not working/gi, /improve/gi, /add/gi, /problem/gi, /error/gi, /need/gi, /want/gi]
 
     for (const pattern of phrasePatterns) {
       const matches = text.match(pattern)
@@ -532,7 +457,7 @@ export class IssueGenerator {
     }
 
     // Extract component names (simplified)
-    const componentNames = getAllComponentMeta().map(c => c.name)
+    const componentNames = getAllComponentMeta().map((c) => c.name)
     for (const name of componentNames) {
       if (text.toLowerCase().includes(name.toLowerCase())) {
         phrases.push(name)
@@ -547,22 +472,28 @@ export class IssueGenerator {
    */
   private extractRequirements(text: string, language: QueryLanguage): string[] {
     const requirements: string[] = []
-    
+
     // Split text into sentences
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0)
-    
+    const sentences = text.split(/[.!?]+/).filter((s) => s.trim().length > 0)
+
     // Look for requirement indicators
-    const requirementIndicators = language === 'ru' ? [
-      'нужно', 'хочу', 'должен', 'требуется', 'необходимо',
-      'пожелание', 'ожидание', 'сценарий'
-    ] : [
-      'need', 'want', 'should', 'must', 'require',
-      'expectation', 'scenario', 'user story'
-    ]
+    const requirementIndicators =
+      language === 'ru'
+        ? [
+            'нужно',
+            'хочу',
+            'должен',
+            'требуется',
+            'необходимо',
+            'пожелание',
+            'ожидание',
+            'сценарий',
+          ]
+        : ['need', 'want', 'should', 'must', 'require', 'expectation', 'scenario', 'user story']
 
     for (const sentence of sentences) {
       const lowerSentence = sentence.toLowerCase().trim()
-      if (requirementIndicators.some(indicator => lowerSentence.includes(indicator))) {
+      if (requirementIndicators.some((indicator) => lowerSentence.includes(indicator))) {
         requirements.push(sentence.trim())
       }
     }
@@ -576,14 +507,14 @@ export class IssueGenerator {
   private findRelatedComponents(text: string, messages: ConversationMessage[]): ComponentMeta[] {
     const components: ComponentMeta[] = []
     const searchText = text.toLowerCase()
-    
+
     // Search by component name and description
     const allComponents = getAllComponentMeta()
     for (const component of allComponents) {
       if (
         searchText.includes(component.name.toLowerCase()) ||
         searchText.includes(component.id.toLowerCase()) ||
-        component.keywords.some(keyword => searchText.includes(keyword.toLowerCase()))
+        component.keywords.some((keyword) => searchText.includes(keyword.toLowerCase()))
       ) {
         components.push(component)
       }
@@ -592,8 +523,8 @@ export class IssueGenerator {
     // Also check message context for component IDs
     for (const message of messages) {
       if (message.context?.componentId) {
-        const component = allComponents.find(c => c.id === message.context.componentId)
-        if (component && !components.some(c => c.id === component.id)) {
+        const component = allComponents.find((c) => c.id === message.context.componentId)
+        if (component && !components.some((c) => c.id === component.id)) {
           components.push(component)
         }
       }
@@ -605,28 +536,37 @@ export class IssueGenerator {
   /**
    * Generates issue title
    */
-  private generateTitle(
-    text: string,
-    type: IssueType,
-    language: QueryLanguage
-  ): string {
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0)
-    
+  private generateTitle(text: string, type: IssueType, language: QueryLanguage): string {
+    const sentences = text.split(/[.!?]+/).filter((s) => s.trim().length > 0)
+
     if (sentences.length === 0) {
       return language === 'ru' ? 'Новая задача' : 'New issue'
     }
 
     // Try to extract a meaningful title from first sentence
     let title = sentences[0].trim()
-    
+
     // Clean up common prefixes
-    const prefixes = language === 'ru' ? [
-      'Я хочу ', 'Я бы хотел ', 'Нужно ', 'Требуется ',
-      'Есть проблема ', 'Обнаружил ', 'Нашел '
-    ] : [
-      'I want ', 'I would like ', 'We need ', 'It requires ',
-      'There is a problem ', 'I found ', 'I discovered '
-    ]
+    const prefixes =
+      language === 'ru'
+        ? [
+            'Я хочу ',
+            'Я бы хотел ',
+            'Нужно ',
+            'Требуется ',
+            'Есть проблема ',
+            'Обнаружил ',
+            'Нашел ',
+          ]
+        : [
+            'I want ',
+            'I would like ',
+            'We need ',
+            'It requires ',
+            'There is a problem ',
+            'I found ',
+            'I discovered ',
+          ]
 
     for (const prefix of prefixes) {
       if (title.toLowerCase().startsWith(prefix.toLowerCase())) {
@@ -640,21 +580,24 @@ export class IssueGenerator {
     }
 
     // Add type prefix if not obvious
-    const typePrefixes = language === 'ru' ? {
-      bug: 'Баг: ',
-      feature: 'Фича: ',
-      improvement: 'Улучшение: ',
-      documentation: 'Документация: ',
-      question: 'Вопрос: ',
-      maintenance: 'Поддержка: ',
-    } : {
-      bug: 'Bug: ',
-      feature: 'Feature: ',
-      improvement: 'Improvement: ',
-      documentation: 'Documentation: ',
-      question: 'Question: ',
-      maintenance: 'Maintenance: ',
-    }
+    const typePrefixes =
+      language === 'ru'
+        ? {
+            bug: 'Баг: ',
+            feature: 'Фича: ',
+            improvement: 'Улучшение: ',
+            documentation: 'Документация: ',
+            question: 'Вопрос: ',
+            maintenance: 'Поддержка: ',
+          }
+        : {
+            bug: 'Bug: ',
+            feature: 'Feature: ',
+            improvement: 'Improvement: ',
+            documentation: 'Documentation: ',
+            question: 'Question: ',
+            maintenance: 'Maintenance: ',
+          }
 
     return typePrefixes[type] + title
   }
@@ -687,7 +630,7 @@ export class IssueGenerator {
       } else {
         body += '## Requirements\n\n'
       }
-      
+
       requirements.forEach((req, index) => {
         body += `${index + 1}. ${req}\n`
       })
@@ -732,7 +675,7 @@ export class IssueGenerator {
       } else {
         body += '## Conversation Context\n\n'
       }
-      
+
       const recentMessages = conversationContext.slice(-5) // Last 5 messages
       for (const message of recentMessages) {
         const role = message.role === 'user' ? 'User' : 'Assistant'
@@ -786,7 +729,7 @@ export class IssueGenerator {
    * Gets template by ID
    */
   getTemplate(id: string): IssueTemplate | undefined {
-    return BUILTIN_ISSUE_TEMPLATES.find(template => template.id === id)
+    return BUILTIN_ISSUE_TEMPLATES.find((template) => template.id === id)
   }
 
   /**
@@ -794,7 +737,7 @@ export class IssueGenerator {
    */
   createFromTemplate(
     templateId: string,
-    values: Record<string, any> = {},
+    values: Record<string, string> = {},
     overrides: Partial<IssueDraft> = {}
   ): IssueDraft {
     const template = this.getTemplate(templateId)
@@ -826,9 +769,7 @@ export class IssueGenerator {
 /**
  * Creates a new issue generator instance
  */
-export function createIssueGenerator(
-  settings?: Partial<IssueDraftSettings>
-): IssueGenerator {
+export function createIssueGenerator(settings?: Partial<IssueDraftSettings>): IssueGenerator {
   return new IssueGenerator(settings)
 }
 
