@@ -25,6 +25,21 @@ import {
   recordFeedback,
   getAvailableThemes,
   getAvailableGroupTypes,
+  // Metadata Query functions (TASK 53)
+  isMetadataQueryReady,
+  initializeMetadataQueryMode,
+  processMetadataQueryWithLLM,
+  clearMetadataQueryCache,
+  setMetadataQueryConfig,
+  getMetadataQueryConfig,
+  addMetadataQueryTrainingExample,
+  getMetadataQueryDataset,
+  clearMetadataQueryDataset,
+  loadMetadataQueryDataset,
+  exportMetadataQueryDataset,
+  recordMetadataQueryFeedback,
+  getAvailableMetadataQueryIntents,
+  getMetadataQueryExamples,
 } from './tinyLLM'
 import { validateCube } from './validation'
 import type { SpectralCube, CompositeDescription, BatchGenerationRequest } from '../types/cube'
@@ -979,6 +994,454 @@ describe('tinyLLM', () => {
       expect(types).toContain('column')
       expect(types).toContain('structure')
       expect(types).toContain('terrain')
+    })
+  })
+
+  // ============================================================================
+  // TASK 53: TinyLLM + Metadata Integration Tests (Phase 8 - AI + Metadata)
+  // ============================================================================
+
+  describe('metadata query mode', () => {
+    describe('isMetadataQueryReady', () => {
+      it('should return true (rule-based implementation always ready)', () => {
+        expect(isMetadataQueryReady()).toBe(true)
+      })
+    })
+
+    describe('initializeMetadataQueryMode', () => {
+      beforeEach(() => {
+        clearMetadataQueryDataset()
+      })
+
+      it('should resolve without errors', async () => {
+        await expect(initializeMetadataQueryMode()).resolves.toBeUndefined()
+      })
+
+      it('should populate default training examples', async () => {
+        await initializeMetadataQueryMode()
+        const dataset = getMetadataQueryDataset()
+
+        expect(dataset).not.toBeNull()
+        expect(dataset?.examples.length).toBeGreaterThan(0)
+      })
+
+      it('should not duplicate examples on multiple calls', async () => {
+        await initializeMetadataQueryMode()
+        const countAfterFirst = getMetadataQueryDataset()?.examples.length ?? 0
+
+        await initializeMetadataQueryMode()
+        const countAfterSecond = getMetadataQueryDataset()?.examples.length ?? 0
+
+        expect(countAfterSecond).toBe(countAfterFirst)
+      })
+    })
+
+    describe('processMetadataQueryWithLLM', () => {
+      beforeEach(() => {
+        clearMetadataQueryCache()
+        setMetadataQueryConfig({ enableCache: false })
+      })
+
+      it('should process English query successfully', () => {
+        const response = processMetadataQueryWithLLM({
+          query: 'What does Gallery do?',
+        })
+
+        expect(response.success).toBe(true)
+        expect(response.language).toBe('en')
+        expect(response.intent).toBeDefined()
+        expect(response.processingTime).toBeDefined()
+      })
+
+      it('should process Russian query successfully', () => {
+        const response = processMetadataQueryWithLLM({
+          query: 'Что делает компонент Gallery?',
+        })
+
+        expect(response.success).toBe(true)
+        expect(response.language).toBe('ru')
+        expect(response.intent).toBeDefined()
+      })
+
+      it('should classify describe intent correctly', () => {
+        const response = processMetadataQueryWithLLM({
+          query: 'Describe the CubePreview component',
+        })
+
+        expect(response.intent).toBe('describe')
+      })
+
+      it('should classify find intent correctly', () => {
+        const response = processMetadataQueryWithLLM({
+          query: 'Find components related to export',
+        })
+
+        expect(response.intent).toBe('find')
+      })
+
+      it('should classify dependencies intent correctly', () => {
+        const response = processMetadataQueryWithLLM({
+          query: 'dependencies of Gallery',
+        })
+
+        expect(response.intent).toBe('dependencies')
+      })
+
+      it('should classify history intent correctly', () => {
+        const response = processMetadataQueryWithLLM({
+          query: 'Show history and version changes of Gallery',
+        })
+
+        expect(response.intent).toBe('history')
+      })
+
+      it('should classify usage intent correctly', () => {
+        const response = processMetadataQueryWithLLM({
+          query: 'How to use CubePreview example',
+        })
+
+        expect(response.intent).toBe('usage')
+      })
+
+      it('should classify features intent correctly', () => {
+        const response = processMetadataQueryWithLLM({
+          query: 'List capabilities and features of Gallery',
+        })
+
+        expect(response.intent).toBe('features')
+      })
+
+      it('should classify status intent correctly', () => {
+        const response = processMetadataQueryWithLLM({
+          query: 'Show status and stability of Gallery',
+        })
+
+        expect(response.intent).toBe('status')
+      })
+
+      it('should provide suggestions for no results', () => {
+        const response = processMetadataQueryWithLLM({
+          query: 'xyzzy nonexistent component abc123',
+        })
+
+        expect(response.success).toBe(true)
+        // Should have suggestions when no components found
+        if (response.components?.length === 0) {
+          expect(response.suggestions?.length).toBeGreaterThan(0)
+        }
+      })
+
+      it('should provide related queries for found components', () => {
+        const response = processMetadataQueryWithLLM({
+          query: 'Describe Gallery',
+        })
+
+        expect(response.success).toBe(true)
+        if (response.components && response.components.length > 0) {
+          expect(response.relatedQueries).toBeDefined()
+        }
+      })
+
+      it('should respect maxResults option', () => {
+        const response = processMetadataQueryWithLLM({
+          query: 'Find all components',
+          maxResults: 3,
+        })
+
+        expect(response.success).toBe(true)
+        if (response.components) {
+          expect(response.components.length).toBeLessThanOrEqual(3)
+        }
+      })
+
+      it('should handle empty query', () => {
+        const response = processMetadataQueryWithLLM({
+          query: '',
+        })
+
+        expect(response.success).toBe(true)
+        // Should still provide a valid response
+        expect(response.answer).toBeDefined()
+      })
+    })
+
+    describe('metadata query caching', () => {
+      beforeEach(() => {
+        clearMetadataQueryCache()
+        setMetadataQueryConfig({ enableCache: true, cacheTTL: 60000 })
+      })
+
+      it('should cache query results', () => {
+        const query = 'What does Gallery do?'
+
+        // First call
+        const response1 = processMetadataQueryWithLLM({ query })
+
+        // Second call should be faster (from cache)
+        const startTime = performance.now()
+        const response2 = processMetadataQueryWithLLM({ query })
+        const elapsed = performance.now() - startTime
+
+        expect(response2.answer).toBe(response1.answer)
+        // Cache retrieval should be very fast
+        expect(elapsed).toBeLessThan(100)
+      })
+
+      it('should clear cache properly', () => {
+        const query = 'What does Gallery do?'
+
+        processMetadataQueryWithLLM({ query })
+        clearMetadataQueryCache()
+
+        // After clearing, should not use cached result
+        const response = processMetadataQueryWithLLM({ query })
+        expect(response.success).toBe(true)
+      })
+    })
+
+    describe('metadata query configuration', () => {
+      it('should get default configuration', () => {
+        const config = getMetadataQueryConfig()
+
+        expect(config.maxResults).toBeDefined()
+        expect(config.minRelevanceScore).toBeDefined()
+        expect(config.enableCache).toBeDefined()
+        expect(config.cacheTTL).toBeDefined()
+        expect(config.useLLMEnhancements).toBeDefined()
+      })
+
+      it('should set configuration', () => {
+        const newConfig = {
+          maxResults: 5,
+          minRelevanceScore: 0.2,
+        }
+
+        setMetadataQueryConfig(newConfig)
+        const config = getMetadataQueryConfig()
+
+        expect(config.maxResults).toBe(5)
+        expect(config.minRelevanceScore).toBe(0.2)
+      })
+
+      it('should toggle LLM enhancements', () => {
+        setMetadataQueryConfig({ useLLMEnhancements: false })
+        const config = getMetadataQueryConfig()
+
+        expect(config.useLLMEnhancements).toBe(false)
+
+        // Query should still work with enhancements disabled
+        const response = processMetadataQueryWithLLM({
+          query: 'What does Gallery do?',
+        })
+        expect(response.success).toBe(true)
+      })
+    })
+
+    describe('metadata query training', () => {
+      beforeEach(() => {
+        clearMetadataQueryDataset()
+      })
+
+      it('should start with no dataset', () => {
+        const dataset = getMetadataQueryDataset()
+        expect(dataset).toBeNull()
+      })
+
+      it('should add training examples', () => {
+        addMetadataQueryTrainingExample({
+          query: 'What does Gallery do?',
+          intent: 'describe',
+          expectedComponents: ['Gallery'],
+          rating: 0.9,
+          created: new Date().toISOString(),
+        })
+
+        const dataset = getMetadataQueryDataset()
+        expect(dataset).not.toBeNull()
+        expect(dataset?.examples.length).toBe(1)
+        expect(dataset?.examples[0].query).toBe('What does Gallery do?')
+      })
+
+      it('should record feedback', () => {
+        recordMetadataQueryFeedback('test query', 'describe', ['Gallery'], 0.85)
+
+        const dataset = getMetadataQueryDataset()
+        expect(dataset?.examples.length).toBe(1)
+        expect(dataset?.examples[0].rating).toBe(0.85)
+      })
+
+      it('should clamp rating to valid range', () => {
+        recordMetadataQueryFeedback('test', 'find', [], 1.5)
+
+        const dataset = getMetadataQueryDataset()
+        expect(dataset?.examples[0].rating).toBe(1.0)
+      })
+
+      it('should export dataset as JSON', () => {
+        addMetadataQueryTrainingExample({
+          query: 'test',
+          intent: 'describe',
+          expectedComponents: [],
+          created: new Date().toISOString(),
+        })
+
+        const json = exportMetadataQueryDataset()
+        expect(json).not.toBeNull()
+
+        const parsed = JSON.parse(json!)
+        expect(parsed.examples.length).toBe(1)
+      })
+
+      it('should load external dataset', () => {
+        const externalDataset = {
+          id: 'external',
+          name: 'External Dataset',
+          examples: [
+            {
+              query: 'external query',
+              intent: 'find' as const,
+              expectedComponents: ['Test'],
+              created: new Date().toISOString(),
+            },
+          ],
+          version: '1.0.0',
+          created: new Date().toISOString(),
+          modified: new Date().toISOString(),
+        }
+
+        loadMetadataQueryDataset(externalDataset)
+        const dataset = getMetadataQueryDataset()
+
+        expect(dataset?.id).toBe('external')
+        expect(dataset?.examples.length).toBe(1)
+      })
+
+      it('should clear dataset', () => {
+        addMetadataQueryTrainingExample({
+          query: 'test',
+          intent: 'describe',
+          expectedComponents: [],
+          created: new Date().toISOString(),
+        })
+
+        clearMetadataQueryDataset()
+        const dataset = getMetadataQueryDataset()
+
+        expect(dataset).toBeNull()
+      })
+    })
+
+    describe('getAvailableMetadataQueryIntents', () => {
+      it('should return array of intents', () => {
+        const intents = getAvailableMetadataQueryIntents()
+
+        expect(Array.isArray(intents)).toBe(true)
+        expect(intents.length).toBeGreaterThan(0)
+      })
+
+      it('should include all standard intents', () => {
+        const intents = getAvailableMetadataQueryIntents()
+
+        expect(intents).toContain('describe')
+        expect(intents).toContain('find')
+        expect(intents).toContain('dependencies')
+        expect(intents).toContain('history')
+        expect(intents).toContain('usage')
+        expect(intents).toContain('related')
+        expect(intents).toContain('features')
+        expect(intents).toContain('status')
+      })
+
+      it('should not include unknown intent', () => {
+        const intents = getAvailableMetadataQueryIntents()
+
+        expect(intents).not.toContain('unknown')
+      })
+    })
+
+    describe('getMetadataQueryExamples', () => {
+      it('should return examples for English', () => {
+        const examples = getMetadataQueryExamples('describe', 'en')
+
+        expect(Array.isArray(examples)).toBe(true)
+        expect(examples.length).toBeGreaterThan(0)
+        // Should be English examples
+        expect(examples[0]).toMatch(/[a-zA-Z]/)
+      })
+
+      it('should return examples for Russian', () => {
+        const examples = getMetadataQueryExamples('describe', 'ru')
+
+        expect(Array.isArray(examples)).toBe(true)
+        expect(examples.length).toBeGreaterThan(0)
+        // Should contain Cyrillic characters
+        expect(examples[0]).toMatch(/[а-яёА-ЯЁ]/)
+      })
+
+      it('should return examples for all intents', () => {
+        const intents = getAvailableMetadataQueryIntents()
+
+        for (const intent of intents) {
+          const enExamples = getMetadataQueryExamples(intent, 'en')
+          const ruExamples = getMetadataQueryExamples(intent, 'ru')
+
+          expect(enExamples.length).toBeGreaterThan(0)
+          expect(ruExamples.length).toBeGreaterThan(0)
+        }
+      })
+    })
+
+    describe('Russian language support for metadata queries', () => {
+      it('should process Russian describe query', () => {
+        const response = processMetadataQueryWithLLM({
+          query: 'Опиши компонент Gallery',
+        })
+
+        expect(response.success).toBe(true)
+        expect(response.language).toBe('ru')
+        expect(response.intent).toBe('describe')
+      })
+
+      it('should process Russian find query', () => {
+        const response = processMetadataQueryWithLLM({
+          query: 'найди Gallery',
+        })
+
+        expect(response.success).toBe(true)
+        expect(response.language).toBe('ru')
+        expect(response.intent).toBe('find')
+      })
+
+      it('should process Russian dependencies query', () => {
+        const response = processMetadataQueryWithLLM({
+          query: 'Какие зависимости у Gallery?',
+        })
+
+        expect(response.success).toBe(true)
+        expect(response.language).toBe('ru')
+        expect(response.intent).toBe('dependencies')
+      })
+
+      it('should process Russian usage query', () => {
+        const response = processMetadataQueryWithLLM({
+          query: 'Как использовать CubePreview?',
+        })
+
+        expect(response.success).toBe(true)
+        expect(response.language).toBe('ru')
+        expect(response.intent).toBe('usage')
+      })
+
+      it('should return Russian responses for Russian queries', () => {
+        const response = processMetadataQueryWithLLM({
+          query: 'Найди компоненты фазы 1',
+          language: 'ru',
+        })
+
+        expect(response.success).toBe(true)
+        // Response should contain some Russian text or be relevant to the query
+        expect(response.language).toBe('ru')
+      })
     })
   })
 })

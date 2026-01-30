@@ -1769,3 +1769,1079 @@ export function getAvailableThemes(): string[] {
 export function getAvailableGroupTypes(): CubeGroupType[] {
   return Object.keys(GROUP_CONFIGS) as CubeGroupType[]
 }
+
+// ============================================================================
+// TASK 53: TinyLLM + Metadata Integration (Phase 8 - AI + Metadata)
+// ============================================================================
+
+import type { AIQueryRequest, AIQueryResponse, QueryIntent, QueryLanguage } from '../types/ai-query'
+import { detectQueryLanguage, classifyQueryIntent, createSuccessResponse } from '../types/ai-query'
+import type { ComponentMeta } from '../types/component-meta'
+import { getAllComponentMeta, searchComponentMeta } from '../types/component-meta'
+
+/**
+ * Configuration for metadata query processing
+ */
+export interface MetadataQueryConfig {
+  /** Maximum results to return */
+  maxResults: number
+  /** Minimum relevance score threshold (0-1) */
+  minRelevanceScore: number
+  /** Enable caching */
+  enableCache: boolean
+  /** Cache TTL in milliseconds */
+  cacheTTL: number
+  /** Use TinyLLM enhancements for response generation */
+  useLLMEnhancements: boolean
+}
+
+/**
+ * Default metadata query configuration
+ */
+export const DEFAULT_METADATA_QUERY_CONFIG: MetadataQueryConfig = {
+  maxResults: 10,
+  minRelevanceScore: 0.1,
+  enableCache: true,
+  cacheTTL: 60000, // 1 minute
+  useLLMEnhancements: true,
+}
+
+/**
+ * Training example for metadata queries
+ */
+export interface MetadataQueryTrainingExample {
+  /** Input query text */
+  query: string
+  /** Expected intent */
+  intent: QueryIntent
+  /** Expected component names in response */
+  expectedComponents: string[]
+  /** Response quality rating (0-1) */
+  rating?: number
+  /** ISO date when example was created */
+  created: string
+}
+
+/**
+ * Metadata query training dataset
+ */
+export interface MetadataQueryDataset {
+  /** Dataset ID */
+  id: string
+  /** Dataset name */
+  name: string
+  /** Training examples */
+  examples: MetadataQueryTrainingExample[]
+  /** Dataset version */
+  version: string
+  /** ISO date when dataset was created */
+  created: string
+  /** ISO date when dataset was last modified */
+  modified: string
+}
+
+/**
+ * Cache entry for metadata queries
+ */
+interface MetadataQueryCacheEntry {
+  response: AIQueryResponse
+  timestamp: number
+}
+
+/**
+ * Keyword patterns for enhanced intent detection
+ */
+const METADATA_INTENT_KEYWORDS: Record<QueryLanguage, Record<QueryIntent, string[]>> = {
+  ru: {
+    describe: ['что', 'какой', 'опиши', 'расскажи', 'объясни', 'информация', 'делает', 'для чего'],
+    find: ['найди', 'покажи', 'где', 'поиск', 'искать', 'компоненты'],
+    dependencies: ['зависимости', 'использует', 'требует', 'импорт', 'зависит'],
+    history: ['история', 'изменения', 'обновления', 'версия', 'когда'],
+    usage: ['использовать', 'применять', 'пример', 'синтаксис', 'как'],
+    related: ['связанные', 'похожие', 'аналоги', 'альтернативы', 'подобные'],
+    features: ['функции', 'возможности', 'фичи', 'умеет', 'может'],
+    status: ['статус', 'состояние', 'стабильность', 'фаза', 'готов'],
+    unknown: [],
+  },
+  en: {
+    describe: ['what', 'describe', 'tell', 'explain', 'info', 'does', 'purpose'],
+    find: ['find', 'show', 'where', 'search', 'locate', 'components'],
+    dependencies: ['dependencies', 'uses', 'requires', 'imports', 'depends'],
+    history: ['history', 'changes', 'updates', 'version', 'when'],
+    usage: ['use', 'apply', 'example', 'syntax', 'how'],
+    related: ['related', 'similar', 'alternatives', 'like', 'analogous'],
+    features: ['features', 'capabilities', 'functions', 'can', 'able'],
+    status: ['status', 'state', 'stability', 'phase', 'ready'],
+    unknown: [],
+  },
+}
+
+/**
+ * Russian to English translation map for component-related terms
+ */
+const COMPONENT_TERM_TRANSLATIONS: Record<string, string> = {
+  // Component types
+  компонент: 'component',
+  компоненты: 'components',
+  модуль: 'module',
+  панель: 'panel',
+  редактор: 'editor',
+  превью: 'preview',
+  галерея: 'gallery',
+  генератор: 'generator',
+  // Features
+  куб: 'cube',
+  кубик: 'cube',
+  шейдер: 'shader',
+  визуализация: 'visualization',
+  экспорт: 'export',
+  импорт: 'import',
+  // Status
+  стабильный: 'stable',
+  бета: 'beta',
+  экспериментальный: 'experimental',
+  устаревший: 'deprecated',
+  // Phase
+  фаза: 'phase',
+  этап: 'phase',
+}
+
+/**
+ * Stopwords to filter from queries
+ */
+const QUERY_STOPWORDS: Set<string> = new Set([
+  'the',
+  'a',
+  'an',
+  'is',
+  'are',
+  'was',
+  'be',
+  'been',
+  'being',
+  'have',
+  'has',
+  'had',
+  'do',
+  'does',
+  'did',
+  'will',
+  'would',
+  'could',
+  'should',
+  'may',
+  'might',
+  'must',
+  'to',
+  'of',
+  'in',
+  'for',
+  'on',
+  'with',
+  'at',
+  'by',
+  'from',
+  'and',
+  'or',
+  'but',
+  'not',
+  'this',
+  'that',
+  'it',
+  'me',
+  'you',
+  'и',
+  'в',
+  'во',
+  'не',
+  'что',
+  'он',
+  'на',
+  'я',
+  'с',
+  'со',
+  'как',
+  'а',
+  'то',
+  'все',
+  'она',
+  'так',
+  'его',
+  'но',
+  'да',
+  'ты',
+  'к',
+  'у',
+  'же',
+  'вы',
+  'за',
+  'бы',
+  'по',
+  'только',
+  'её',
+  'мне',
+])
+
+// In-memory training dataset for metadata queries
+let metadataQueryDataset: MetadataQueryDataset | null = null
+
+// In-memory cache for metadata queries
+const metadataQueryCache: Map<string, MetadataQueryCacheEntry> = new Map()
+
+// Current configuration
+let metadataQueryConfig: MetadataQueryConfig = { ...DEFAULT_METADATA_QUERY_CONFIG }
+
+/**
+ * Sets the metadata query configuration
+ */
+export function setMetadataQueryConfig(config: Partial<MetadataQueryConfig>): void {
+  metadataQueryConfig = { ...metadataQueryConfig, ...config }
+}
+
+/**
+ * Gets the current metadata query configuration
+ */
+export function getMetadataQueryConfig(): MetadataQueryConfig {
+  return { ...metadataQueryConfig }
+}
+
+/**
+ * Tokenizes a query for processing
+ */
+function tokenizeQuery(query: string): string[] {
+  return query
+    .toLowerCase()
+    .replace(/[^\wа-яёА-ЯЁ\s-]/g, ' ')
+    .split(/[\s-]+/)
+    .filter((token) => token.length > 1)
+    .filter((token) => !QUERY_STOPWORDS.has(token))
+}
+
+/**
+ * Translates query tokens from Russian to English
+ */
+function translateQueryTokens(tokens: string[]): string[] {
+  return tokens.map((token) => {
+    // First check component-specific translations
+    if (COMPONENT_TERM_TRANSLATIONS[token]) {
+      return COMPONENT_TERM_TRANSLATIONS[token]
+    }
+    // Then check the general Russian translations from cube generation
+    return RUSSIAN_TRANSLATIONS[token] || token
+  })
+}
+
+/**
+ * Extracts component name from query using pattern matching
+ */
+function extractComponentNameFromQuery(query: string): string | null {
+  // Look for PascalCase component names
+  const pascalCaseMatch = query.match(
+    /([A-Z][a-zA-Z]*(?:Editor|Panel|Preview|Gallery|Generator|Cube|Stack|Grid)?)/g
+  )
+  if (pascalCaseMatch && pascalCaseMatch.length > 0) {
+    // Return the longest match (more specific)
+    return pascalCaseMatch.sort((a, b) => b.length - a.length)[0]
+  }
+  return null
+}
+
+/**
+ * Extracts phase number from query
+ */
+function extractPhaseFromQuery(query: string): number | null {
+  const match = query.match(/(?:phase|фаз[аеуыо]?)\s*(\d+)/i)
+  if (match) {
+    return parseInt(match[1], 10)
+  }
+  return null
+}
+
+/**
+ * Extracts status filter from query
+ */
+function extractStatusFromQuery(query: string): ComponentMeta['status'] | null {
+  const queryLower = query.toLowerCase()
+
+  const statusPatterns: Record<ComponentMeta['status'], string[]> = {
+    stable: ['stable', 'стабильн'],
+    beta: ['beta', 'бета'],
+    experimental: ['experimental', 'эксперимент'],
+    deprecated: ['deprecated', 'устарев'],
+  }
+
+  for (const [status, patterns] of Object.entries(statusPatterns)) {
+    for (const pattern of patterns) {
+      if (queryLower.includes(pattern)) {
+        return status as ComponentMeta['status']
+      }
+    }
+  }
+
+  return null
+}
+
+/**
+ * Calculates relevance score between query tokens and component
+ */
+function calculateRelevanceScore(
+  queryTokens: string[],
+  component: ComponentMeta
+): { score: number; matchedFields: string[] } {
+  if (queryTokens.length === 0) {
+    return { score: 0, matchedFields: [] }
+  }
+
+  let score = 0
+  const matchedFields: string[] = []
+
+  // Name matching (highest weight: 0.4)
+  const nameLower = component.name.toLowerCase()
+  const nameTokens = tokenizeQuery(component.name)
+  let nameScore = 0
+  for (const token of queryTokens) {
+    if (nameLower.includes(token) || nameTokens.some((t) => t.includes(token))) {
+      nameScore += 1 / queryTokens.length
+    }
+  }
+  if (nameScore > 0) {
+    score += nameScore * 0.4
+    matchedFields.push('name')
+  }
+
+  // Summary matching (weight: 0.3)
+  const summaryLower = component.summary.toLowerCase()
+  const summaryTokens = tokenizeQuery(component.summary)
+  let summaryScore = 0
+  for (const token of queryTokens) {
+    if (summaryLower.includes(token) || summaryTokens.some((t) => t.includes(token))) {
+      summaryScore += 1 / queryTokens.length
+    }
+  }
+  if (summaryScore > 0) {
+    score += summaryScore * 0.3
+    matchedFields.push('summary')
+  }
+
+  // Description matching (weight: 0.2)
+  const descLower = component.description.toLowerCase()
+  const descTokens = tokenizeQuery(component.description)
+  let descScore = 0
+  for (const token of queryTokens) {
+    if (descLower.includes(token) || descTokens.some((t) => t.includes(token))) {
+      descScore += 1 / queryTokens.length
+    }
+  }
+  if (descScore > 0) {
+    score += descScore * 0.2
+    matchedFields.push('description')
+  }
+
+  // Tag matching (weight: 0.1)
+  const tagLower = component.tags.map((t) => t.toLowerCase())
+  let tagScore = 0
+  for (const token of queryTokens) {
+    if (tagLower.some((t) => t.includes(token))) {
+      tagScore += 1 / queryTokens.length
+    }
+  }
+  if (tagScore > 0) {
+    score += tagScore * 0.1
+    matchedFields.push('tags')
+  }
+
+  return { score: Math.min(1.0, score), matchedFields }
+}
+
+/**
+ * Searches components using TinyLLM-enhanced matching
+ */
+function searchComponentsWithLLM(
+  query: string,
+  maxResults: number = 10,
+  minScore: number = 0.1
+): Array<{ component: ComponentMeta; score: number; matchedFields: string[] }> {
+  const results: Array<{ component: ComponentMeta; score: number; matchedFields: string[] }> = []
+  const components = getAllComponentMeta()
+
+  // Extract component name for exact matching
+  const componentName = extractComponentNameFromQuery(query)
+  if (componentName) {
+    const exactMatches = searchComponentMeta(componentName)
+    for (const component of exactMatches) {
+      results.push({ component, score: 1.0, matchedFields: ['name'] })
+    }
+    if (results.length > 0) {
+      return results.slice(0, maxResults)
+    }
+  }
+
+  // Tokenize and translate query
+  const rawTokens = tokenizeQuery(query)
+  const tokens = translateQueryTokens(rawTokens)
+
+  // Extract filters
+  const phaseFilter = extractPhaseFromQuery(query)
+  const statusFilter = extractStatusFromQuery(query)
+
+  // Filter components by phase and status
+  let candidateComponents = components
+  if (phaseFilter !== null) {
+    candidateComponents = candidateComponents.filter((c) => c.phase === phaseFilter)
+  }
+  if (statusFilter !== null) {
+    candidateComponents = candidateComponents.filter((c) => c.status === statusFilter)
+  }
+
+  // Score each component
+  for (const component of candidateComponents) {
+    const { score, matchedFields } = calculateRelevanceScore(tokens, component)
+    if (score >= minScore) {
+      results.push({ component, score, matchedFields })
+    }
+  }
+
+  // Sort by score descending
+  results.sort((a, b) => b.score - a.score)
+
+  return results.slice(0, maxResults)
+}
+
+/**
+ * Enhances intent classification using TinyLLM keyword matching
+ */
+function enhanceIntentClassification(query: string, language: QueryLanguage): QueryIntent {
+  const queryLower = query.toLowerCase()
+  const keywords = METADATA_INTENT_KEYWORDS[language]
+
+  // Score each intent based on keyword matches
+  const intentScores: Record<QueryIntent, number> = {
+    describe: 0,
+    find: 0,
+    dependencies: 0,
+    history: 0,
+    usage: 0,
+    related: 0,
+    features: 0,
+    status: 0,
+    unknown: 0,
+  }
+
+  for (const [intent, intentKeywords] of Object.entries(keywords)) {
+    for (const keyword of intentKeywords) {
+      if (queryLower.includes(keyword)) {
+        intentScores[intent as QueryIntent] += 1
+      }
+    }
+  }
+
+  // Find the intent with highest score
+  let maxScore = 0
+  let bestIntent: QueryIntent = 'unknown'
+  for (const [intent, score] of Object.entries(intentScores)) {
+    if (score > maxScore) {
+      maxScore = score
+      bestIntent = intent as QueryIntent
+    }
+  }
+
+  // If no clear winner, fall back to standard classification
+  if (maxScore === 0) {
+    return classifyQueryIntent(query, language)
+  }
+
+  return bestIntent
+}
+
+/**
+ * Generates a natural language response using TinyLLM patterns
+ */
+function generateNLResponse(
+  intent: QueryIntent,
+  components: ComponentMeta[],
+  language: QueryLanguage
+): string {
+  if (components.length === 0) {
+    return language === 'ru'
+      ? 'Компоненты не найдены. Попробуйте уточнить запрос или использовать другие ключевые слова.'
+      : 'No components found. Try refining your query or using different keywords.'
+  }
+
+  const component = components[0]
+
+  switch (intent) {
+    case 'describe':
+      return language === 'ru'
+        ? `**${component.name}** (v${component.version}) — ${component.summary}\n\n${component.description}`
+        : `**${component.name}** (v${component.version}) — ${component.summary}\n\n${component.description}`
+
+    case 'find': {
+      const names = components.map((c) => c.name).join(', ')
+      return language === 'ru'
+        ? `Найдено ${components.length} компонент(ов): ${names}`
+        : `Found ${components.length} component(s): ${names}`
+    }
+
+    case 'dependencies': {
+      if (component.dependencies.length === 0) {
+        return language === 'ru'
+          ? `Компонент ${component.name} не имеет зарегистрированных зависимостей.`
+          : `Component ${component.name} has no registered dependencies.`
+      }
+      const deps = component.dependencies
+        .map((d) => `- ${d.name} (${d.type}): ${d.purpose}`)
+        .join('\n')
+      return language === 'ru'
+        ? `**Зависимости ${component.name}:**\n\n${deps}`
+        : `**Dependencies of ${component.name}:**\n\n${deps}`
+    }
+
+    case 'history': {
+      if (component.history.length === 0) {
+        return language === 'ru'
+          ? `История изменений ${component.name} недоступна.`
+          : `Change history for ${component.name} is not available.`
+      }
+      const history = component.history
+        .slice(0, 5)
+        .map((h) => `- v${h.version} (${h.date.split('T')[0]}): ${h.description}`)
+        .join('\n')
+      return language === 'ru'
+        ? `**История изменений ${component.name}:**\n\n${history}`
+        : `**Change history of ${component.name}:**\n\n${history}`
+    }
+
+    case 'usage': {
+      const tips = component.tips?.length
+        ? component.tips.map((t) => `- ${t}`).join('\n')
+        : language === 'ru'
+          ? 'Нет доступных подсказок.'
+          : 'No tips available.'
+      return language === 'ru'
+        ? `**Использование ${component.name}:**\n\n${tips}\n\nФайл: \`${component.filePath}\``
+        : `**Usage of ${component.name}:**\n\n${tips}\n\nFile: \`${component.filePath}\``
+    }
+
+    case 'related': {
+      const allComponents = getAllComponentMeta()
+      const related = allComponents
+        .filter(
+          (c) =>
+            c.id !== component.id &&
+            (c.phase === component.phase || c.tags.some((t) => component.tags.includes(t)))
+        )
+        .slice(0, 5)
+
+      if (related.length === 0) {
+        return language === 'ru'
+          ? `Связанные компоненты для ${component.name} не найдены.`
+          : `No related components found for ${component.name}.`
+      }
+      const relatedNames = related.map((c) => c.name).join(', ')
+      return language === 'ru'
+        ? `**Связанные с ${component.name}:** ${relatedNames}`
+        : `**Related to ${component.name}:** ${relatedNames}`
+    }
+
+    case 'features': {
+      if (component.features.length === 0) {
+        return language === 'ru'
+          ? `Список функций ${component.name} не определён.`
+          : `Feature list for ${component.name} is not defined.`
+      }
+      const features = component.features
+        .map((f) => `- ${f.enabled ? '[+]' : '[-]'} ${f.name}: ${f.description}`)
+        .join('\n')
+      return language === 'ru'
+        ? `**Функции ${component.name}:**\n\n${features}`
+        : `**Features of ${component.name}:**\n\n${features}`
+    }
+
+    case 'status': {
+      const statusLabels = {
+        stable: language === 'ru' ? 'Стабильный' : 'Stable',
+        beta: 'Beta',
+        experimental: language === 'ru' ? 'Экспериментальный' : 'Experimental',
+        deprecated: language === 'ru' ? 'Устаревший' : 'Deprecated',
+      }
+      let answer =
+        language === 'ru'
+          ? `**${component.name}**: ${statusLabels[component.status]} (v${component.version}, Фаза ${component.phase})`
+          : `**${component.name}**: ${statusLabels[component.status]} (v${component.version}, Phase ${component.phase})`
+
+      if (component.knownIssues && component.knownIssues.length > 0) {
+        const issues = component.knownIssues.map((i) => `- ${i}`).join('\n')
+        answer += `\n\n${language === 'ru' ? 'Известные проблемы' : 'Known issues'}:\n${issues}`
+      }
+      return answer
+    }
+
+    default:
+      return language === 'ru'
+        ? `Возможно, вы ищете: ${components.map((c) => c.name).join(', ')}`
+        : `Perhaps you're looking for: ${components.map((c) => c.name).join(', ')}`
+  }
+}
+
+/**
+ * Generates a cache key for a metadata query
+ */
+function generateCacheKey(request: AIQueryRequest): string {
+  return `${request.query.toLowerCase().trim()}|${request.context || ''}|${request.language || ''}`
+}
+
+/**
+ * Clears the metadata query cache
+ */
+export function clearMetadataQueryCache(): void {
+  metadataQueryCache.clear()
+}
+
+/**
+ * Gets related queries based on component and current intent
+ */
+function getRelatedQueries(
+  component: ComponentMeta,
+  currentIntent: QueryIntent,
+  language: QueryLanguage
+): string[] {
+  const queries: string[] = []
+
+  if (currentIntent !== 'dependencies') {
+    queries.push(
+      language === 'ru'
+        ? `Какие зависимости у ${component.name}?`
+        : `What are the dependencies of ${component.name}?`
+    )
+  }
+
+  if (currentIntent !== 'usage') {
+    queries.push(
+      language === 'ru' ? `Как использовать ${component.name}?` : `How to use ${component.name}?`
+    )
+  }
+
+  if (currentIntent !== 'history') {
+    queries.push(
+      language === 'ru'
+        ? `История изменений ${component.name}`
+        : `Change history of ${component.name}`
+    )
+  }
+
+  if (currentIntent !== 'features') {
+    queries.push(
+      language === 'ru'
+        ? `Какие функции у ${component.name}?`
+        : `What features does ${component.name} have?`
+    )
+  }
+
+  return queries.slice(0, 3)
+}
+
+/**
+ * Gets suggestions for the user
+ */
+function getSuggestions(language: QueryLanguage): string[] {
+  const allComponents = getAllComponentMeta()
+  const names = allComponents.slice(0, 5).map((c) => c.name)
+
+  if (language === 'ru') {
+    return [...names, 'Покажи все компоненты', 'Найди компоненты фазы 1']
+  }
+
+  return [...names, 'Show all components', 'Find phase 1 components']
+}
+
+/**
+ * Processes a metadata query using TinyLLM-enhanced processing
+ *
+ * This function integrates TinyLLM with the component metadata registry to provide
+ * intelligent responses to natural language queries about components.
+ *
+ * Features:
+ * - Enhanced intent classification using TinyLLM keyword matching
+ * - Semantic search with relevance scoring
+ * - Caching for frequent queries
+ * - Rule-based fallback when AI processing fails
+ * - Multi-language support (Russian/English)
+ *
+ * @param request - The query request containing the natural language query
+ * @returns AIQueryResponse with structured response and metadata
+ */
+export function processMetadataQueryWithLLM(request: AIQueryRequest): AIQueryResponse {
+  const startTime = Date.now()
+  const cacheKey = generateCacheKey(request)
+
+  // Check cache
+  if (metadataQueryConfig.enableCache) {
+    const cached = metadataQueryCache.get(cacheKey)
+    if (cached && Date.now() - cached.timestamp < metadataQueryConfig.cacheTTL) {
+      return {
+        ...cached.response,
+        processingTime: Date.now() - startTime,
+      }
+    }
+  }
+
+  try {
+    // Detect language
+    const language = request.language || detectQueryLanguage(request.query)
+
+    // Enhanced intent classification using TinyLLM
+    let intent: QueryIntent
+    if (metadataQueryConfig.useLLMEnhancements) {
+      intent = enhanceIntentClassification(request.query, language)
+    } else {
+      intent = request.intent || classifyQueryIntent(request.query, language)
+    }
+
+    // Search for components using TinyLLM-enhanced matching
+    const searchResults = searchComponentsWithLLM(
+      request.query,
+      request.maxResults || metadataQueryConfig.maxResults,
+      metadataQueryConfig.minRelevanceScore
+    )
+
+    // Extract components and calculate average confidence
+    const components = searchResults.map((r) => r.component)
+    const avgScore =
+      searchResults.length > 0
+        ? searchResults.reduce((sum, r) => sum + r.score, 0) / searchResults.length
+        : 0
+
+    // Generate natural language response
+    const answer = generateNLResponse(intent, components, language)
+
+    // Build response
+    const response: AIQueryResponse = createSuccessResponse(
+      answer,
+      components,
+      intent,
+      language,
+      avgScore,
+      {
+        relatedQueries:
+          components.length > 0 ? getRelatedQueries(components[0], intent, language) : undefined,
+        suggestions: components.length === 0 ? getSuggestions(language) : undefined,
+        processingTime: Date.now() - startTime,
+      }
+    )
+
+    // Cache the response
+    if (metadataQueryConfig.enableCache) {
+      metadataQueryCache.set(cacheKey, { response, timestamp: Date.now() })
+    }
+
+    return response
+  } catch {
+    // Rule-based fallback on error
+    return ruleBasedMetadataQuery(request, Date.now() - startTime)
+  }
+}
+
+/**
+ * Rule-based fallback for metadata queries when LLM processing fails
+ *
+ * This provides a simpler, more reliable processing path that doesn't
+ * depend on LLM enhancements but still provides useful results.
+ *
+ * @param request - The query request
+ * @param elapsedTime - Time already elapsed in processing
+ * @returns AIQueryResponse with fallback results
+ */
+function ruleBasedMetadataQuery(request: AIQueryRequest, elapsedTime: number): AIQueryResponse {
+  const language = request.language || detectQueryLanguage(request.query)
+  const intent = classifyQueryIntent(request.query, language)
+
+  // Simple component search
+  const componentName = extractComponentNameFromQuery(request.query)
+  let components: ComponentMeta[] = []
+
+  if (componentName) {
+    components = searchComponentMeta(componentName)
+  } else {
+    // Search by raw query
+    components = searchComponentMeta(request.query).slice(
+      0,
+      request.maxResults || metadataQueryConfig.maxResults
+    )
+  }
+
+  // Generate basic response
+  let answer: string
+  if (components.length === 0) {
+    answer =
+      language === 'ru'
+        ? 'Компоненты не найдены. Попробуйте уточнить запрос.'
+        : 'No components found. Try refining your query.'
+  } else if (components.length === 1) {
+    const comp = components[0]
+    answer = `**${comp.name}** (v${comp.version}) — ${comp.summary}`
+  } else {
+    const names = components.map((c) => c.name).join(', ')
+    answer = language === 'ru' ? `Найдено: ${names}` : `Found: ${names}`
+  }
+
+  return createSuccessResponse(
+    answer,
+    components,
+    intent,
+    language,
+    components.length > 0 ? 0.5 : 0.2,
+    {
+      processingTime: Date.now() - elapsedTime,
+      suggestions: components.length === 0 ? getSuggestions(language) : undefined,
+    }
+  )
+}
+
+/**
+ * Adds a training example to the metadata query dataset
+ *
+ * Training examples help improve future query processing by providing
+ * examples of correct intent classification and expected results.
+ *
+ * @param example - The training example to add
+ */
+export function addMetadataQueryTrainingExample(example: MetadataQueryTrainingExample): void {
+  if (!metadataQueryDataset) {
+    metadataQueryDataset = {
+      id: `metadata_dataset_${Date.now().toString(36)}`,
+      name: 'Metadata Query Training Data',
+      examples: [],
+      version: '1.0.0',
+      created: new Date().toISOString(),
+      modified: new Date().toISOString(),
+    }
+  }
+
+  metadataQueryDataset.examples.push(example)
+  metadataQueryDataset.modified = new Date().toISOString()
+}
+
+/**
+ * Gets the current metadata query training dataset
+ */
+export function getMetadataQueryDataset(): MetadataQueryDataset | null {
+  return metadataQueryDataset
+}
+
+/**
+ * Loads a metadata query training dataset
+ *
+ * @param dataset - The dataset to load
+ */
+export function loadMetadataQueryDataset(dataset: MetadataQueryDataset): void {
+  metadataQueryDataset = dataset
+}
+
+/**
+ * Clears the metadata query training dataset
+ */
+export function clearMetadataQueryDataset(): void {
+  metadataQueryDataset = null
+}
+
+/**
+ * Exports the metadata query dataset as JSON
+ */
+export function exportMetadataQueryDataset(): string | null {
+  if (!metadataQueryDataset) return null
+  return JSON.stringify(metadataQueryDataset, null, 2)
+}
+
+/**
+ * Records feedback for a metadata query to improve future processing
+ *
+ * @param query - The original query
+ * @param intent - The detected intent
+ * @param expectedComponents - Component names that were expected
+ * @param rating - Quality rating (0-1)
+ */
+export function recordMetadataQueryFeedback(
+  query: string,
+  intent: QueryIntent,
+  expectedComponents: string[],
+  rating: number
+): void {
+  addMetadataQueryTrainingExample({
+    query,
+    intent,
+    expectedComponents,
+    rating: clamp(rating, 0, 1),
+    created: new Date().toISOString(),
+  })
+}
+
+/**
+ * Checks if TinyLLM metadata query mode is ready
+ */
+export function isMetadataQueryReady(): boolean {
+  return true // Rule-based implementation is always ready
+}
+
+/**
+ * Initializes TinyLLM metadata query mode
+ *
+ * This loads any pre-defined training examples and prepares the system
+ * for processing metadata queries.
+ */
+export async function initializeMetadataQueryMode(): Promise<void> {
+  // Pre-load default training examples for common queries
+  const defaultExamples: MetadataQueryTrainingExample[] = [
+    {
+      query: 'What does Gallery do?',
+      intent: 'describe',
+      expectedComponents: ['Gallery'],
+      rating: 1.0,
+      created: new Date().toISOString(),
+    },
+    {
+      query: 'Что делает компонент Gallery?',
+      intent: 'describe',
+      expectedComponents: ['Gallery'],
+      rating: 1.0,
+      created: new Date().toISOString(),
+    },
+    {
+      query: 'Find components for export',
+      intent: 'find',
+      expectedComponents: ['ExportPanel'],
+      rating: 1.0,
+      created: new Date().toISOString(),
+    },
+    {
+      query: 'Найди компоненты для экспорта',
+      intent: 'find',
+      expectedComponents: ['ExportPanel'],
+      rating: 1.0,
+      created: new Date().toISOString(),
+    },
+    {
+      query: 'Show dependencies of CubePreview',
+      intent: 'dependencies',
+      expectedComponents: ['CubePreview'],
+      rating: 1.0,
+      created: new Date().toISOString(),
+    },
+    {
+      query: 'How to use PromptGenerator?',
+      intent: 'usage',
+      expectedComponents: ['PromptGenerator'],
+      rating: 1.0,
+      created: new Date().toISOString(),
+    },
+    {
+      query: 'What is the status of phase 1 components?',
+      intent: 'status',
+      expectedComponents: [],
+      rating: 1.0,
+      created: new Date().toISOString(),
+    },
+  ]
+
+  // Only load if dataset is empty
+  if (!metadataQueryDataset || metadataQueryDataset.examples.length === 0) {
+    for (const example of defaultExamples) {
+      addMetadataQueryTrainingExample(example)
+    }
+  }
+
+  return Promise.resolve()
+}
+
+/**
+ * Gets all available metadata query intents
+ */
+export function getAvailableMetadataQueryIntents(): QueryIntent[] {
+  return ['describe', 'find', 'dependencies', 'history', 'usage', 'related', 'features', 'status']
+}
+
+/**
+ * Gets example queries for a specific intent
+ *
+ * @param intent - The intent to get examples for
+ * @param language - The language for examples
+ */
+export function getMetadataQueryExamples(intent: QueryIntent, language: QueryLanguage): string[] {
+  const examples: Record<QueryLanguage, Record<QueryIntent, string[]>> = {
+    ru: {
+      describe: [
+        'Что делает компонент Gallery?',
+        'Опиши CubePreview',
+        'Для чего нужен ExportPanel?',
+      ],
+      find: [
+        'Найди компоненты для 3D',
+        'Покажи компоненты фазы 1',
+        'Где находится функция экспорта?',
+      ],
+      dependencies: [
+        'Какие зависимости у UnifiedEditor?',
+        'Что использует CubePreview?',
+        'От чего зависит Gallery?',
+      ],
+      history: [
+        'История изменений PromptGenerator',
+        'Когда был обновлён ExportPanel?',
+        'Какая версия Gallery?',
+      ],
+      usage: [
+        'Как использовать CubePreview?',
+        'Пример использования Gallery',
+        'Как применить ExportPanel?',
+      ],
+      related: [
+        'Какие компоненты связаны с Gallery?',
+        'Похожие на CubePreview',
+        'Альтернативы ExportPanel',
+      ],
+      features: [
+        'Какие функции у Gallery?',
+        'Что умеет CubePreview?',
+        'Возможности PromptGenerator',
+      ],
+      status: [
+        'Статус компонента Gallery',
+        'Какая фаза у CubePreview?',
+        'Есть ли проблемы в ExportPanel?',
+      ],
+      unknown: ['Помощь', 'Что ты умеешь?', 'Справка'],
+    },
+    en: {
+      describe: ['What does Gallery do?', 'Describe CubePreview', 'What is ExportPanel for?'],
+      find: ['Find 3D components', 'Show phase 1 components', 'Where is the export function?'],
+      dependencies: [
+        'What are UnifiedEditor dependencies?',
+        'What does CubePreview use?',
+        'What does Gallery depend on?',
+      ],
+      history: [
+        'PromptGenerator change history',
+        'When was ExportPanel updated?',
+        'What version is Gallery?',
+      ],
+      usage: ['How to use CubePreview?', 'Gallery usage example', 'How to apply ExportPanel?'],
+      related: [
+        'What components are related to Gallery?',
+        'Similar to CubePreview',
+        'ExportPanel alternatives',
+      ],
+      features: [
+        'What features does Gallery have?',
+        'What can CubePreview do?',
+        'PromptGenerator capabilities',
+      ],
+      status: [
+        'Gallery component status',
+        'What phase is CubePreview?',
+        'Are there issues in ExportPanel?',
+      ],
+      unknown: ['Help', 'What can you do?', 'Guide'],
+    },
+  }
+
+  return examples[language][intent] || []
+}
