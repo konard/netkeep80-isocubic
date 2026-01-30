@@ -145,7 +145,8 @@ isocubic/
 │   │   ├── ExportPanel.tsx    # Экспорт/импорт
 │   │   ├── SharePanel.tsx     # Шаринг кубиков с QR-кодами
 │   │   ├── DevModeQueryPanel.tsx # AI-запросы в режиме разработки
-│   │   └── ComponentContextPanel.tsx # AI-контекст для компонентов в DevMode
+│   │   ├── ComponentContextPanel.tsx # AI-контекст для компонентов в DevMode
+│   │   └── ExtendedSearchPanel.tsx # Расширенный AI-поиск компонентов
 │   ├── shaders/           # GLSL-шейдеры
 │   │   ├── parametric-cube.glsl  # Исходный GLSL код
 │   │   ├── parametric-cube.ts    # TypeScript модуль для Three.js
@@ -157,6 +158,7 @@ isocubic/
 │   │   ├── webgpu-compute.ts  # WebGPU compute-шейдеры для параллельной генерации текстур
 │   │   ├── tinyLLM.ts         # ИИ-генератор с расширенными функциями
 │   │   ├── ai-metadata-processor.ts # Обработчик метаданных для AI-запросов
+│   │   ├── extended-search.ts    # Расширенный поиск компонентов с автодополнением
 │   │   ├── storage.ts         # Работа с хранилищем
 │   │   ├── validation.ts      # Валидация схемы
 │   │   ├── fft-wasm.ts        # FFT модуль (WASM + JS fallback)
@@ -274,7 +276,7 @@ npm run test:coverage
 ```
 
 **Текущее покрытие:**
-- 2295+ тестов
+- 2400+ тестов
 - Unit-тесты для типов, валидации, хранилища, производительности, физики энергии
 - Тесты модуля коллаборации (сессии, участники, синхронизация, конфликты)
 - Тесты WebSocket клиента (подключение, сообщения, реконнект, fallback на polling)
@@ -287,6 +289,7 @@ npm run test:coverage
 - Тесты share-ссылок (SharePanel, QR-коды, защита паролем, аналитика)
 - Тесты социальных функций (комментарии, подписки, уведомления, избранное)
 - Тесты AI-контекста для компонентов (ComponentContextPanel)
+- Тесты расширенного поиска компонентов (ExtendedSearchPanel, семантический поиск, автодополнение)
 - E2E тесты для полных workflow редактирования
 
 ## Вклад в проект
