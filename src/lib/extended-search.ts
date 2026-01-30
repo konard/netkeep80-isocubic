@@ -456,8 +456,6 @@ export class ExtendedSearchEngine {
         this.featureIndex.get(featureLower)!.add(component.id)
       }
     }
-
-    this.lastIndexUpdate = Date.now()
   }
 
   /**
