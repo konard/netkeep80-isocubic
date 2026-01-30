@@ -417,7 +417,6 @@ export class ExtendedSearchEngine {
   private componentIndex: Map<string, ComponentIndexEntry> = new Map()
   private tagIndex: Map<string, Set<string>> = new Map()
   private featureIndex: Map<string, Set<string>> = new Map()
-  private lastIndexUpdate: number = 0
 
   constructor(options: SearchOptions = {}) {
     this.options = { ...DEFAULT_SEARCH_OPTIONS, ...options }
@@ -805,8 +804,11 @@ export class ExtendedSearchEngine {
       tokens,
       searchTerms,
       filters,
-      isFilterQuery:
-        !!filters.phases || !!filters.status || (filters.tags && filters.tags.length > 0),
+      isFilterQuery: !!(
+        filters.phases ||
+        filters.status ||
+        (filters.tags && filters.tags.length > 0)
+      ),
     }
   }
 
