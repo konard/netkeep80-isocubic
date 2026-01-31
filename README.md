@@ -158,7 +158,9 @@ isocubic/
 │   │   ├── parametric-cube.ts    # TypeScript модуль для Three.js
 │   │   ├── energy-cube.glsl      # Энергетический шейдер
 │   │   └── energy-cube.ts        # TypeScript модуль для энергетических кубов
-│   ├── lib/               # Утилиты
+│   ├── lib/               # Утилиты (framework-agnostic + Pinia stores)
+│   │   ├── devmode.ts        # DevMode Pinia store (мигрирован с React Context — Phase 10)
+│   │   ├── auth.ts           # Auth Pinia store (мигрирован с React Context — Phase 10)
 │   │   ├── shader-utils.ts    # Утилиты для шейдеров (с поддержкой LOD)
 │   │   ├── lod-system.ts      # LOD-система для оптимизации рендеринга
 │   │   ├── webgpu-compute.ts  # WebGPU compute-шейдеры для параллельной генерации текстур
@@ -189,7 +191,7 @@ isocubic/
 │   │   ├── ai-query.ts        # Типы для AI-запросов в DevMode
 │   │   ├── god-mode.ts        # Типы для GOD MODE (Phase 9)
 │   │   └── issue-generator.ts # Типы для генератора issues (Phase 9)
-│   └── App.tsx
+│   └── App.vue
 ├── wasm-fft/              # Rust WASM модуль для FFT
 │   ├── Cargo.toml             # Rust конфигурация
 │   ├── src/lib.rs             # Реализация 3D FFT
@@ -197,7 +199,7 @@ isocubic/
 ├── public/
 │   └── model/             # Модель TinyLLM
 ├── packages/              # Выделенные npm-пакеты
-│   └── god-mode/          # @isocubic/god-mode — библиотека GOD MODE (Phase 9)
+│   └── god-mode/          # @isocubic/god-mode — библиотека GOD MODE (Vue.js 3.0, Phase 9-10)
 ├── examples/              # Примеры конфигов
 ├── ANALYSIS.md            # Анализ подходов
 └── README.md
@@ -292,7 +294,7 @@ npm run test:coverage
 ```
 
 **Текущее покрытие:**
-- 2880+ тестов
+- 1828+ тестов (framework-agnostic и Vue.js тесты; React-компонентные тесты будут мигрированы в TASK 68)
 - Unit-тесты для типов, валидации, хранилища, производительности, физики энергии
 - Тесты модуля коллаборации (сессии, участники, синхронизация, конфликты)
 - Тесты WebSocket клиента (подключение, сообщения, реконнект, fallback на polling)

@@ -1,43 +1,18 @@
 /**
  * Authentication module for isocubic
  *
- * Provides React context and hooks for user authentication.
+ * Provides a Pinia store and composables for user authentication.
  * Designed to work with Supabase but abstracted to allow provider changes.
  *
+ * TASK 61: Migrated from React Context to Pinia store (Phase 10 - Vue.js 3.0 Migration)
+ *
  * Usage:
- * ```tsx
- * // In App.tsx
- * import { AuthProvider } from './lib/auth'
- *
- * function App() {
- *   return (
- *     <AuthProvider>
- *       <YourApp />
- *     </AuthProvider>
- *   )
- * }
- *
- * // In any component
- * import { useAuth } from './lib/auth'
- *
- * function Profile() {
- *   const { state, signOut } = useAuth()
- *
- *   if (state.status === 'loading') return <div>Loading...</div>
- *   if (!state.user) return <div>Please sign in</div>
- *
- *   return (
- *     <div>
- *       <p>Hello, {state.user.displayName}!</p>
- *       <button onClick={signOut}>Sign Out</button>
- *     </div>
- *   )
- * }
- * ```
+ * In App.vue — just install Pinia in main.ts, no provider needed.
+ * In any component, import useAuthStore from './lib/auth' and use it.
  */
 
-import { createContext, useContext, useCallback, useReducer, useEffect } from 'react'
-import type { ReactNode } from 'react'
+import { ref, watch } from 'vue'
+import { defineStore } from 'pinia'
 import type {
   AuthState,
   AuthContextValue,
@@ -220,27 +195,21 @@ function simpleHash(str: string): string {
 }
 
 // ============================================================================
-// React Context
+// Pinia Auth Store
 // ============================================================================
-
-const AuthContext = createContext<AuthContextValue | null>(null)
-
-// ============================================================================
-// Auth Provider Component
-// ============================================================================
-
-interface AuthProviderProps {
-  children: ReactNode
-}
 
 /**
- * Auth provider component that wraps the application
+ * Pinia store for authentication state management
  */
-export function AuthProvider({ children }: AuthProviderProps) {
-  const [state, dispatch] = useReducer(authReducer, DEFAULT_AUTH_STATE)
+export const useAuthStore = defineStore('auth', () => {
+  const state = ref<AuthState>({ ...DEFAULT_AUTH_STATE })
 
-  // Initialize auth state from localStorage on mount
-  useEffect(() => {
+  function dispatch(action: AuthAction) {
+    state.value = authReducer(state.value, action)
+  }
+
+  // Initialize auth state from localStorage
+  function initialize() {
     const { user, session } = loadAuthFromStorage()
 
     if (user && session && !isSessionExpired(session)) {
@@ -249,19 +218,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
       clearAuthFromStorage()
       dispatch({ type: 'AUTH_LOGOUT' })
     }
-  }, [])
+  }
 
   // Save auth state to localStorage when it changes
-  useEffect(() => {
-    if (state.status === 'authenticated') {
-      saveAuthToStorage(state.user, state.session)
+  watch(
+    () => [state.value.status, state.value.user, state.value.session] as const,
+    () => {
+      if (state.value.status === 'authenticated') {
+        saveAuthToStorage(state.value.user, state.value.session)
+      }
     }
-  }, [state.status, state.user, state.session])
+  )
 
   /**
    * Sign in with email and password
    */
-  const signIn = useCallback(async (credentials: LoginCredentials): Promise<AuthResult> => {
+  async function signIn(credentials: LoginCredentials): Promise<AuthResult> {
     dispatch({ type: 'AUTH_LOADING' })
 
     try {
@@ -301,12 +273,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       dispatch({ type: 'AUTH_ERROR', error: errorMessage })
       return { success: false, error: errorMessage }
     }
-  }, [])
+  }
 
   /**
    * Sign in with OAuth provider
    */
-  const signInWithOAuth = useCallback(async (provider: OAuthProvider): Promise<AuthResult> => {
+  async function signInWithOAuth(provider: OAuthProvider): Promise<AuthResult> {
     dispatch({ type: 'AUTH_LOADING' })
 
     try {
@@ -326,12 +298,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       dispatch({ type: 'AUTH_ERROR', error: errorMessage })
       return { success: false, error: errorMessage }
     }
-  }, [])
+  }
 
   /**
    * Sign up with email and password
    */
-  const signUp = useCallback(async (data: RegistrationData): Promise<AuthResult> => {
+  async function signUp(data: RegistrationData): Promise<AuthResult> {
     dispatch({ type: 'AUTH_LOADING' })
 
     try {
@@ -372,20 +344,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
       dispatch({ type: 'AUTH_ERROR', error: errorMessage })
       return { success: false, error: errorMessage }
     }
-  }, [])
+  }
 
   /**
    * Sign out current user
    */
-  const signOut = useCallback(async (): Promise<void> => {
+  async function signOut(): Promise<void> {
     clearAuthFromStorage()
     dispatch({ type: 'AUTH_LOGOUT' })
-  }, [])
+  }
 
   /**
    * Send password reset email
    */
-  const resetPassword = useCallback(async (email: string): Promise<AuthResult> => {
+  async function resetPassword(email: string): Promise<AuthResult> {
     try {
       if (!authValidation.isValidEmail(email)) {
         return { success: false, error: 'Invalid email address' }
@@ -400,71 +372,65 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const errorMessage = error instanceof Error ? error.message : 'Password reset failed'
       return { success: false, error: errorMessage }
     }
-  }, [])
+  }
 
   /**
    * Update user profile
    */
-  const updateProfile = useCallback(
-    async (data: Partial<UserProfile>): Promise<AuthResult> => {
-      if (!state.user) {
-        return { success: false, error: 'Not authenticated' }
+  async function updateProfile(data: Partial<UserProfile>): Promise<AuthResult> {
+    if (!state.value.user) {
+      return { success: false, error: 'Not authenticated' }
+    }
+
+    try {
+      dispatch({ type: 'UPDATE_USER', user: data })
+
+      // Update mock storage
+      const storedUser = mockUserStore.get(state.value.user.email)
+      if (storedUser) {
+        mockUserStore.set(state.value.user.email, {
+          ...storedUser,
+          user: { ...storedUser.user, ...data },
+        })
       }
 
-      try {
-        dispatch({ type: 'UPDATE_USER', user: data })
-
-        // Update mock storage
-        const storedUser = mockUserStore.get(state.user.email)
-        if (storedUser) {
-          mockUserStore.set(state.user.email, {
-            ...storedUser,
-            user: { ...storedUser.user, ...data },
-          })
-        }
-
-        return { success: true, user: { ...state.user, ...data } }
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Profile update failed'
-        return { success: false, error: errorMessage }
-      }
-    },
-    [state.user]
-  )
+      return { success: true, user: { ...state.value.user, ...data } }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Profile update failed'
+      return { success: false, error: errorMessage }
+    }
+  }
 
   /**
    * Update user preferences
    */
-  const updatePreferences = useCallback(
-    async (prefs: Partial<UserPreferences>): Promise<AuthResult> => {
-      if (!state.user) {
-        return { success: false, error: 'Not authenticated' }
+  async function updatePreferences(prefs: Partial<UserPreferences>): Promise<AuthResult> {
+    if (!state.value.user) {
+      return { success: false, error: 'Not authenticated' }
+    }
+
+    try {
+      dispatch({ type: 'UPDATE_PREFERENCES', preferences: prefs })
+
+      // Save preferences separately for quick access
+      const updatedPrefs = {
+        ...(state.value.user.preferences || DEFAULT_USER_PREFERENCES),
+        ...prefs,
       }
+      localStorage.setItem(AUTH_STORAGE_KEYS.PREFERENCES, JSON.stringify(updatedPrefs))
 
-      try {
-        dispatch({ type: 'UPDATE_PREFERENCES', preferences: prefs })
-
-        // Save preferences separately for quick access
-        const updatedPrefs = {
-          ...(state.user.preferences || DEFAULT_USER_PREFERENCES),
-          ...prefs,
-        }
-        localStorage.setItem(AUTH_STORAGE_KEYS.PREFERENCES, JSON.stringify(updatedPrefs))
-
-        return { success: true }
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Preferences update failed'
-        return { success: false, error: errorMessage }
-      }
-    },
-    [state.user]
-  )
+      return { success: true }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Preferences update failed'
+      return { success: false, error: errorMessage }
+    }
+  }
 
   /**
    * Refresh the current session
    */
-  const refreshSession = useCallback(async (): Promise<AuthResult> => {
-    if (!state.session || !state.user) {
+  async function refreshSession(): Promise<AuthResult> {
+    if (!state.value.session || !state.value.user) {
       return { success: false, error: 'No active session' }
     }
 
@@ -474,7 +440,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       dispatch({
         type: 'AUTH_SUCCESS',
-        user: state.user,
+        user: state.value.user,
         session: newSession,
       })
 
@@ -484,10 +450,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       dispatch({ type: 'AUTH_ERROR', error: errorMessage })
       return { success: false, error: errorMessage }
     }
-  }, [state.session, state.user])
+  }
 
-  const contextValue: AuthContextValue = {
+  return {
     state,
+    initialize,
     signIn,
     signInWithOAuth,
     signUp,
@@ -497,69 +464,67 @@ export function AuthProvider({ children }: AuthProviderProps) {
     updatePreferences,
     refreshSession,
   }
-
-  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
-}
+})
 
 // ============================================================================
-// useAuth Hook
+// Composable hooks (convenience wrappers for backward compatibility)
 // ============================================================================
 
 /**
- * Hook to access authentication context
+ * Composable to access authentication state
  *
- * @throws Error if used outside of AuthProvider
+ * @returns AuthContextValue compatible interface
  */
 export function useAuth(): AuthContextValue {
-  const context = useContext(AuthContext)
-
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
+  const store = useAuthStore()
+  return {
+    state: store.state,
+    signIn: store.signIn,
+    signInWithOAuth: store.signInWithOAuth,
+    signUp: store.signUp,
+    signOut: store.signOut,
+    resetPassword: store.resetPassword,
+    updateProfile: store.updateProfile,
+    updatePreferences: store.updatePreferences,
+    refreshSession: store.refreshSession,
   }
-
-  return context
 }
 
-// ============================================================================
-// Utility hooks
-// ============================================================================
-
 /**
- * Hook to get current user (convenience wrapper)
+ * Composable to get current user (convenience wrapper)
  * Returns null if not authenticated
  */
 export function useCurrentUser(): UserProfile | null {
-  const { state } = useAuth()
-  return state.user
+  const store = useAuthStore()
+  return store.state.user
 }
 
 /**
- * Hook to check if user is authenticated
+ * Composable to check if user is authenticated
  */
 export function useIsAuthenticated(): boolean {
-  const { state } = useAuth()
-  return state.status === 'authenticated'
+  const store = useAuthStore()
+  return store.state.status === 'authenticated'
 }
 
 /**
- * Hook to get loading state
+ * Composable to get loading state
  */
 export function useAuthLoading(): boolean {
-  const { state } = useAuth()
-  return state.status === 'loading'
+  const store = useAuthStore()
+  return store.state.status === 'loading'
 }
 
 /**
- * Hook to get user preferences
+ * Composable to get user preferences
  */
 export function useUserPreferences(): UserPreferences {
-  const { state } = useAuth()
-  return state.user?.preferences || DEFAULT_USER_PREFERENCES
+  const store = useAuthStore()
+  return store.state.user?.preferences || DEFAULT_USER_PREFERENCES
 }
 
 // ============================================================================
-// Export context for testing
+// Export types for testing
 // ============================================================================
 
-export { AuthContext }
 export type { AuthAction }

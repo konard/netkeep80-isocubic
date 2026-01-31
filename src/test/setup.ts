@@ -1,6 +1,8 @@
 /**
  * Test setup file for Vitest
- * Configures jsdom environment and testing utilities
+ * Configures jsdom environment and testing utilities for Vue.js 3.0
+ *
+ * TASK 61: Updated for Vue.js 3.0 migration (Phase 10)
  */
 
 import { beforeEach } from 'vitest'

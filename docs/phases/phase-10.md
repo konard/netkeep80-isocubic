@@ -95,17 +95,19 @@
 Проверить и адаптировать все типы и утилиты в `src/types/` и `src/lib/` для работы с Vue.js 3.0. Большинство файлов framework-agnostic и не потребуют изменений.
 
 **Задачи**:
-- [ ] Проверить все файлы в `src/types/` — убедиться в отсутствии React-специфичного кода
-- [ ] Проверить все файлы в `src/lib/` — убедиться в отсутствии React-импортов
-- [ ] Адаптировать `src/lib/devmode.tsx` → `src/lib/devmode.ts` (заменить React Context на Vue provide/inject или Pinia store)
-- [ ] Обновить `src/test/setup.ts` для Vue.js (заменить `@testing-library/react` setup на `@vue/test-utils`)
-- [ ] Запустить все тесты для типов и утилит — убедиться что они проходят
-- [ ] Адаптировать `src/lib/god-mode-library.ts` если есть React-зависимости
+- [x] Проверить все файлы в `src/types/` — убедиться в отсутствии React-специфичного кода
+- [x] Проверить все файлы в `src/lib/` — убедиться в отсутствии React-импортов
+- [x] Адаптировать `src/lib/devmode.tsx` → `src/lib/devmode.ts` (заменить React Context на Pinia store)
+- [x] Адаптировать `src/lib/auth.tsx` → `src/lib/auth.ts` (заменить React Context на Pinia store)
+- [x] Адаптировать `packages/god-mode/src/components/GodModeProvider.tsx` → `.ts` (заменить React Context на Vue provide/inject)
+- [x] Обновить `src/test/setup.ts` для Vue.js (заменить `@testing-library/react` setup на `@vue/test-utils`)
+- [x] Запустить все тесты для типов и утилит — убедиться что они проходят
+- [x] Адаптировать `src/lib/god-mode-library.ts` — React-зависимостей нет, тесты проходят
 
 **Критерии приёмки**:
-- Все файлы в `src/types/` компилируются без ошибок
-- Все файлы в `src/lib/` компилируются без ошибок
-- Тесты типов и утилит проходят
+- [x] Все файлы в `src/types/` компилируются без ошибок
+- [x] Все файлы в `src/lib/` компилируются без ошибок
+- [x] Тесты типов и утилит проходят
 
 **Метки**: `migration`, `types`, `lib`
 

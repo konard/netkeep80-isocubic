@@ -2,26 +2,24 @@
  * @isocubic/god-mode
  *
  * GOD MODE — Unified floating DevMode window with AI conversation,
- * GitHub issue generation, screen capture & annotations for React apps.
+ * GitHub issue generation, screen capture & annotations for Vue.js 3.0 apps.
  *
  * ## Quick Start
  *
- * ```tsx
- * import { GodModeProvider, useGodMode } from '@isocubic/god-mode'
+ * ```vue
+ * <script setup lang="ts">
+ * import { provideGodMode, useGodMode } from '@isocubic/god-mode'
  *
- * function App() {
- *   return (
- *     <GodModeProvider
- *       config={{
- *         github: { owner: 'my-org', repo: 'my-repo' },
- *         preferredLanguage: 'en',
- *         storageKeyPrefix: 'my_app_god_mode',
- *       }}
- *     >
- *       <MyApp />
- *     </GodModeProvider>
- *   )
- * }
+ * // In root component (App.vue)
+ * provideGodMode({
+ *   github: { owner: 'my-org', repo: 'my-repo' },
+ *   preferredLanguage: 'en',
+ *   storageKeyPrefix: 'my_app_god_mode',
+ * })
+ *
+ * // In any child component
+ * const { toggleWindow, isVisible } = useGodMode()
+ * </script>
  * ```
  */
 
@@ -116,7 +114,7 @@ export {
 } from './types/issue-generator'
 
 // =============================================================================
-// Components — GodModeProvider (React Context)
+// Components — GodModeProvider (Vue provide/inject)
 // =============================================================================
-export { GodModeProvider, useGodMode } from './components/GodModeProvider'
+export { provideGodMode, useGodMode, GOD_MODE_KEY } from './components/GodModeProvider'
 export type { GodModeProviderProps } from './components/GodModeProvider'
