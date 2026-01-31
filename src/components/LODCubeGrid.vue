@@ -14,7 +14,7 @@
   - Debug visualization mode
 -->
 <script setup lang="ts">
-import { computed, ref, shallowRef } from 'vue'
+import { computed, ref } from 'vue'
 import { useRenderLoop, useTresContext } from '@tresjs/core'
 import * as THREE from 'three'
 import ParametricCube from './ParametricCube.vue'
@@ -91,7 +91,11 @@ const lodSystem = computed(() => {
 
 // Generate static grid positions
 const gridCubes = computed(() => {
-  const cubes: { key: string; gridPosition: [number, number, number]; worldPosition: [number, number, number] }[] = []
+  const cubes: {
+    key: string
+    gridPosition: [number, number, number]
+    worldPosition: [number, number, number]
+  }[] = []
   const [sizeX, sizeY, sizeZ] = props.gridSize
   const step = props.cubeScale + props.spacing
 

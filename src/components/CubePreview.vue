@@ -290,11 +290,7 @@ onUnmounted(() => {
       <TresAmbientLight :intensity="0.4" />
 
       <!-- Main directional light (sun-like) -->
-      <TresDirectionalLight
-        :position="[5, 8, 5]"
-        :intensity="0.8"
-        :cast-shadow="true"
-      />
+      <TresDirectionalLight :position="[5, 8, 5]" :intensity="0.8" :cast-shadow="true" />
 
       <!-- Secondary directional light for fill -->
       <TresDirectionalLight :position="[-3, 4, -3]" :intensity="0.24" />

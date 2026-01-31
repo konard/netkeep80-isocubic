@@ -15,7 +15,6 @@
 import { ref, computed, watch, onUnmounted } from 'vue'
 import { TresCanvas } from '@tresjs/core'
 import { OrbitControls, Environment, Html } from '@tresjs/cientos'
-import * as THREE from 'three'
 import {
   createMagicCrystalConfig,
   createUnstableCoreConfig,
@@ -90,38 +89,6 @@ function energyConfigToFFT(
       coherence_loss: config.coherenceLoss ?? 0.01,
       fracture_threshold: config.fractureThreshold ?? 80,
     },
-  }
-}
-
-/**
- * Converts FFTCubeConfig back to EnergyCubeConfig for rendering
- */
-function fftToEnergyConfig(fft: FFTCubeConfig): EnergyCubeConfig {
-  const convertChannel = (
-    channel: FFTChannel | undefined
-  ): EnergyCubeConfig['channelR'] | undefined => {
-    if (!channel) return undefined
-    return {
-      dcAmplitude: channel.dcAmplitude,
-      dcPhase: channel.dcPhase,
-      coefficients: channel.coefficients.map((c) => ({
-        amplitude: c.amplitude,
-        phase: c.phase,
-        freqX: c.freqX,
-        freqY: c.freqY,
-        freqZ: c.freqZ,
-      })),
-    }
-  }
-
-  return {
-    channelR: convertChannel(fft.channels.R),
-    channelG: convertChannel(fft.channels.G),
-    channelB: convertChannel(fft.channels.B),
-    channelA: convertChannel(fft.channels.A),
-    energyCapacity: fft.energy_capacity,
-    coherenceLoss: fft.physics?.coherence_loss ?? 0,
-    fractureThreshold: fft.physics?.fracture_threshold ?? 0,
   }
 }
 
@@ -228,7 +195,10 @@ let decayInterval: ReturnType<typeof setInterval> | null = null
 let lastDecayTime = Date.now()
 
 // Helper function to check fractures and update cube state
-function checkAndApplyFractures(cubeList: MagicCubeState[]): { cubes: MagicCubeState[]; message: string | null } {
+function checkAndApplyFractures(cubeList: MagicCubeState[]): {
+  cubes: MagicCubeState[]
+  message: string | null
+} {
   let messageToSet: string | null = null
 
   const updatedCubes = cubeList.map((cube) => {
@@ -321,7 +291,8 @@ function handleTransferEnergy(cubeId: string) {
           return cube
         })
 
-        const { cubes: fractureCheckedCubes, message: fractureMessage } = checkAndApplyFractures(updatedCubes)
+        const { cubes: fractureCheckedCubes, message: fractureMessage } =
+          checkAndApplyFractures(updatedCubes)
         cubes.value = fractureCheckedCubes
 
         let transferMsg = `Transferred ${result.transferredAmount.toFixed(1)} energy from ${sourceCube.name} to ${targetCube.name}!`
@@ -329,7 +300,9 @@ function handleTransferEnergy(cubeId: string) {
           transferMsg += ` Warning: ${targetCube.name} is near fracture threshold!`
         }
         if (fractureMessage) {
-          setTimeout(() => { message.value = fractureMessage }, 100)
+          setTimeout(() => {
+            message.value = fractureMessage
+          }, 100)
         }
         message.value = transferMsg
       } else {
@@ -406,10 +379,6 @@ function getCubeFractureResult(cube: MagicCubeState): FractureCheckResult {
   return checkFracture(cube.fftConfig)
 }
 
-function getCubeEnergyConfig(cube: MagicCubeState): EnergyCubeConfig {
-  return fftToEnergyConfig(cube.fftConfig)
-}
-
 function getCubeGlowIntensity(cube: MagicCubeState): number {
   const nearFracture = isCubeNearFracture(cube)
   return nearFracture ? 1.5 : 0.5 + getNormalizedEnergy(cube.fftConfig) * 0.5
@@ -480,11 +449,7 @@ const stats = computed(() => {
                       ? '#22ff88'
                       : '#4488ff'
                 "
-                :emissive="
-                  isCubeNearFracture(cube)
-                    ? '#ff3300'
-                    : '#002244'
-                "
+                :emissive="isCubeNearFracture(cube) ? '#ff3300' : '#002244'"
                 :emissive-intensity="getCubeGlowIntensity(cube)"
                 :transparent="true"
                 :opacity="0.9"
@@ -494,7 +459,12 @@ const stats = computed(() => {
             <!-- Selection indicator -->
             <TresMesh v-if="selectedCubeId === cube.id">
               <TresBoxGeometry :args="[1.15, 1.15, 1.15]" />
-              <TresMeshBasicMaterial color="#00ff00" :transparent="true" :opacity="0.2" :wireframe="true" />
+              <TresMeshBasicMaterial
+                color="#00ff00"
+                :transparent="true"
+                :opacity="0.2"
+                :wireframe="true"
+              />
             </TresMesh>
 
             <!-- Info label via Html -->

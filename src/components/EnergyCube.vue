@@ -126,9 +126,13 @@ const shaderMaterial = computed(() => {
 })
 
 // Store material in ref after creation for animation access
-watch(shaderMaterial, (newMat) => {
-  materialRef.value = newMat
-}, { immediate: true })
+watch(
+  shaderMaterial,
+  (newMat) => {
+    materialRef.value = newMat
+  },
+  { immediate: true }
+)
 
 // Animation frame for time updates and rotation
 const { onLoop } = useRenderLoop()
