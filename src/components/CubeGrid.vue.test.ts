@@ -5,27 +5,47 @@
  * @vitest-environment jsdom
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+import { mount } from '@vue/test-utils'
 import type { SpectralCube } from '../types/cube'
 
-// Mock cube for testing
-const mockCube: SpectralCube = {
-  id: 'test_grid_cube',
-  base: {
-    color: [0.65, 0.55, 0.45],
-    roughness: 0.8,
-    transparency: 1.0,
+// Mock TresJS dependencies
+vi.mock('@tresjs/core', () => ({
+  useRenderLoop: () => ({ onLoop: vi.fn() }),
+}))
+
+// Mock ParametricCube to render a simple stub with data attributes
+vi.mock('./ParametricCube.vue', () => ({
+  default: {
+    name: 'ParametricCube',
+    props: ['config', 'position', 'gridPosition', 'scale', 'lodLevel'],
+    template: `<div
+      data-testid="parametric-cube-mock"
+      :data-config-id="config?.id"
+      :data-position="position?.join(',')"
+      :data-grid-position="gridPosition?.join(',')"
+      :data-scale="scale"
+    />`,
   },
-  noise: {
-    type: 'perlin',
-    scale: 8.0,
-    octaves: 4,
-    persistence: 0.6,
-    mask: 'bottom_40%',
+}))
+
+// Mock cube for testing
+const mockConfig: SpectralCube = {
+  id: 'test-cube',
+  base: {
+    color: [0.5, 0.5, 0.5],
+    roughness: 0.5,
+    transparency: 1.0,
   },
   boundary: {
     mode: 'smooth',
     neighbor_influence: 0.5,
+  },
+}
+
+const globalStubs = {
+  stubs: {
+    TresGroup: { template: '<div><slot /></div>' },
   },
 }
 
@@ -34,7 +54,6 @@ describe('CubeGrid Vue Component — Grid Position Calculations', () => {
     const gridSize: [number, number, number] = [3, 1, 3]
     const cubeScale = 1
     const spacing = 0
-    const position: [number, number, number] = [0, 0, 0]
 
     const step = cubeScale + spacing
     const offsetX = ((gridSize[0] - 1) * step) / 2
@@ -56,10 +75,8 @@ describe('CubeGrid Vue Component — Grid Position Calculations', () => {
     const spacing = 0.5
     const step = cubeScale + spacing
 
-    // With 2x1x2 grid and 0.5 spacing, step is 1.5
     expect(step).toBe(1.5)
 
-    // Offset should center the grid
     const offsetX = ((gridSize[0] - 1) * step) / 2
     const offsetZ = ((gridSize[2] - 1) * step) / 2
     expect(offsetX).toBeCloseTo(0.75)
@@ -72,7 +89,6 @@ describe('CubeGrid Vue Component — Grid Position Calculations', () => {
       base: { color: [0.5, 0.5, 0.5] },
     }
 
-    // CubeGrid sets default boundary mode
     const gridConfig: SpectralCube = {
       ...config,
       boundary: {
@@ -113,5 +129,226 @@ describe('CubeGrid Vue Component — Module Exports', () => {
     const module = await import('./CubeGrid.vue')
     expect(module.default).toBeDefined()
     expect(typeof module.default).toBe('object')
+  })
+})
+
+describe('CubeGrid Vue Component — Component Mounting', () => {
+  describe('Grid Generation', () => {
+    it('should render default 3x1x3 grid (9 cubes)', async () => {
+      const { default: CubeGrid } = await import('./CubeGrid.vue')
+      const wrapper = mount(CubeGrid as any, {
+        props: { config: mockConfig },
+        global: globalStubs,
+      })
+      const cubes = wrapper.findAll('[data-testid="parametric-cube-mock"]')
+      expect(cubes).toHaveLength(9)
+    })
+
+    it('should render custom grid size', async () => {
+      const { default: CubeGrid } = await import('./CubeGrid.vue')
+      const wrapper = mount(CubeGrid as any, {
+        props: { config: mockConfig, gridSize: [2, 2, 2] },
+        global: globalStubs,
+      })
+      const cubes = wrapper.findAll('[data-testid="parametric-cube-mock"]')
+      expect(cubes).toHaveLength(8)
+    })
+
+    it('should render single cube when gridSize is [1,1,1]', async () => {
+      const { default: CubeGrid } = await import('./CubeGrid.vue')
+      const wrapper = mount(CubeGrid as any, {
+        props: { config: mockConfig, gridSize: [1, 1, 1] },
+        global: globalStubs,
+      })
+      const cubes = wrapper.findAll('[data-testid="parametric-cube-mock"]')
+      expect(cubes).toHaveLength(1)
+    })
+
+    it('should render large grid correctly', async () => {
+      const { default: CubeGrid } = await import('./CubeGrid.vue')
+      const wrapper = mount(CubeGrid as any, {
+        props: { config: mockConfig, gridSize: [5, 1, 5] },
+        global: globalStubs,
+      })
+      const cubes = wrapper.findAll('[data-testid="parametric-cube-mock"]')
+      expect(cubes).toHaveLength(25)
+    })
+  })
+
+  describe('Grid Positioning', () => {
+    it('should pass correct grid positions to cubes', async () => {
+      const { default: CubeGrid } = await import('./CubeGrid.vue')
+      const wrapper = mount(CubeGrid as any, {
+        props: { config: mockConfig, gridSize: [2, 1, 2] },
+        global: globalStubs,
+      })
+      const cubes = wrapper.findAll('[data-testid="parametric-cube-mock"]')
+      const gridPositions = cubes.map((cube) => cube.attributes('data-grid-position'))
+
+      expect(gridPositions).toContain('0,0,0')
+      expect(gridPositions).toContain('0,0,1')
+      expect(gridPositions).toContain('1,0,0')
+      expect(gridPositions).toContain('1,0,1')
+    })
+
+    it('should center the grid when using default position', async () => {
+      const { default: CubeGrid } = await import('./CubeGrid.vue')
+      const wrapper = mount(CubeGrid as any, {
+        props: { config: mockConfig, gridSize: [3, 1, 1], cubeScale: 1, spacing: 0 },
+        global: globalStubs,
+      })
+      const cubes = wrapper.findAll('[data-testid="parametric-cube-mock"]')
+      const positions = cubes.map((cube) => cube.attributes('data-position'))
+
+      expect(positions).toContain('-1,0,0')
+      expect(positions).toContain('0,0,0')
+      expect(positions).toContain('1,0,0')
+    })
+  })
+
+  describe('Spacing', () => {
+    it('should apply spacing between cubes', async () => {
+      const { default: CubeGrid } = await import('./CubeGrid.vue')
+      const wrapper = mount(CubeGrid as any, {
+        props: { config: mockConfig, gridSize: [2, 1, 1], cubeScale: 1, spacing: 0.5 },
+        global: globalStubs,
+      })
+      const cubes = wrapper.findAll('[data-testid="parametric-cube-mock"]')
+      const positions = cubes.map((cube) => {
+        const pos = cube.attributes('data-position')
+        return pos ? pos.split(',').map(Number) : null
+      })
+
+      const xPositions = positions.map((p) => p?.[0] ?? 0)
+      const distance = Math.abs(xPositions[1] - xPositions[0])
+      expect(distance).toBeCloseTo(1.5)
+    })
+  })
+
+  describe('Scale', () => {
+    it('should pass scale to all cubes', async () => {
+      const { default: CubeGrid } = await import('./CubeGrid.vue')
+      const wrapper = mount(CubeGrid as any, {
+        props: { config: mockConfig, gridSize: [2, 1, 1], cubeScale: 2 },
+        global: globalStubs,
+      })
+      const cubes = wrapper.findAll('[data-testid="parametric-cube-mock"]')
+
+      cubes.forEach((cube) => {
+        expect(cube.attributes('data-scale')).toBe('2')
+      })
+    })
+  })
+
+  describe('Configuration', () => {
+    it('should pass config with boundary settings to all cubes', async () => {
+      const { default: CubeGrid } = await import('./CubeGrid.vue')
+      const wrapper = mount(CubeGrid as any, {
+        props: { config: mockConfig, gridSize: [2, 1, 1] },
+        global: globalStubs,
+      })
+      const cubes = wrapper.findAll('[data-testid="parametric-cube-mock"]')
+
+      cubes.forEach((cube) => {
+        expect(cube.attributes('data-config-id')).toBe('test-cube')
+      })
+    })
+
+    it('should use default boundary mode if not specified in config', async () => {
+      const configWithoutBoundary: SpectralCube = {
+        id: 'no-boundary',
+        base: { color: [0.5, 0.5, 0.5] },
+      }
+
+      const { default: CubeGrid } = await import('./CubeGrid.vue')
+      const wrapper = mount(CubeGrid as any, {
+        props: { config: configWithoutBoundary, gridSize: [2, 1, 1] },
+        global: globalStubs,
+      })
+      const cubes = wrapper.findAll('[data-testid="parametric-cube-mock"]')
+      expect(cubes).toHaveLength(2)
+    })
+  })
+
+  describe('Props Interface', () => {
+    it('should accept all optional props', async () => {
+      const { default: CubeGrid } = await import('./CubeGrid.vue')
+      const wrapper = mount(CubeGrid as any, {
+        props: {
+          config: mockConfig,
+          gridSize: [3, 2, 3],
+          spacing: 0.1,
+          cubeScale: 0.5,
+          position: [1, 2, 3],
+        },
+        global: globalStubs,
+      })
+      const cubes = wrapper.findAll('[data-testid="parametric-cube-mock"]')
+      expect(cubes).toHaveLength(18)
+    })
+
+    it('should work with minimal props', async () => {
+      const { default: CubeGrid } = await import('./CubeGrid.vue')
+      const wrapper = mount(CubeGrid as any, {
+        props: { config: mockConfig },
+        global: globalStubs,
+      })
+      const cubes = wrapper.findAll('[data-testid="parametric-cube-mock"]')
+      expect(cubes.length).toBeGreaterThan(0)
+    })
+  })
+})
+
+describe('CubeGrid Vue Component — Boundary Stitching', () => {
+  const boundaryConfig: SpectralCube = {
+    id: 'boundary-test',
+    base: { color: [0.5, 0.5, 0.5] },
+    boundary: {
+      mode: 'smooth',
+      neighbor_influence: 0.7,
+    },
+  }
+
+  it('should generate sequential grid positions for seamless stitching', async () => {
+    const { default: CubeGrid } = await import('./CubeGrid.vue')
+    const wrapper = mount(CubeGrid as any, {
+      props: { config: boundaryConfig, gridSize: [3, 1, 3] },
+      global: globalStubs,
+    })
+    const cubes = wrapper.findAll('[data-testid="parametric-cube-mock"]')
+    const gridPositions = cubes.map((cube) => cube.attributes('data-grid-position'))
+
+    // All grid positions should be unique
+    const uniquePositions = new Set(gridPositions)
+    expect(uniquePositions.size).toBe(9)
+
+    // Check corner positions exist
+    expect(gridPositions).toContain('0,0,0')
+    expect(gridPositions).toContain('2,0,0')
+    expect(gridPositions).toContain('0,0,2')
+    expect(gridPositions).toContain('2,0,2')
+
+    // Check center position exists
+    expect(gridPositions).toContain('1,0,1')
+  })
+
+  it('should maintain grid integrity for 3D grids', async () => {
+    const { default: CubeGrid } = await import('./CubeGrid.vue')
+    const wrapper = mount(CubeGrid as any, {
+      props: { config: boundaryConfig, gridSize: [2, 2, 2] },
+      global: globalStubs,
+    })
+    const cubes = wrapper.findAll('[data-testid="parametric-cube-mock"]')
+
+    expect(cubes).toHaveLength(8)
+
+    const gridPositions = cubes.map((cube) => cube.attributes('data-grid-position'))
+    const expectedPositions = [
+      '0,0,0', '0,0,1', '0,1,0', '0,1,1',
+      '1,0,0', '1,0,1', '1,1,0', '1,1,1',
+    ]
+    expectedPositions.forEach((pos) => {
+      expect(gridPositions).toContain(pos)
+    })
   })
 })

@@ -93,6 +93,7 @@ isocubic использует **параметрический подход** д
 | TensorFlow.js | Клиентский ИИ (TinyLLM) |
 | Vite | Сборка |
 | Vitest | Тестирование |
+| @vue/test-utils | Тестирование Vue-компонентов (TASK 68) |
 
 ## Быстрый старт
 
@@ -316,7 +317,7 @@ npm run test:coverage
 ```
 
 **Текущее покрытие:**
-- 2000+ тестов (framework-agnostic и Vue.js тесты; React-компонентные тесты будут мигрированы в TASK 68)
+- 3000+ тестов (все компонентные тесты мигрированы на @vue/test-utils — TASK 68)
 - Тесты 3D-компонентов Vue.js (ParametricCube, EnergyCube, CubePreview, CubeGrid, CubeStack, LODCubeGrid, LODStatisticsDisplay, MagicCubeDemo — TASK 62)
 - Тесты UI-компонентов редактора Vue.js (UnifiedEditor, ParamEditor, FFTParamEditor, FFTChannelEditor, EnergyVisualizationEditor, LODConfigEditor, StackEditor, StackPresetPicker, PromptGenerator — TASK 63)
 - Тесты компонентов галереи, экспорта и шаринга Vue.js (Gallery, CommunityGallery, ExportPanel, SharePanel, CommentsSection, SubscriptionButton, NotificationPanel, ActionHistory — TASK 64)
@@ -341,7 +342,8 @@ npm run test:coverage
 - Тесты GitHub Integration (GitHub API клиент, авторизация PAT/OAuth, создание issues, метки)
 - Тесты Screen Capture & Annotation (захват экрана, Canvas API, аннотации, ScreenCaptureManager)
 - Тесты библиотеки @isocubic/god-mode (типы, утилиты, хранилище, GodModeProvider, useGodMode)
-- E2E тесты для полных workflow редактирования
+- Тесты DevMode компонентов Vue.js (DevModeQueryPanel, ComponentContextPanel, ExtendedSearchPanel, ComponentInfo, AnnotationCanvas — TASK 66)
+- E2E тесты для полных workflow редактирования (мигрированы на Vue — TASK 68)
 
 ## Вклад в проект
 
