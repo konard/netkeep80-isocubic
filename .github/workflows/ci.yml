@@ -49,10 +49,10 @@ jobs:
         run: npm run lint
 
       - name: Type check
-        run: npx tsc --noEmit
+        run: npx vue-tsc --noEmit
 
       - name: Check formatting
-        run: npx prettier --check "src/**/*.{ts,tsx,js,jsx,json,css}" "*.{ts,js,json}" || echo "::warning::Some files need formatting. Run 'npx prettier --write' to fix."
+        run: npx prettier --check "src/**/*.{ts,tsx,vue,js,jsx,json,css}" "*.{ts,js,json}" || echo "::warning::Some files need formatting. Run 'npx prettier --write' to fix."
 
   # === FILE SIZE CHECK ===
   # Enforce maximum file size to keep code maintainable for both AI and humans
@@ -79,7 +79,7 @@ jobs:
                 oversized_count=$((oversized_count + 1))
               fi
             fi
-          done < <(find src -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) 2>/dev/null)
+          done < <(find src -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.vue" -o -name "*.js" -o -name "*.jsx" \) 2>/dev/null)
 
           if [ -n "$oversized_files" ]; then
             echo "::warning::Files exceeding 1500 lines limit (should be refactored):"

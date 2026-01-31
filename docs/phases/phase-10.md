@@ -2,7 +2,7 @@
 
 Данный документ содержит планирование задач для полного перехода проекта isocubic с React на Vue.js 3.0 с TypeScript.
 
-**Статус**: 📋 Запланирована
+**Статус**: 🔄 В процессе
 
 ---
 
@@ -62,20 +62,20 @@
 Обновить конфигурацию проекта для поддержки Vue.js 3.0 вместо React.
 
 **Задачи**:
-- [ ] Обновить `package.json`: заменить React-зависимости на Vue.js 3.0
+- [x] Обновить `package.json`: заменить React-зависимости на Vue.js 3.0
   - Удалить: `react`, `react-dom`, `@react-three/fiber`, `@react-three/drei`
   - Удалить dev: `@types/react`, `@types/react-dom`, `@vitejs/plugin-react`, `@testing-library/react`, `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`
-  - Добавить: `vue` (^3.5), `@tresjs/core` (^4), `@tresjs/cientos` (^4), `pinia` (^3), `three` (оставить)
-  - Добавить dev: `@vitejs/plugin-vue`, `@vue/test-utils`, `@testing-library/vue`, `vue-tsc`, `eslint-plugin-vue`
-- [ ] Обновить `vite.config.ts`: заменить `@vitejs/plugin-react` на `@vitejs/plugin-vue`
-- [ ] Обновить `tsconfig.app.json`: добавить поддержку Vue SFC (`"types": ["vite/client"]`, пути для .vue файлов)
-- [ ] Создать `env.d.ts` с декларацией типов для `.vue` файлов
-- [ ] Обновить `eslint.config.js`: заменить React-плагины на `eslint-plugin-vue`
-- [ ] Обновить `index.html`: при необходимости обновить точку входа
-- [ ] Создать `src/main.ts`: точка входа Vue приложения (`createApp`)
-- [ ] Создать `src/App.vue`: корневой компонент Vue
-- [ ] Удалить `src/main.tsx` и `src/App.tsx`
-- [ ] Проверить что `npm run dev` запускает пустое Vue.js приложение
+  - Добавить: `vue` (^3.5), `@tresjs/core` (^5), `@tresjs/cientos` (^5), `pinia` (^3), `three` (оставить)
+  - Добавить dev: `@vitejs/plugin-vue` (^6), `@vue/test-utils`, `@testing-library/vue`, `vue-tsc`, `eslint-plugin-vue`
+- [x] Обновить `vite.config.ts`: заменить `@vitejs/plugin-react` на `@vitejs/plugin-vue`
+- [x] Обновить `tsconfig.app.json`: добавить поддержку Vue SFC (`"types": ["vite/client"]`, пути для .vue файлов)
+- [x] Создать `env.d.ts` с декларацией типов для `.vue` файлов
+- [x] Обновить `eslint.config.js`: заменить React-плагины на `eslint-plugin-vue`
+- [x] Обновить `index.html`: обновить точку входа на `src/main.ts`
+- [x] Создать `src/main.ts`: точка входа Vue приложения (`createApp` + Pinia)
+- [x] Создать `src/App.vue`: корневой компонент Vue
+- [x] Удалить `src/main.tsx` и `src/App.tsx`
+- [x] Проверить что `npm run dev` запускает Vue.js приложение
 
 **Критерии приёмки**:
 - [x] Проект запускается с Vue.js 3.0
@@ -385,12 +385,12 @@
 |---------------|---------------------|
 | React ^19.2 | Vue ^3.5 |
 | ReactDOM ^19.2 | (встроено в Vue) |
-| @react-three/fiber ^9.5 | @tresjs/core ^4 |
-| @react-three/drei ^10.7 | @tresjs/cientos ^4 |
+| @react-three/fiber ^9.5 | @tresjs/core ^5.3 |
+| @react-three/drei ^10.7 | @tresjs/cientos ^5.2 |
 | React Context | Pinia ^3 / provide-inject |
-| @vitejs/plugin-react | @vitejs/plugin-vue |
+| @vitejs/plugin-react | @vitejs/plugin-vue ^6 |
 | @testing-library/react | @vue/test-utils + @testing-library/vue |
-| eslint-plugin-react-hooks | eslint-plugin-vue |
+| eslint-plugin-react-hooks | eslint-plugin-vue ^10 |
 | .tsx компоненты | .vue SFC компоненты |
 
 ### Структура проекта после миграции
