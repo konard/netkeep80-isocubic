@@ -345,7 +345,7 @@
 - Для форм с `type="submit"` кнопками используется `wrapper.find('form').trigger('submit')` вместо `button.trigger('click')`
 - Pinia stores инициализируются с `setActivePinia(createPinia())` в `beforeEach`
 - Auth store требует вызова `initialize()` для перехода из состояния 'loading'
-- Старые React .test.tsx файлы ещё не удалены (будут удалены в TASK 69)
+- Все старые React .test.tsx файлы удалены (34 файла)
 
 **Критерии приёмки**:
 - [x] Все существующие тесты переведены и проходят

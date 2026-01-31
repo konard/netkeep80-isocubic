@@ -317,7 +317,7 @@ npm run test:coverage
 ```
 
 **Текущее покрытие:**
-- 3000+ тестов (все компонентные тесты мигрированы на @vue/test-utils — TASK 68)
+- 2500+ тестов (все компонентные тесты мигрированы на @vue/test-utils, старые React .test.tsx файлы удалены — TASK 68)
 - Тесты 3D-компонентов Vue.js (ParametricCube, EnergyCube, CubePreview, CubeGrid, CubeStack, LODCubeGrid, LODStatisticsDisplay, MagicCubeDemo — TASK 62)
 - Тесты UI-компонентов редактора Vue.js (UnifiedEditor, ParamEditor, FFTParamEditor, FFTChannelEditor, EnergyVisualizationEditor, LODConfigEditor, StackEditor, StackPresetPicker, PromptGenerator — TASK 63)
 - Тесты компонентов галереи, экспорта и шаринга Vue.js (Gallery, CommunityGallery, ExportPanel, SharePanel, CommentsSection, SubscriptionButton, NotificationPanel, ActionHistory — TASK 64)
