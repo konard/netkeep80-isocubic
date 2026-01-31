@@ -130,29 +130,32 @@ npm run dev
 ```
 isocubic/
 ├── src/
-│   ├── components/        # React-компоненты
-│   │   ├── ParametricCube.tsx # Параметрический куб с шейдером (с поддержкой LOD)
-│   │   ├── EnergyCube.tsx     # Энергетический куб с FFT визуализацией
-│   │   ├── CubePreview.tsx    # 3D-превью куба с интерактивным управлением
-│   │   ├── CubeGrid.tsx       # Сетка кубов с бесшовной сшивкой
-│   │   ├── CubeStack.tsx      # Вертикальные стопки кубов с плавными переходами
-│   │   ├── LODCubeGrid.tsx    # Сетка кубов с автоматическим LOD управлением
-│   │   ├── StackEditor.tsx    # Редактор стопок кубиков
+│   ├── components/        # Vue SFC-компоненты (миграция React → Vue в процессе)
+│   │   ├── ParametricCube.vue   # Параметрический куб с шейдером (TresJS, TASK 62)
+│   │   ├── EnergyCube.vue       # Энергетический куб с FFT визуализацией (TresJS, TASK 62)
+│   │   ├── CubePreview.vue      # 3D-превью куба с интерактивным управлением (TresJS, TASK 62)
+│   │   ├── CubeGrid.vue         # Сетка кубов с бесшовной сшивкой (TresJS, TASK 62)
+│   │   ├── CubeStack.vue        # Вертикальные стопки кубов с плавными переходами (TresJS, TASK 62)
+│   │   ├── CubeStackGrid.vue    # Сетка стопок кубов (TresJS, TASK 62)
+│   │   ├── LODCubeGrid.vue      # Сетка кубов с автоматическим LOD управлением (TresJS, TASK 62)
+│   │   ├── MagicCubeDemo.vue    # Демо магического куба с энергетической физикой (TresJS, TASK 62)
+│   │   ├── LODStatisticsDisplay.vue # Статистика LOD-системы (Vue SFC, TASK 62)
+│   │   ├── StackEditor.tsx      # Редактор стопок кубиков (ожидает миграцию — TASK 63)
 │   │   ├── StackPresetPicker.tsx # Выбор шаблонов стопок
-│   │   ├── ParamEditor.tsx    # Редактор параметров (TODO)
-│   │   ├── PromptGenerator.tsx # Генерация по промпту с расширенными режимами
-│   │   ├── Gallery.tsx        # Галерея примеров
+│   │   ├── ParamEditor.tsx      # Редактор параметров (TODO)
+│   │   ├── PromptGenerator.tsx  # Генерация по промпту с расширенными режимами
+│   │   ├── Gallery.tsx          # Галерея примеров
 │   │   ├── CommunityGallery.tsx # Галерея сообщества
-│   │   ├── ExportPanel.tsx    # Экспорт/импорт
-│   │   ├── SharePanel.tsx     # Шаринг кубиков с QR-кодами
+│   │   ├── ExportPanel.tsx      # Экспорт/импорт
+│   │   ├── SharePanel.tsx       # Шаринг кубиков с QR-кодами
 │   │   ├── DevModeQueryPanel.tsx # AI-запросы в режиме разработки
 │   │   ├── ComponentContextPanel.tsx # AI-контекст для компонентов в DevMode
 │   │   ├── ExtendedSearchPanel.tsx # Расширенный AI-поиск компонентов
-│   │   ├── GodModeWindow.tsx     # Единое окно GOD MODE (Phase 9)
+│   │   ├── GodModeWindow.tsx    # Единое окно GOD MODE (Phase 9)
 │   │   ├── ConversationPanel.tsx # AI-диалог для GOD MODE (Phase 9)
-│   │   ├── IssueDraftPanel.tsx   # Генератор черновиков issues (Phase 9)
-│   │   ├── GitHubAuthButton.tsx  # Авторизация GitHub (Phase 9)
-│   │   └── AnnotationCanvas.tsx  # Аннотирование скриншотов (Phase 9)
+│   │   ├── IssueDraftPanel.tsx  # Генератор черновиков issues (Phase 9)
+│   │   ├── GitHubAuthButton.tsx # Авторизация GitHub (Phase 9)
+│   │   └── AnnotationCanvas.tsx # Аннотирование скриншотов (Phase 9)
 │   ├── shaders/           # GLSL-шейдеры
 │   │   ├── parametric-cube.glsl  # Исходный GLSL код
 │   │   ├── parametric-cube.ts    # TypeScript модуль для Three.js
@@ -294,7 +297,8 @@ npm run test:coverage
 ```
 
 **Текущее покрытие:**
-- 1828+ тестов (framework-agnostic и Vue.js тесты; React-компонентные тесты будут мигрированы в TASK 68)
+- 1926+ тестов (framework-agnostic и Vue.js тесты; React-компонентные тесты будут мигрированы в TASK 68)
+- Тесты 3D-компонентов Vue.js (ParametricCube, EnergyCube, CubePreview, CubeGrid, CubeStack, LODCubeGrid, LODStatisticsDisplay, MagicCubeDemo — TASK 62)
 - Unit-тесты для типов, валидации, хранилища, производительности, физики энергии
 - Тесты модуля коллаборации (сессии, участники, синхронизация, конфликты)
 - Тесты WebSocket клиента (подключение, сообщения, реконнект, fallback на polling)

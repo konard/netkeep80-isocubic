@@ -121,14 +121,14 @@
 Перевести все 3D-компоненты с @react-three/fiber + @react-three/drei на TresJS (@tresjs/core + @tresjs/cientos).
 
 **Компоненты для миграции**:
-- [ ] `ParametricCube.tsx` → `ParametricCube.vue` — параметрический куб с шейдером
-- [ ] `EnergyCube.tsx` → `EnergyCube.vue` — энергетический куб с FFT визуализацией
-- [ ] `CubePreview.tsx` → `CubePreview.vue` — 3D-превью с интерактивным управлением
-- [ ] `CubeGrid.tsx` → `CubeGrid.vue` — сетка кубов с бесшовной сшивкой
-- [ ] `CubeStack.tsx` → `CubeStack.vue` — вертикальные стопки кубов
-- [ ] `LODCubeGrid.tsx` → `LODCubeGrid.vue` — сетка с автоматическим LOD
-- [ ] `MagicCubeDemo.tsx` → `MagicCubeDemo.vue` — демо магического куба
-- [ ] `LODStatistics.tsx` → `LODStatistics.vue` — статистика LOD-системы
+- [x] `ParametricCube.tsx` → `ParametricCube.vue` — параметрический куб с шейдером
+- [x] `EnergyCube.tsx` → `EnergyCube.vue` — энергетический куб с FFT визуализацией
+- [x] `CubePreview.tsx` → `CubePreview.vue` — 3D-превью с интерактивным управлением
+- [x] `CubeGrid.tsx` → `CubeGrid.vue` — сетка кубов с бесшовной сшивкой
+- [x] `CubeStack.tsx` → `CubeStack.vue` + `CubeStackGrid.vue` — вертикальные стопки кубов
+- [x] `LODCubeGrid.tsx` → `LODCubeGrid.vue` — сетка с автоматическим LOD
+- [x] `MagicCubeDemo.tsx` → `MagicCubeDemo.vue` — демо магического куба
+- [x] `LODStatistics.tsx` → `LODStatisticsDisplay.vue` — статистика LOD-системы
 
 **Ключевые изменения**:
 - `<Canvas>` (react-three-fiber) → `<TresCanvas>` (tresjs)
