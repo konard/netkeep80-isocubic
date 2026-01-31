@@ -711,11 +711,7 @@ async function handleExport() {
     </div>
 
     <!-- Annotation list -->
-    <div
-      v-if="annotations.length > 0"
-      :style="styles.annotationList"
-      data-testid="annotation-list"
-    >
+    <div v-if="annotations.length > 0" :style="styles.annotationList" data-testid="annotation-list">
       <div :style="styles.annotationListTitle">
         {{
           props.language === 'ru'
@@ -742,10 +738,7 @@ async function handleExport() {
           />
           <span>{{ getToolIcon(annotation.type) }}</span>
           <span>{{ getToolLabel(annotation.type, props.language) }}</span>
-          <span
-            v-if="annotation.text"
-            :style="{ color: '#9ca3af', fontSize: '10px' }"
-          >
+          <span v-if="annotation.text" :style="{ color: '#9ca3af', fontSize: '10px' }">
             &quot;{{ annotation.text.substring(0, 20)
             }}{{ (annotation.text.length || 0) > 20 ? '...' : '' }}&quot;
           </span>

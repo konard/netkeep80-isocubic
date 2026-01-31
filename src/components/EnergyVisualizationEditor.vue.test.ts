@@ -168,7 +168,9 @@ describe('EnergyVisualizationEditor Vue Component', () => {
         await wrapper.find('#visualization-mode').setValue('amplitude')
 
         expect(wrapper.emitted('update:settings')).toBeTruthy()
-        const newSettings = wrapper.emitted('update:settings')![0][0] as EnergyVisualizationEditorSettings
+        const newSettings = wrapper.emitted(
+          'update:settings'
+        )![0][0] as EnergyVisualizationEditorSettings
         expect(newSettings.visualization.visualizationMode).toBe('amplitude')
       })
 
@@ -186,7 +188,9 @@ describe('EnergyVisualizationEditor Vue Component', () => {
           props: { settings: defaultSettings },
         })
         expect(wrapper.text()).toContain('Channel Mask')
-        const checkboxes = wrapper.findAll('.energy-viz-editor__channel-checkbox input[type="checkbox"]')
+        const checkboxes = wrapper.findAll(
+          '.energy-viz-editor__channel-checkbox input[type="checkbox"]'
+        )
         expect(checkboxes.length).toBeGreaterThanOrEqual(4)
       })
 
@@ -194,7 +198,9 @@ describe('EnergyVisualizationEditor Vue Component', () => {
         const wrapper = shallowMount(EnergyVisualizationEditor, {
           props: { settings: defaultSettings },
         })
-        const checkboxes = wrapper.findAll('.energy-viz-editor__channel-checkbox input[type="checkbox"]')
+        const checkboxes = wrapper.findAll(
+          '.energy-viz-editor__channel-checkbox input[type="checkbox"]'
+        )
         checkboxes.forEach((cb) => {
           expect((cb.element as HTMLInputElement).checked).toBe(true)
         })
@@ -205,12 +211,16 @@ describe('EnergyVisualizationEditor Vue Component', () => {
           props: { settings: defaultSettings },
         })
 
-        const checkboxes = wrapper.findAll('.energy-viz-editor__channel-checkbox input[type="checkbox"]')
+        const checkboxes = wrapper.findAll(
+          '.energy-viz-editor__channel-checkbox input[type="checkbox"]'
+        )
         // First checkbox is Red
         await checkboxes[0].trigger('change')
 
         expect(wrapper.emitted('update:settings')).toBeTruthy()
-        const newSettings = wrapper.emitted('update:settings')![0][0] as EnergyVisualizationEditorSettings
+        const newSettings = wrapper.emitted(
+          'update:settings'
+        )![0][0] as EnergyVisualizationEditorSettings
         expect(newSettings.visualization.channelMask).toBe(ChannelMask.RGBA ^ ChannelMask.R)
       })
 
@@ -248,7 +258,9 @@ describe('EnergyVisualizationEditor Vue Component', () => {
         await wrapper.find('#energy-scale').setValue('2.0')
 
         expect(wrapper.emitted('update:settings')).toBeTruthy()
-        const newSettings = wrapper.emitted('update:settings')![0][0] as EnergyVisualizationEditorSettings
+        const newSettings = wrapper.emitted(
+          'update:settings'
+        )![0][0] as EnergyVisualizationEditorSettings
         expect(newSettings.visualization.energyScale).toBe(2.0)
       })
 
@@ -285,7 +297,9 @@ describe('EnergyVisualizationEditor Vue Component', () => {
         await wrapper.find('#glow-intensity').setValue('1.5')
 
         expect(wrapper.emitted('update:settings')).toBeTruthy()
-        const newSettings = wrapper.emitted('update:settings')![0][0] as EnergyVisualizationEditorSettings
+        const newSettings = wrapper.emitted(
+          'update:settings'
+        )![0][0] as EnergyVisualizationEditorSettings
         expect(newSettings.visualization.glowIntensity).toBe(1.5)
       })
 
@@ -326,7 +340,9 @@ describe('EnergyVisualizationEditor Vue Component', () => {
         await resetButtons[0].trigger('click')
 
         expect(wrapper.emitted('update:settings')).toBeTruthy()
-        const newSettings = wrapper.emitted('update:settings')![0][0] as EnergyVisualizationEditorSettings
+        const newSettings = wrapper.emitted(
+          'update:settings'
+        )![0][0] as EnergyVisualizationEditorSettings
         expect(newSettings.visualization).toEqual(DEFAULT_VISUALIZATION_SETTINGS)
       })
     })
@@ -364,7 +380,9 @@ describe('EnergyVisualizationEditor Vue Component', () => {
         await animateCheckbox!.setValue(false)
 
         expect(wrapper.emitted('update:settings')).toBeTruthy()
-        const newSettings = wrapper.emitted('update:settings')![0][0] as EnergyVisualizationEditorSettings
+        const newSettings = wrapper.emitted(
+          'update:settings'
+        )![0][0] as EnergyVisualizationEditorSettings
         expect(newSettings.animation.animate).toBe(false)
       })
     })
@@ -392,7 +410,9 @@ describe('EnergyVisualizationEditor Vue Component', () => {
         await wrapper.find('#animation-speed').setValue('3.0')
 
         expect(wrapper.emitted('update:settings')).toBeTruthy()
-        const newSettings = wrapper.emitted('update:settings')![0][0] as EnergyVisualizationEditorSettings
+        const newSettings = wrapper.emitted(
+          'update:settings'
+        )![0][0] as EnergyVisualizationEditorSettings
         expect(newSettings.animation.animationSpeed).toBe(3.0)
       })
 
@@ -452,7 +472,9 @@ describe('EnergyVisualizationEditor Vue Component', () => {
         await rotateCheckbox!.setValue(true)
 
         expect(wrapper.emitted('update:settings')).toBeTruthy()
-        const newSettings = wrapper.emitted('update:settings')![0][0] as EnergyVisualizationEditorSettings
+        const newSettings = wrapper.emitted(
+          'update:settings'
+        )![0][0] as EnergyVisualizationEditorSettings
         expect(newSettings.animation.rotate).toBe(true)
       })
     })
@@ -487,7 +509,9 @@ describe('EnergyVisualizationEditor Vue Component', () => {
         await wrapper.find('#rotation-speed').setValue('1.5')
 
         expect(wrapper.emitted('update:settings')).toBeTruthy()
-        const newSettings = wrapper.emitted('update:settings')![0][0] as EnergyVisualizationEditorSettings
+        const newSettings = wrapper.emitted(
+          'update:settings'
+        )![0][0] as EnergyVisualizationEditorSettings
         expect(newSettings.animation.rotationSpeed).toBe(1.5)
       })
 
@@ -543,7 +567,9 @@ describe('EnergyVisualizationEditor Vue Component', () => {
         await resetButtons[1].trigger('click') // Second reset button is for animation
 
         expect(wrapper.emitted('update:settings')).toBeTruthy()
-        const newSettings = wrapper.emitted('update:settings')![0][0] as EnergyVisualizationEditorSettings
+        const newSettings = wrapper.emitted(
+          'update:settings'
+        )![0][0] as EnergyVisualizationEditorSettings
         expect(newSettings.animation).toEqual(DEFAULT_ANIMATION_SETTINGS)
       })
     })
@@ -565,9 +591,9 @@ describe('EnergyVisualizationEditor Vue Component', () => {
         props: { settings: defaultSettings },
       })
 
-      const vizHeader = wrapper.findAll('.energy-viz-editor__section-header').find((h) =>
-        h.text().includes('Visualization')
-      )
+      const vizHeader = wrapper
+        .findAll('.energy-viz-editor__section-header')
+        .find((h) => h.text().includes('Visualization'))
       await vizHeader!.trigger('click')
 
       expect(vizHeader!.attributes('aria-expanded')).toBe('false')
@@ -578,9 +604,9 @@ describe('EnergyVisualizationEditor Vue Component', () => {
         props: { settings: defaultSettings },
       })
 
-      const animHeader = wrapper.findAll('.energy-viz-editor__section-header').find((h) =>
-        h.text().includes('Animation')
-      )
+      const animHeader = wrapper
+        .findAll('.energy-viz-editor__section-header')
+        .find((h) => h.text().includes('Animation'))
       await animHeader!.trigger('click')
 
       expect(animHeader!.attributes('aria-expanded')).toBe('false')
@@ -591,9 +617,9 @@ describe('EnergyVisualizationEditor Vue Component', () => {
         props: { settings: defaultSettings },
       })
 
-      const vizHeader = wrapper.findAll('.energy-viz-editor__section-header').find((h) =>
-        h.text().includes('Visualization')
-      )
+      const vizHeader = wrapper
+        .findAll('.energy-viz-editor__section-header')
+        .find((h) => h.text().includes('Visualization'))
       await vizHeader!.trigger('click') // Collapse
       await vizHeader!.trigger('click') // Expand
 
@@ -605,9 +631,9 @@ describe('EnergyVisualizationEditor Vue Component', () => {
         props: { settings: defaultSettings },
       })
 
-      const vizHeader = wrapper.findAll('.energy-viz-editor__section-header').find((h) =>
-        h.text().includes('Visualization')
-      )
+      const vizHeader = wrapper
+        .findAll('.energy-viz-editor__section-header')
+        .find((h) => h.text().includes('Visualization'))
       await vizHeader!.trigger('click')
 
       expect(wrapper.find('#visualization-mode').exists()).toBe(false)

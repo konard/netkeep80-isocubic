@@ -308,8 +308,8 @@ const actualPosition = computed(() =>
   props.position === 'auto' ? settings.panelPosition : props.position
 )
 
-const showPanel = computed(() =>
-  props.alwaysShow || (settings.showHoverInfo && (isHovered.value || isPinned.value))
+const showPanel = computed(
+  () => props.alwaysShow || (settings.showHoverInfo && (isHovered.value || isPinned.value))
 )
 
 const showOutline = computed(() => settings.showOutline)
@@ -408,57 +408,56 @@ function closePanel() {
       </p>
 
       <!-- History -->
-      <div
-        v-if="categories.history && meta.history.length > 0"
-        :style="styles.section"
-      >
+      <div v-if="categories.history && meta.history.length > 0" :style="styles.section">
         <div
           :style="styles.sectionHeader"
           @click="toggleSection(`History (${meta.history.length})`, verbosity !== 'minimal')"
         >
           <span :style="styles.sectionTitle">History ({{ meta.history.length }})</span>
-          <span>{{ isSectionExpanded(`History (${meta.history.length})`, verbosity !== 'minimal') ? '\u25BC' : '\u25B6' }}</span>
+          <span>{{
+            isSectionExpanded(`History (${meta.history.length})`, verbosity !== 'minimal')
+              ? '\u25BC'
+              : '\u25B6'
+          }}</span>
         </div>
         <div
           v-if="isSectionExpanded(`History (${meta.history.length})`, verbosity !== 'minimal')"
           :style="styles.sectionContent"
         >
-          <div
-            v-for="(entry, i) in historyEntries"
-            :key="i"
-            :style="styles.historyItem"
-          >
+          <div v-for="(entry, i) in historyEntries" :key="i" :style="styles.historyItem">
             <span :style="styles.historyIcon">{{ HISTORY_ICONS[entry.type] }}</span>
             <div>
               <strong>v{{ entry.version }}</strong> &mdash; {{ entry.description }}
-              <span
-                v-if="entry.taskId"
-                :style="{ color: '#3b82f6', marginLeft: '4px' }"
-              >({{ entry.taskId }})</span>
-              <div :style="{ fontSize: '10px', color: '#6b7280' }">{{ formatDate(entry.date) }}</div>
+              <span v-if="entry.taskId" :style="{ color: '#3b82f6', marginLeft: '4px' }"
+                >({{ entry.taskId }})</span
+              >
+              <div :style="{ fontSize: '10px', color: '#6b7280' }">
+                {{ formatDate(entry.date) }}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Features -->
-      <div
-        v-if="categories.features && meta.features.length > 0"
-        :style="styles.section"
-      >
+      <div v-if="categories.features && meta.features.length > 0" :style="styles.section">
         <div
           :style="styles.sectionHeader"
           @click="toggleSection(`Features (${meta.features.length})`, verbosity !== 'minimal')"
         >
           <span :style="styles.sectionTitle">Features ({{ meta.features.length }})</span>
-          <span>{{ isSectionExpanded(`Features (${meta.features.length})`, verbosity !== 'minimal') ? '\u25BC' : '\u25B6' }}</span>
+          <span>{{
+            isSectionExpanded(`Features (${meta.features.length})`, verbosity !== 'minimal')
+              ? '\u25BC'
+              : '\u25B6'
+          }}</span>
         </div>
         <div
           v-if="isSectionExpanded(`Features (${meta.features.length})`, verbosity !== 'minimal')"
           :style="styles.sectionContent"
         >
           <div
-            v-for="feature in (meta.features as ComponentFeature[])"
+            v-for="feature in meta.features as ComponentFeature[]"
             :key="feature.id"
             :style="{
               ...styles.featureItem,
@@ -468,10 +467,9 @@ function closePanel() {
             <span>{{ feature.enabled ? '\u2713' : '\u25CB' }}</span>
             <span>
               {{ feature.name }}
-              <span
-                v-if="feature.taskId"
-                :style="{ color: '#6b7280', marginLeft: '4px' }"
-              >({{ feature.taskId }})</span>
+              <span v-if="feature.taskId" :style="{ color: '#6b7280', marginLeft: '4px' }"
+                >({{ feature.taskId }})</span
+              >
             </span>
           </div>
         </div>
@@ -487,17 +485,17 @@ function closePanel() {
           @click="toggleSection(`Dependencies (${meta.dependencies.length})`, true)"
         >
           <span :style="styles.sectionTitle">Dependencies ({{ meta.dependencies.length }})</span>
-          <span>{{ isSectionExpanded(`Dependencies (${meta.dependencies.length})`, true) ? '\u25BC' : '\u25B6' }}</span>
+          <span>{{
+            isSectionExpanded(`Dependencies (${meta.dependencies.length})`, true)
+              ? '\u25BC'
+              : '\u25B6'
+          }}</span>
         </div>
         <div
           v-if="isSectionExpanded(`Dependencies (${meta.dependencies.length})`, true)"
           :style="styles.sectionContent"
         >
-          <div
-            v-for="(dep, i) in meta.dependencies"
-            :key="i"
-            :style="styles.dependencyItem"
-          >
+          <div v-for="(dep, i) in meta.dependencies" :key="i" :style="styles.dependencyItem">
             <span :style="styles.dependencyType">{{ dep.type }}</span>
             <strong>{{ dep.name }}</strong>
             <span v-if="verbosity === 'verbose'"> &mdash; {{ dep.purpose }}</span>
@@ -515,17 +513,17 @@ function closePanel() {
           @click="toggleSection(`Related Files (${meta.relatedFiles.length})`, true)"
         >
           <span :style="styles.sectionTitle">Related Files ({{ meta.relatedFiles.length }})</span>
-          <span>{{ isSectionExpanded(`Related Files (${meta.relatedFiles.length})`, true) ? '\u25BC' : '\u25B6' }}</span>
+          <span>{{
+            isSectionExpanded(`Related Files (${meta.relatedFiles.length})`, true)
+              ? '\u25BC'
+              : '\u25B6'
+          }}</span>
         </div>
         <div
           v-if="isSectionExpanded(`Related Files (${meta.relatedFiles.length})`, true)"
           :style="styles.sectionContent"
         >
-          <div
-            v-for="(file, i) in meta.relatedFiles"
-            :key="i"
-            :style="styles.dependencyItem"
-          >
+          <div v-for="(file, i) in meta.relatedFiles" :key="i" :style="styles.dependencyItem">
             <span :style="styles.dependencyType">{{ file.type }}</span>
             <code>{{ file.path }}</code>
           </div>
@@ -533,26 +531,18 @@ function closePanel() {
       </div>
 
       <!-- Tips -->
-      <div
-        v-if="categories.tips && meta.tips && meta.tips.length > 0"
-        :style="styles.section"
-      >
-        <div
-          :style="styles.sectionHeader"
-          @click="toggleSection('Tips', verbosity !== 'minimal')"
-        >
+      <div v-if="categories.tips && meta.tips && meta.tips.length > 0" :style="styles.section">
+        <div :style="styles.sectionHeader" @click="toggleSection('Tips', verbosity !== 'minimal')">
           <span :style="styles.sectionTitle">Tips</span>
-          <span>{{ isSectionExpanded('Tips', verbosity !== 'minimal') ? '\u25BC' : '\u25B6' }}</span>
+          <span>{{
+            isSectionExpanded('Tips', verbosity !== 'minimal') ? '\u25BC' : '\u25B6'
+          }}</span>
         </div>
         <div
           v-if="isSectionExpanded('Tips', verbosity !== 'minimal')"
           :style="styles.sectionContent"
         >
-          <div
-            v-for="(tip, i) in meta.tips"
-            :key="i"
-            :style="styles.tip"
-          >
+          <div v-for="(tip, i) in meta.tips" :key="i" :style="styles.tip">
             <span :style="styles.tipIcon">&#x1F4A1;</span>
             <span>{{ tip }}</span>
           </div>
@@ -564,22 +554,12 @@ function closePanel() {
         v-if="categories.tips && meta.knownIssues && meta.knownIssues.length > 0"
         :style="styles.section"
       >
-        <div
-          :style="styles.sectionHeader"
-          @click="toggleSection('Known Issues', true)"
-        >
+        <div :style="styles.sectionHeader" @click="toggleSection('Known Issues', true)">
           <span :style="styles.sectionTitle">Known Issues</span>
           <span>{{ isSectionExpanded('Known Issues', true) ? '\u25BC' : '\u25B6' }}</span>
         </div>
-        <div
-          v-if="isSectionExpanded('Known Issues', true)"
-          :style="styles.sectionContent"
-        >
-          <div
-            v-for="(issue, i) in meta.knownIssues"
-            :key="i"
-            :style="styles.tip"
-          >
+        <div v-if="isSectionExpanded('Known Issues', true)" :style="styles.sectionContent">
+          <div v-for="(issue, i) in meta.knownIssues" :key="i" :style="styles.tip">
             <span :style="{ ...styles.tipIcon, color: '#ef4444' }">&#x26A0;</span>
             <span>{{ issue }}</span>
           </div>
@@ -588,11 +568,7 @@ function closePanel() {
 
       <!-- Tags -->
       <div v-if="meta.tags.length > 0" :style="styles.tags">
-        <span
-          v-for="tag in meta.tags"
-          :key="tag"
-          :style="styles.tag"
-        >
+        <span v-for="tag in meta.tags" :key="tag" :style="styles.tag">
           {{ tag }}
         </span>
       </div>

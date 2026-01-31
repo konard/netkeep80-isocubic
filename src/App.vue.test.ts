@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { shallowMount, VueWrapper } from '@vue/test-utils'
+import { shallowMount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 import App from './App.vue'
@@ -24,7 +24,8 @@ vi.mock('./components/Gallery.vue', () => ({
 vi.mock('./components/ExportPanel.vue', () => ({
   default: {
     name: 'ExportPanel',
-    template: '<div class="export-panel-mock"><button>Download JSON</button><button>Upload JSON</button><button>Save</button></div>',
+    template:
+      '<div class="export-panel-mock"><button>Download JSON</button><button>Upload JSON</button><button>Save</button></div>',
     props: ['currentCube'],
   },
 }))

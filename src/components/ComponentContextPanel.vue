@@ -1,27 +1,13 @@
-/**
- * ComponentContextPanel Component
- *
- * AI-powered context assistant that provides information about the selected component.
- * Displays AI-generated description, key features, related components, and usage tips.
- *
- * TASK 51: Component Context Assistant (Phase 8 - AI + Metadata)
- *
- * Features:
- * - Automatic context update on component selection
- * - AI-generated component description
- * - Key features highlighting
- * - Related components suggestions
- * - Usage tips and patterns
- * - Multi-language support (Russian/English)
- */
+/** * ComponentContextPanel Component * * AI-powered context assistant that provides information
+about the selected component. * Displays AI-generated description, key features, related components,
+and usage tips. * * TASK 51: Component Context Assistant (Phase 8 - AI + Metadata) * * Features: * -
+Automatic context update on component selection * - AI-generated component description * - Key
+features highlighting * - Related components suggestions * - Usage tips and patterns * -
+Multi-language support (Russian/English) */
 
 <script lang="ts">
 import type { ComponentMeta } from '../types/component-meta'
-import type {
-  ComponentContextInfo,
-  RelatedComponentInfo,
-  QueryLanguage,
-} from '../types/ai-query'
+import type { ComponentContextInfo, RelatedComponentInfo, QueryLanguage } from '../types/ai-query'
 import {
   DEFAULT_CONTEXT_PANEL_SETTINGS,
   createDefaultContextInfo,
@@ -442,15 +428,6 @@ export {
 import { ref, computed } from 'vue'
 import { useIsDevModeEnabled } from '../lib/devmode'
 import type { ContextPanelSettings } from '../types/ai-query'
-import {
-  DEFAULT_CONTEXT_PANEL_SETTINGS,
-  detectQueryLanguage,
-} from '../types/ai-query'
-import type { ComponentMeta } from '../types/component-meta'
-import {
-  getComponentMeta,
-  getAllComponentMeta,
-} from '../types/component-meta'
 import type { CSSProperties } from 'vue'
 
 // ─── Props ─────────────────────────────────────────────────────────────────────
@@ -807,10 +784,7 @@ const positionStyles: Record<string, CSSProperties> = {
       <div :style="styles.headerTitle">
         <span :style="styles.headerIcon">&#x1F3AF;</span>
         <span>{{ labels.title }}</span>
-        <span
-          v-if="componentMeta"
-          :style="{ fontWeight: 400, color: '#9ca3af', fontSize: '12px' }"
-        >
+        <span v-if="componentMeta" :style="{ fontWeight: 400, color: '#9ca3af', fontSize: '12px' }">
           &mdash; {{ componentMeta.name }}
         </span>
       </div>
@@ -838,7 +812,8 @@ const positionStyles: Record<string, CSSProperties> = {
             </span>
           </div>
           <div :style="styles.componentVersion">
-            {{ labels.version }} {{ componentMeta.version }} &bull; {{ labels.phase }} {{ componentMeta.phase }}
+            {{ labels.version }} {{ componentMeta.version }} &bull; {{ labels.phase }}
+            {{ componentMeta.phase }}
           </div>
         </div>
 
@@ -884,7 +859,10 @@ const positionStyles: Record<string, CSSProperties> = {
           <div :style="styles.sectionTitle">{{ labels.related }}</div>
           <div :style="styles.relatedList">
             <div
-              v-for="related in contextInfo.relatedComponents.slice(0, mergedSettings.maxRelatedComponents)"
+              v-for="related in contextInfo.relatedComponents.slice(
+                0,
+                mergedSettings.maxRelatedComponents
+              )"
               :key="related.id"
               :style="getRelatedItemStyle(related.id)"
               role="button"

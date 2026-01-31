@@ -196,9 +196,7 @@ describe('StackPresetPicker Vue Component', () => {
 
       // Click on Construction category
       const categoryButtons = wrapper.findAll('.stack-preset-picker__category')
-      const constructionButton = categoryButtons.find((btn) =>
-        btn.text().includes('Construction')
-      )
+      const constructionButton = categoryButtons.find((btn) => btn.text().includes('Construction'))
       await constructionButton!.trigger('click')
 
       // Should show construction presets
@@ -221,9 +219,7 @@ describe('StackPresetPicker Vue Component', () => {
 
       // First filter by category
       const categoryButtons = wrapper.findAll('.stack-preset-picker__category')
-      const constructionButton = categoryButtons.find((btn) =>
-        btn.text().includes('Construction')
-      )
+      const constructionButton = categoryButtons.find((btn) => btn.text().includes('Construction'))
       await constructionButton!.trigger('click')
 
       // Then click All

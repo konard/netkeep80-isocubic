@@ -58,7 +58,8 @@ HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue(mockCtx)
 describe('AnnotationCanvas Vue Component', () => {
   const baseScreenshot: IssueScreenshot = {
     id: 'screenshot-1',
-    imageData: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+    imageData:
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
     timestamp: new Date().toISOString(),
     resolution: { width: 400, height: 300 },
     viewport: { width: 1920, height: 1080 },
@@ -227,8 +228,12 @@ describe('AnnotationCanvas Vue Component', () => {
     it('should render in Russian by default', () => {
       const wrapper = mountCanvas()
       expect(wrapper.text()).toContain('\u21A9 \u041E\u0442\u043C\u0435\u043D\u0438\u0442\u044C')
-      expect(wrapper.text()).toContain('\uD83D\uDDD1 \u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C')
-      expect(wrapper.text()).toContain('\uD83D\uDCBE \u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C')
+      expect(wrapper.text()).toContain(
+        '\uD83D\uDDD1 \u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C'
+      )
+      expect(wrapper.text()).toContain(
+        '\uD83D\uDCBE \u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C'
+      )
     })
 
     it('should render in English when language is en', () => {
@@ -240,7 +245,9 @@ describe('AnnotationCanvas Vue Component', () => {
 
     it('should show tool name in Russian in status bar', () => {
       const wrapper = mountCanvas()
-      expect(wrapper.text()).toContain('\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442: \u0412\u044B\u0431\u043E\u0440')
+      expect(wrapper.text()).toContain(
+        '\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442: \u0412\u044B\u0431\u043E\u0440'
+      )
     })
 
     it('should show tool name in English in status bar', () => {
@@ -255,42 +262,54 @@ describe('AnnotationCanvas Vue Component', () => {
   describe('Tool Selection', () => {
     it('should start with select tool active', () => {
       const wrapper = mountCanvas()
-      expect(wrapper.text()).toContain('\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442: \u0412\u044B\u0431\u043E\u0440')
+      expect(wrapper.text()).toContain(
+        '\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442: \u0412\u044B\u0431\u043E\u0440'
+      )
     })
 
     it('should switch to arrow tool on click', async () => {
       const wrapper = mountCanvas()
       await wrapper.find('[data-testid="annotation-tool-arrow"]').trigger('click')
       await nextTick()
-      expect(wrapper.text()).toContain('\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442: \u0421\u0442\u0440\u0435\u043B\u043A\u0430')
+      expect(wrapper.text()).toContain(
+        '\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442: \u0421\u0442\u0440\u0435\u043B\u043A\u0430'
+      )
     })
 
     it('should switch to circle tool on click', async () => {
       const wrapper = mountCanvas()
       await wrapper.find('[data-testid="annotation-tool-circle"]').trigger('click')
       await nextTick()
-      expect(wrapper.text()).toContain('\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442: \u041A\u0440\u0443\u0433')
+      expect(wrapper.text()).toContain(
+        '\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442: \u041A\u0440\u0443\u0433'
+      )
     })
 
     it('should switch to rectangle tool on click', async () => {
       const wrapper = mountCanvas()
       await wrapper.find('[data-testid="annotation-tool-rectangle"]').trigger('click')
       await nextTick()
-      expect(wrapper.text()).toContain('\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442: \u041F\u0440\u044F\u043C\u043E\u0443\u0433\u043E\u043B\u044C\u043D\u0438\u043A')
+      expect(wrapper.text()).toContain(
+        '\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442: \u041F\u0440\u044F\u043C\u043E\u0443\u0433\u043E\u043B\u044C\u043D\u0438\u043A'
+      )
     })
 
     it('should switch to text tool on click', async () => {
       const wrapper = mountCanvas()
       await wrapper.find('[data-testid="annotation-tool-text"]').trigger('click')
       await nextTick()
-      expect(wrapper.text()).toContain('\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442: \u0422\u0435\u043A\u0441\u0442')
+      expect(wrapper.text()).toContain(
+        '\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442: \u0422\u0435\u043A\u0441\u0442'
+      )
     })
 
     it('should switch to highlight tool on click', async () => {
       const wrapper = mountCanvas()
       await wrapper.find('[data-testid="annotation-tool-highlight"]').trigger('click')
       await nextTick()
-      expect(wrapper.text()).toContain('\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442: \u0412\u044B\u0434\u0435\u043B\u0435\u043D\u0438\u0435')
+      expect(wrapper.text()).toContain(
+        '\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442: \u0412\u044B\u0434\u0435\u043B\u0435\u043D\u0438\u0435'
+      )
     })
   })
 

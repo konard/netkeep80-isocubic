@@ -1,19 +1,9 @@
-/**
- * ExtendedSearchPanel Component (Vue 3 SFC)
- *
- * Provides an advanced search interface for finding components
- * by description, functionality, and various filters.
- *
- * TASK 52: Extended Component Search (Phase 8 - AI + Metadata)
- * TASK 66: Migrated from React to Vue 3.0 SFC (Phase 10 - Vue.js 3.0 Migration)
- *
- * Features:
- * - Semantic search with autocomplete
- * - Functionality-based search
- * - Filter by phase, status, tags
- * - Relevance ranking display
- * - Search result highlighting
- */
+/** * ExtendedSearchPanel Component (Vue 3 SFC) * * Provides an advanced search interface for
+finding components * by description, functionality, and various filters. * * TASK 52: Extended
+Component Search (Phase 8 - AI + Metadata) * TASK 66: Migrated from React to Vue 3.0 SFC (Phase 10 -
+Vue.js 3.0 Migration) * * Features: * - Semantic search with autocomplete * - Functionality-based
+search * - Filter by phase, status, tags * - Relevance ranking display * - Search result
+highlighting */
 
 <script setup lang="ts">
 // === Imports ===
@@ -776,9 +766,13 @@ watch(isExpanded, (newVal) => {
 })
 
 // Save settings when they change
-watch(settings, (newSettings) => {
-  saveSettings(newSettings)
-}, { deep: true })
+watch(
+  settings,
+  (newSettings) => {
+    saveSettings(newSettings)
+  },
+  { deep: true }
+)
 </script>
 
 <template>
@@ -793,7 +787,11 @@ watch(settings, (newSettings) => {
     <div :style="styles.header" role="button" tabindex="0" @click="handleToggle">
       <div :style="styles.headerTitle">
         <span :style="styles.headerIcon">&#x1F50D;</span>
-        <span>{{ detectedLanguage === 'ru' ? '\u0420\u0430\u0441\u0448\u0438\u0440\u0435\u043d\u043d\u044b\u0439 \u043f\u043e\u0438\u0441\u043a' : 'Extended Search' }}</span>
+        <span>{{
+          detectedLanguage === 'ru'
+            ? '\u0420\u0430\u0441\u0448\u0438\u0440\u0435\u043d\u043d\u044b\u0439 \u043f\u043e\u0438\u0441\u043a'
+            : 'Extended Search'
+        }}</span>
       </div>
       <button
         type="button"
@@ -813,13 +811,17 @@ watch(settings, (newSettings) => {
             ref="inputRef"
             type="text"
             :value="query"
-            :placeholder="detectedLanguage === 'ru' ? '\u041f\u043e\u0438\u0441\u043a \u043a\u043e\u043c\u043f\u043e\u043d\u0435\u043d\u0442\u043e\u0432...' : 'Search components...'"
+            :placeholder="
+              detectedLanguage === 'ru'
+                ? '\u041f\u043e\u0438\u0441\u043a \u043a\u043e\u043c\u043f\u043e\u043d\u0435\u043d\u0442\u043e\u0432...'
+                : 'Search components...'
+            "
             :style="inputStyle"
             data-testid="search-input"
             @input="handleInputChange(($event.target as HTMLInputElement).value)"
             @keydown="handleKeyDown"
             @focus="isInputFocused = true"
-            @blur="setTimeout(() => isInputFocused = false, 150)"
+            @blur="setTimeout(() => (isInputFocused = false), 150)"
           />
           <button
             type="submit"
@@ -855,10 +857,7 @@ watch(settings, (newSettings) => {
             <span :style="styles.autocompleteIcon">{{ getSuggestionIcon(suggestion.type) }}</span>
             <span :style="styles.autocompleteText">
               {{ suggestion.text }}
-              <span
-                v-if="suggestion.description"
-                :style="{ color: '#6b7280', marginLeft: '8px' }"
-              >
+              <span v-if="suggestion.description" :style="{ color: '#6b7280', marginLeft: '8px' }">
                 {{ suggestion.description.substring(0, 40) }}...
               </span>
             </span>
@@ -901,7 +900,9 @@ watch(settings, (newSettings) => {
           }"
           @click="clearFilters"
         >
-          {{ detectedLanguage === 'ru' ? '\u0421\u0431\u0440\u043e\u0441\u0438\u0442\u044c' : 'Clear' }}
+          {{
+            detectedLanguage === 'ru' ? '\u0421\u0431\u0440\u043e\u0441\u0438\u0442\u044c' : 'Clear'
+          }}
         </button>
       </div>
 
@@ -918,10 +919,19 @@ watch(settings, (newSettings) => {
       <div v-if="results.length > 0" :style="styles.resultsContainer" data-testid="search-results">
         <div :style="styles.resultsHeader">
           <span :style="styles.resultsLabel">
-            {{ detectedLanguage === 'ru' ? '\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u044b' : 'Results' }}
+            {{
+              detectedLanguage === 'ru'
+                ? '\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u044b'
+                : 'Results'
+            }}
           </span>
           <span :style="styles.resultCount">
-            {{ results.length }} {{ detectedLanguage === 'ru' ? '\u043a\u043e\u043c\u043f\u043e\u043d\u0435\u043d\u0442(\u043e\u0432)' : 'component(s)' }}
+            {{ results.length }}
+            {{
+              detectedLanguage === 'ru'
+                ? '\u043a\u043e\u043c\u043f\u043e\u043d\u0435\u043d\u0442(\u043e\u0432)'
+                : 'component(s)'
+            }}
           </span>
         </div>
 
@@ -936,10 +946,7 @@ watch(settings, (newSettings) => {
         >
           <div :style="styles.resultHeader">
             <span :style="styles.resultName">{{ result.component.name }}</span>
-            <span
-              v-if="settings.showScores"
-              :style="getScoreStyle(result.score)"
-            >
+            <span v-if="settings.showScores" :style="getScoreStyle(result.score)">
               {{ Math.round(result.score * 100) }}%
             </span>
           </div>
@@ -948,7 +955,8 @@ watch(settings, (newSettings) => {
 
           <div :style="styles.resultMeta">
             <span :style="styles.resultPhase">
-              {{ detectedLanguage === 'ru' ? '\u0424\u0430\u0437\u0430' : 'Phase' }} {{ result.component.phase }}
+              {{ detectedLanguage === 'ru' ? '\u0424\u0430\u0437\u0430' : 'Phase' }}
+              {{ result.component.phase }}
             </span>
             <span :style="getStatusStyle(result.component.status)">
               {{ result.component.status }}
@@ -1004,7 +1012,11 @@ watch(settings, (newSettings) => {
       <div :style="styles.shortcutHint">
         <span :style="styles.kbd">Ctrl+Shift+F</span>
         {{ ' ' }}
-        {{ detectedLanguage === 'ru' ? '\u043e\u0442\u043a\u0440\u044b\u0442\u044c/\u0437\u0430\u043a\u0440\u044b\u0442\u044c \u043f\u0430\u043d\u0435\u043b\u044c' : 'toggle panel' }}
+        {{
+          detectedLanguage === 'ru'
+            ? '\u043e\u0442\u043a\u0440\u044b\u0442\u044c/\u0437\u0430\u043a\u0440\u044b\u0442\u044c \u043f\u0430\u043d\u0435\u043b\u044c'
+            : 'toggle panel'
+        }}
       </div>
 
       <!-- Custom children (slot replaces ReactNode children) -->

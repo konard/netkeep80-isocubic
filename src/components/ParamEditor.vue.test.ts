@@ -384,9 +384,9 @@ describe('ParamEditor Vue Component', () => {
       })
       expect(wrapper.find('#base-color').exists()).toBe(true)
 
-      const baseHeader = wrapper.findAll('.param-editor__section-header').find((el) =>
-        el.text().includes('Base Properties')
-      )
+      const baseHeader = wrapper
+        .findAll('.param-editor__section-header')
+        .find((el) => el.text().includes('Base Properties'))
       await baseHeader!.trigger('click')
       expect(wrapper.find('#base-color').exists()).toBe(false)
     })
@@ -395,9 +395,9 @@ describe('ParamEditor Vue Component', () => {
       const wrapper = shallowMount(ParamEditor, {
         props: { currentCube: testCube },
       })
-      const baseHeader = wrapper.findAll('.param-editor__section-header').find((el) =>
-        el.text().includes('Base Properties')
-      )
+      const baseHeader = wrapper
+        .findAll('.param-editor__section-header')
+        .find((el) => el.text().includes('Base Properties'))
 
       await baseHeader!.trigger('click')
       expect(wrapper.find('#base-color').exists()).toBe(false)
@@ -542,9 +542,9 @@ describe('ParamEditor Vue Component', () => {
       const wrapper = shallowMount(ParamEditor, {
         props: { currentCube: testCube },
       })
-      const boundaryHeader = wrapper.findAll('.param-editor__section-header').find((el) =>
-        el.text().includes('Boundary Settings')
-      )
+      const boundaryHeader = wrapper
+        .findAll('.param-editor__section-header')
+        .find((el) => el.text().includes('Boundary Settings'))
 
       expect(wrapper.find('#boundary-mode').exists()).toBe(true)
       await boundaryHeader!.trigger('click')

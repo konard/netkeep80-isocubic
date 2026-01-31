@@ -222,15 +222,15 @@ describe('PromptGenerator Vue Component', () => {
       await wrapper.find('.prompt-generator__action-btn--template').trigger('click')
 
       // Click on Stone category
-      const stoneCategory = wrapper.findAll('.prompt-generator__category-btn').find((btn) =>
-        btn.text().includes('Stone')
-      )
+      const stoneCategory = wrapper
+        .findAll('.prompt-generator__category-btn')
+        .find((btn) => btn.text().includes('Stone'))
       await stoneCategory!.trigger('click')
 
       // Find and click a template button (e.g., granite)
-      const graniteButton = wrapper.findAll('.prompt-generator__template-btn').find((btn) =>
-        btn.text().toLowerCase().includes('granite')
-      )
+      const graniteButton = wrapper
+        .findAll('.prompt-generator__template-btn')
+        .find((btn) => btn.text().toLowerCase().includes('granite'))
       await graniteButton!.trigger('click')
       await flushPromises()
 
@@ -244,9 +244,9 @@ describe('PromptGenerator Vue Component', () => {
       await wrapper.find('.prompt-generator__action-btn--template').trigger('click')
 
       // Click on Metal category
-      const metalCategory = wrapper.findAll('.prompt-generator__category-btn').find((btn) =>
-        btn.text().includes('Metal')
-      )
+      const metalCategory = wrapper
+        .findAll('.prompt-generator__category-btn')
+        .find((btn) => btn.text().includes('Metal'))
       await metalCategory!.trigger('click')
 
       // Should show metal templates
@@ -411,9 +411,9 @@ describe('PromptGenerator Vue Component', () => {
 
       await wrapper.find('.prompt-generator__action-btn--advanced').trigger('click')
 
-      const contextualButton = wrapper.findAll('.prompt-generator__mode-btn').find((btn) =>
-        btn.text().includes('Contextual')
-      )
+      const contextualButton = wrapper
+        .findAll('.prompt-generator__mode-btn')
+        .find((btn) => btn.text().includes('Contextual'))
       expect((contextualButton!.element as HTMLButtonElement).disabled).toBe(true)
     })
 
@@ -430,9 +430,9 @@ describe('PromptGenerator Vue Component', () => {
 
       await wrapper.find('.prompt-generator__action-btn--advanced').trigger('click')
 
-      const contextualButton = wrapper.findAll('.prompt-generator__mode-btn').find((btn) =>
-        btn.text().includes('Contextual')
-      )
+      const contextualButton = wrapper
+        .findAll('.prompt-generator__mode-btn')
+        .find((btn) => btn.text().includes('Contextual'))
       expect((contextualButton!.element as HTMLButtonElement).disabled).toBe(false)
     })
 
@@ -451,9 +451,9 @@ describe('PromptGenerator Vue Component', () => {
       await wrapper.find('.prompt-generator__action-btn--advanced').trigger('click')
 
       // Switch to contextual mode
-      const contextualButton = wrapper.findAll('.prompt-generator__mode-btn').find((btn) =>
-        btn.text().includes('Contextual')
-      )
+      const contextualButton = wrapper
+        .findAll('.prompt-generator__mode-btn')
+        .find((btn) => btn.text().includes('Contextual'))
       await contextualButton!.trigger('click')
 
       // Should show context cubes toggle
@@ -476,9 +476,9 @@ describe('PromptGenerator Vue Component', () => {
       await wrapper.find('.prompt-generator__action-btn--advanced').trigger('click')
 
       // Switch to contextual mode
-      const contextualButton = wrapper.findAll('.prompt-generator__mode-btn').find((btn) =>
-        btn.text().includes('Contextual')
-      )
+      const contextualButton = wrapper
+        .findAll('.prompt-generator__mode-btn')
+        .find((btn) => btn.text().includes('Contextual'))
       await contextualButton!.trigger('click')
 
       // Enter prompt
@@ -518,9 +518,9 @@ describe('PromptGenerator Vue Component', () => {
       await wrapper.find('.prompt-generator__action-btn--advanced').trigger('click')
 
       // Switch to contextual mode
-      const contextualButton = wrapper.findAll('.prompt-generator__mode-btn').find((btn) =>
-        btn.text().includes('Contextual')
-      )
+      const contextualButton = wrapper
+        .findAll('.prompt-generator__mode-btn')
+        .find((btn) => btn.text().includes('Contextual'))
       await contextualButton!.trigger('click')
 
       // Toggle show context info

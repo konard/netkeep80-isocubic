@@ -277,7 +277,14 @@ describe('GodModeWindow Vue Component', () => {
           state: 'minimized',
           activeTab: 'query',
           position: { x: 20, y: 80 },
-          size: { width: 500, height: 600, minWidth: 380, minHeight: 400, maxWidth: 900, maxHeight: 900 },
+          size: {
+            width: 500,
+            height: 600,
+            minWidth: 380,
+            minHeight: 400,
+            maxWidth: 900,
+            maxHeight: 900,
+          },
           isPinned: false,
         })
       )
@@ -374,7 +381,14 @@ describe('GodModeWindow Vue Component', () => {
           state: 'open',
           activeTab: 'search',
           position: { x: 100, y: 150 },
-          size: { width: 600, height: 700, minWidth: 380, minHeight: 400, maxWidth: 900, maxHeight: 900 },
+          size: {
+            width: 600,
+            height: 700,
+            minWidth: 380,
+            minHeight: 400,
+            maxWidth: 900,
+            maxHeight: 900,
+          },
           isPinned: true,
         })
       )

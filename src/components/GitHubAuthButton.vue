@@ -247,11 +247,12 @@ const emit = defineEmits<{
 // ============================================================================
 
 const client = shallowRef<GitHubApiClient>(
-  props.client || createGitHubClient({
-    owner: props.owner,
-    repo: props.repo,
-    oauthClientId: props.oauthClientId,
-  })
+  props.client ||
+    createGitHubClient({
+      owner: props.owner,
+      repo: props.repo,
+      oauthClientId: props.oauthClientId,
+    })
 )
 const authState = ref<GitHubAuthState>({ authenticated: false })
 const view = ref<AuthView>('status')
@@ -413,15 +414,10 @@ onMounted(async () => {
         ...(authState.authenticated ? styles.statusConnected : styles.statusDisconnected),
       }"
       :title="
-        authState.authenticated
-          ? `${t.connected}: ${authState.user?.login || ''}`
-          : t.disconnected
+        authState.authenticated ? `${t.connected}: ${authState.user?.login || ''}` : t.disconnected
       "
     />
-    <span
-      v-if="authState.authenticated && authState.user"
-      :style="styles.userName"
-    >
+    <span v-if="authState.authenticated && authState.user" :style="styles.userName">
       {{ authState.user.login }}
     </span>
   </div>
@@ -533,11 +529,7 @@ onMounted(async () => {
     <!-- Authenticated state -->
     <div v-if="authState.authenticated && authState.user" :style="styles.authRow">
       <span :style="{ ...styles.statusDot, ...styles.statusConnected }" />
-      <img
-        :src="authState.user.avatarUrl"
-        :alt="authState.user.login"
-        :style="styles.avatar"
-      />
+      <img :src="authState.user.avatarUrl" :alt="authState.user.login" :style="styles.avatar" />
       <span :style="styles.userName">
         {{ authState.user.name || authState.user.login }}
       </span>

@@ -259,7 +259,9 @@ describe('FFTChannelEditor Vue Component', () => {
         props: { currentCube: testCube },
       })
 
-      const dcAmplitudeSlider = wrapper.find('.fft-channel-editor__dc-amplitude input[type="range"]')
+      const dcAmplitudeSlider = wrapper.find(
+        '.fft-channel-editor__dc-amplitude input[type="range"]'
+      )
       await dcAmplitudeSlider.setValue('1.5')
 
       expect(wrapper.emitted('update:cube')).toBeTruthy()

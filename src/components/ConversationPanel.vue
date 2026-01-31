@@ -1,20 +1,9 @@
-/**
- * ConversationPanel Component
- *
- * Chat-like interface for AI conversation in GOD MODE.
- * Allows users to discuss improvements, report bugs, and formulate tasks
- * through natural language conversation with the AI assistant.
- *
- * TASK 55: AI Conversation Agent (Phase 9 - GOD MODE)
- *
- * Features:
- * - Chat-like message history interface
- * - Context-aware AI responses
- * - Quick suggestion buttons
- * - Message streaming indicator
- * - Conversation history persistence
- * - Multi-language support (Russian/English)
- */
+/** * ConversationPanel Component * * Chat-like interface for AI conversation in GOD MODE. * Allows
+users to discuss improvements, report bugs, and formulate tasks * through natural language
+conversation with the AI assistant. * * TASK 55: AI Conversation Agent (Phase 9 - GOD MODE) * *
+Features: * - Chat-like message history interface * - Context-aware AI responses * - Quick
+suggestion buttons * - Message streaming indicator * - Conversation history persistence * -
+Multi-language support (Russian/English) */
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, shallowRef, type CSSProperties } from 'vue'
 import {
@@ -92,7 +81,8 @@ watch(
   () => props.settings,
   (newSettings) => {
     if (newSettings) {
-      const newLang = newSettings.preferredLanguage ?? DEFAULT_CONVERSATION_SETTINGS.preferredLanguage
+      const newLang =
+        newSettings.preferredLanguage ?? DEFAULT_CONVERSATION_SETTINGS.preferredLanguage
       agentRef.value = createConversationAgent({ language: newLang })
       session.value = agentRef.value.getSession()
     }
@@ -458,10 +448,7 @@ const styles: Record<string, CSSProperties> = {
   >
     <!-- CSS for typing animation -->
     <component :is="'style'">
-      @keyframes bounce {
-        0%, 80%, 100% { transform: scale(0); }
-        40% { transform: scale(1); }
-      }
+      @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
     </component>
 
     <!-- Header -->

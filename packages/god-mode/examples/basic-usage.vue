@@ -8,7 +8,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { provideGodMode, useGodMode } from '../src'
+import { provideGodMode } from '../src'
 import type { ComponentRegistry, GodModeConfig } from '../src'
 
 // ============================================================================
@@ -117,10 +117,7 @@ const toggleButtonStyle = computed(() => ({
     </main>
 
     <!-- GOD MODE toggle button -->
-    <button
-      :style="toggleButtonStyle"
-      @click="handleToggle"
-    >
+    <button :style="toggleButtonStyle" @click="handleToggle">
       {{ isVisible ? 'Close' : 'Open' }} GOD MODE
       {{ isPinned ? ' (Pinned)' : '' }}
     </button>

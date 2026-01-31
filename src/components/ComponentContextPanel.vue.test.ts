@@ -258,9 +258,7 @@ describe('ComponentContextPanel Vue Component', () => {
       ]
 
       function findRelated(target: { tags: string[] }, all: typeof components): string[] {
-        return all
-          .filter((c) => c.tags.some((t) => target.tags.includes(t)))
-          .map((c) => c.name)
+        return all.filter((c) => c.tags.some((t) => target.tags.includes(t))).map((c) => c.name)
       }
 
       const related = findRelated({ tags: ['form'] }, components)

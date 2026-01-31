@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { shallowMount, mount } from '@vue/test-utils'
+import { shallowMount } from '@vue/test-utils'
 import CollaborativeParamEditor from './CollaborativeParamEditor.vue'
 import type { SpectralCube } from '../types/cube'
 import type {
@@ -110,7 +110,8 @@ function createWrapper(props: Record<string, unknown> = {}) {
           props: ['currentCube', 'onCubeUpdate', 'lodConfig', 'onLODConfigChange', 'lodStatistics'],
         },
         ActionHistory: {
-          template: '<div class="action-history-stub">Action History<span>{{ actions?.length ?? 0 }} actions</span></div>',
+          template:
+            '<div class="action-history-stub">Action History<span>{{ actions?.length ?? 0 }} actions</span></div>',
           props: ['actions', 'participants', 'maxActions', 'localParticipantId', 'onUndoAction'],
         },
       },

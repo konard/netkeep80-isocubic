@@ -369,7 +369,13 @@ describe('ParticipantCursor Vue Component - Cursor Filtering Logic', () => {
   it('should filter out local participant', () => {
     const participants = [
       {
-        participant: { id: 'local', name: 'Me', color: '#ff0000', status: 'online', cursor: null } as unknown as Participant,
+        participant: {
+          id: 'local',
+          name: 'Me',
+          color: '#ff0000',
+          status: 'online',
+          cursor: null,
+        } as unknown as Participant,
         cursor: null,
       },
       {

@@ -131,9 +131,9 @@ describe('FFTParamEditor Vue Component', () => {
       const wrapper = shallowMount(FFTParamEditor, {
         props: { currentCube: testCube, showModeSwitcher: true, editorMode: 'fft' },
       })
-      const spectralButton = wrapper.findAll('.fft-editor__mode-btn').find((btn) =>
-        btn.text().includes('SpectralCube')
-      )
+      const spectralButton = wrapper
+        .findAll('.fft-editor__mode-btn')
+        .find((btn) => btn.text().includes('SpectralCube'))
       await spectralButton!.trigger('click')
       expect(wrapper.emitted('modeChange')).toBeTruthy()
       expect(wrapper.emitted('modeChange')![0]).toEqual(['spectral'])
@@ -143,9 +143,9 @@ describe('FFTParamEditor Vue Component', () => {
       const wrapper = shallowMount(FFTParamEditor, {
         props: { currentCube: testCube, showModeSwitcher: true, editorMode: 'fft' },
       })
-      const fftButton = wrapper.findAll('.fft-editor__mode-btn').find((btn) =>
-        btn.text().includes('FFTCubeConfig')
-      )
+      const fftButton = wrapper
+        .findAll('.fft-editor__mode-btn')
+        .find((btn) => btn.text().includes('FFTCubeConfig'))
       expect(fftButton!.classes()).toContain('fft-editor__mode-btn--active')
     })
   })
@@ -361,9 +361,9 @@ describe('FFTParamEditor Vue Component', () => {
       })
       expect(wrapper.text()).toContain('Is Magical')
 
-      const energyHeader = wrapper.findAll('.fft-editor__section-header').find((el) =>
-        el.text().includes('Energy Settings')
-      )
+      const energyHeader = wrapper
+        .findAll('.fft-editor__section-header')
+        .find((el) => el.text().includes('Energy Settings'))
       await energyHeader!.trigger('click')
       expect(wrapper.text()).not.toContain('Is Magical')
     })
@@ -372,9 +372,9 @@ describe('FFTParamEditor Vue Component', () => {
       const wrapper = shallowMount(FFTParamEditor, {
         props: { currentCube: testCube },
       })
-      const energyHeader = wrapper.findAll('.fft-editor__section-header').find((el) =>
-        el.text().includes('Energy Settings')
-      )
+      const energyHeader = wrapper
+        .findAll('.fft-editor__section-header')
+        .find((el) => el.text().includes('Energy Settings'))
 
       await energyHeader!.trigger('click')
       expect(wrapper.text()).not.toContain('Is Magical')

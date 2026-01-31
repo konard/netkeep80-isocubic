@@ -67,7 +67,11 @@ async function setInputValue(wrapper: ReturnType<typeof mount>, selector: string
 /**
  * Helper to set a checkbox value using native dispatchEvent
  */
-async function setCheckboxValue(wrapper: ReturnType<typeof mount>, selector: string, checked: boolean) {
+async function setCheckboxValue(
+  wrapper: ReturnType<typeof mount>,
+  selector: string,
+  checked: boolean
+) {
   const el = wrapper.find(selector).element as HTMLInputElement
   el.checked = checked
   el.dispatchEvent(new Event('change', { bubbles: true }))

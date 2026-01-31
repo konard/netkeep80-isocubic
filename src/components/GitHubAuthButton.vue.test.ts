@@ -219,7 +219,12 @@ describe('GitHubAuthButton Vue Component', () => {
     it('should show sign out button when authenticated', async () => {
       mockGetAuthState.mockResolvedValue({
         authenticated: true,
-        user: { login: 'testuser', name: 'Test User', avatarUrl: 'https://example.com/avatar', htmlUrl: 'https://github.com/testuser' },
+        user: {
+          login: 'testuser',
+          name: 'Test User',
+          avatarUrl: 'https://example.com/avatar',
+          htmlUrl: 'https://github.com/testuser',
+        },
       })
 
       const wrapper = mountButton()

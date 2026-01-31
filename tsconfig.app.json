@@ -28,9 +28,5 @@
     "noUncheckedSideEffectImports": true
   },
   "include": ["src", "examples", "env.d.ts"],
-  "exclude": [
-    "src/**/*.tsx",
-    "src/hooks/**",
-    "packages/god-mode/src/components/**/*.tsx"
-  ]
+  "exclude": ["src/**/*.tsx", "src/hooks/**", "packages/god-mode/src/components/**/*.tsx"]
 }

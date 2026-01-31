@@ -1,20 +1,10 @@
-/**
- * DevModeQueryPanel Component
- *
- * Provides an AI-powered query interface for Developer Mode.
- * Users can ask natural language questions about components and metadata.
- *
- * TASK 49: AI Query Interface for DevMode (Phase 8 - AI + Metadata)
- * TASK 66: Migrated from React TSX to Vue 3 SFC (Phase 10 - Vue.js 3.0 Migration)
- *
- * Features:
- * - Natural language input field for queries
- * - Formatted response display area
- * - Query history with re-use capability
- * - Collapsible/expandable panel
- * - Keyboard shortcut for quick access (Ctrl+Shift+Q)
- * - Multi-language support (Russian/English)
- */
+/** * DevModeQueryPanel Component * * Provides an AI-powered query interface for Developer Mode. *
+Users can ask natural language questions about components and metadata. * * TASK 49: AI Query
+Interface for DevMode (Phase 8 - AI + Metadata) * TASK 66: Migrated from React TSX to Vue 3 SFC
+(Phase 10 - Vue.js 3.0 Migration) * * Features: * - Natural language input field for queries * -
+Formatted response display area * - Query history with re-use capability * - Collapsible/expandable
+panel * - Keyboard shortcut for quick access (Ctrl+Shift+Q) * - Multi-language support
+(Russian/English) */
 
 <script setup lang="ts">
 // === Types ===
@@ -44,24 +34,27 @@ import {
 } from '../types/component-meta'
 
 // === Props & Emits ===
-const props = withDefaults(defineProps<{
-  /** Whether the panel is initially expanded */
-  initialExpanded?: boolean
-  /** Custom styles for the panel container */
-  style?: CSSProperties
-  /** Custom class name */
-  className?: string
-  /** Position of the panel */
-  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
-  /** Settings overrides */
-  settings?: Partial<QueryPanelSettings>
-}>(), {
-  initialExpanded: true,
-  style: undefined,
-  className: undefined,
-  position: 'bottom-right',
-  settings: undefined,
-})
+const props = withDefaults(
+  defineProps<{
+    /** Whether the panel is initially expanded */
+    initialExpanded?: boolean
+    /** Custom styles for the panel container */
+    style?: CSSProperties
+    /** Custom class name */
+    className?: string
+    /** Position of the panel */
+    position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+    /** Settings overrides */
+    settings?: Partial<QueryPanelSettings>
+  }>(),
+  {
+    initialExpanded: true,
+    style: undefined,
+    className: undefined,
+    position: 'bottom-right',
+    settings: undefined,
+  }
+)
 
 const emit = defineEmits<{
   queryProcessed: [query: string, response: AIQueryResponse]
@@ -719,7 +712,9 @@ const inputStyle = computed<CSSProperties>(() => ({
 
 const submitButtonStyle = computed<CSSProperties>(() => ({
   ...componentStyles.submitButton,
-  ...(!query.value.trim() || status.value === 'processing' ? componentStyles.submitButtonDisabled : {}),
+  ...(!query.value.trim() || status.value === 'processing'
+    ? componentStyles.submitButtonDisabled
+    : {}),
   ...(isSubmitHovered.value && query.value.trim() && status.value !== 'processing'
     ? componentStyles.submitButtonHover
     : {}),
@@ -757,7 +752,10 @@ function handleSubmit() {
 
       // Add to history
       const historyEntry = createHistoryEntry(query.value.trim(), result)
-      history.value = [historyEntry, ...history.value.slice(0, mergedSettings.value.maxHistoryEntries - 1)]
+      history.value = [
+        historyEntry,
+        ...history.value.slice(0, mergedSettings.value.maxHistoryEntries - 1),
+      ]
 
       // Callback
       emit('queryProcessed', query.value.trim(), result)
@@ -843,11 +841,15 @@ watch(isExpanded, (newVal) => {
 })
 
 // Persist history
-watch(history, (newHistory) => {
-  if (mergedSettings.value.persistHistory) {
-    saveHistory(newHistory.slice(0, mergedSettings.value.maxHistoryEntries))
-  }
-}, { deep: true })
+watch(
+  history,
+  (newHistory) => {
+    if (mergedSettings.value.persistHistory) {
+      saveHistory(newHistory.slice(0, mergedSettings.value.maxHistoryEntries))
+    }
+  },
+  { deep: true }
+)
 </script>
 
 <template>
@@ -963,7 +965,11 @@ watch(history, (newHistory) => {
 
         <!-- Suggestions -->
         <div
-          v-if="mergedSettings.showSuggestions && response.suggestions && response.suggestions.length > 0"
+          v-if="
+            mergedSettings.showSuggestions &&
+            response.suggestions &&
+            response.suggestions.length > 0
+          "
           :style="componentStyles.suggestionsContainer"
         >
           <button
@@ -979,7 +985,11 @@ watch(history, (newHistory) => {
 
         <!-- Related queries -->
         <div
-          v-if="mergedSettings.showRelatedQueries && response.relatedQueries && response.relatedQueries.length > 0"
+          v-if="
+            mergedSettings.showRelatedQueries &&
+            response.relatedQueries &&
+            response.relatedQueries.length > 0
+          "
           :style="componentStyles.suggestionsContainer"
         >
           <button

@@ -15,7 +15,12 @@ import { CONVERSATION_SUGGESTIONS } from '../types/god-mode'
 // Mock conversation-agent module
 const mockProcessMessage = vi.fn().mockResolvedValue({
   success: true,
-  message: { id: 'resp_1', role: 'assistant', content: 'Test response', timestamp: new Date().toISOString() },
+  message: {
+    id: 'resp_1',
+    role: 'assistant',
+    content: 'Test response',
+    timestamp: new Date().toISOString(),
+  },
   suggestions: [],
 })
 const mockGetSession = vi.fn().mockReturnValue({

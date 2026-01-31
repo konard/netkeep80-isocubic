@@ -533,9 +533,7 @@ function getMinimizeButtonStyle(): CSSProperties {
 function getCloseButtonStyle(): CSSProperties {
   return {
     ...styles.headerButton,
-    ...(hoveredButton.value === 'close'
-      ? { ...styles.headerButtonHover, color: '#ef4444' }
-      : {}),
+    ...(hoveredButton.value === 'close' ? { ...styles.headerButtonHover, color: '#ef4444' } : {}),
   }
 }
 
@@ -638,8 +636,7 @@ function onResizeMouseMove(e: MouseEvent) {
     newX = resizeState.value.startWindowX + (resizeState.value.startWidth - constrainedSize.width)
   }
   if (currentEdge.includes('n') && constrainedSize.height !== newHeight) {
-    newY =
-      resizeState.value.startWindowY + (resizeState.value.startHeight - constrainedSize.height)
+    newY = resizeState.value.startWindowY + (resizeState.value.startHeight - constrainedSize.height)
   }
 
   const constrainedPosition = constrainPosition(
@@ -726,7 +723,9 @@ onUnmounted(() => {
             <button
               type="button"
               :style="getPinButtonStyle()"
-              :title="language === 'ru' ? '\u0417\u0430\u043A\u0440\u0435\u043F\u0438\u0442\u044C' : 'Pin'"
+              :title="
+                language === 'ru' ? '\u0417\u0430\u043A\u0440\u0435\u043F\u0438\u0442\u044C' : 'Pin'
+              "
               data-testid="god-mode-pin"
               @click="togglePin"
               @mouseenter="hoveredButton = 'pin'"
@@ -844,7 +843,11 @@ onUnmounted(() => {
           <!-- Keyboard shortcut hint -->
           <div :style="styles.shortcutHint">
             <span :style="styles.kbd">{{ config.shortcuts?.toggleWindow || 'Ctrl+Shift+G' }}</span>
-            <span>{{ language === 'ru' ? '\u043E\u0442\u043A\u0440\u044B\u0442\u044C/\u0437\u0430\u043A\u0440\u044B\u0442\u044C' : 'toggle' }}</span>
+            <span>{{
+              language === 'ru'
+                ? '\u043E\u0442\u043A\u0440\u044B\u0442\u044C/\u0437\u0430\u043A\u0440\u044B\u0442\u044C'
+                : 'toggle'
+            }}</span>
           </div>
         </div>
 

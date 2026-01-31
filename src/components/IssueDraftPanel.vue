@@ -29,11 +29,7 @@ import type {
 } from '../types/issue-generator'
 import { createIssueGenerator, type IssueGenerationResult } from '../lib/issue-generator'
 import { validateIssueDraft } from '../types/issue-generator'
-import {
-  createGitHubClient,
-  type GitHubApiClient,
-  type GitHubIssueResult,
-} from '../lib/github-api'
+import { createGitHubClient, type GitHubApiClient, type GitHubIssueResult } from '../lib/github-api'
 import { captureViewport, type CaptureResult } from '../lib/screen-capture'
 import GitHubAuthButton from './GitHubAuthButton.vue'
 import AnnotationCanvas from './AnnotationCanvas.vue'
@@ -569,7 +565,10 @@ function handleRemoveScreenshotClick(event: Event, id: string) {
 // Handle annotations change from AnnotationCanvas
 function handleAnnotationsChange(annotations: unknown[]) {
   if (activeScreenshot.value) {
-    activeScreenshot.value = { ...activeScreenshot.value, annotations: annotations as IssueScreenshot['annotations'] }
+    activeScreenshot.value = {
+      ...activeScreenshot.value,
+      annotations: annotations as IssueScreenshot['annotations'],
+    }
   }
 }
 
@@ -585,7 +584,11 @@ function handleAuthStateChange(state: { authenticated: boolean }) {
     <div :style="styles.header">
       <div :style="styles.headerTitle">
         <span>&#x1F4DD;</span>
-        <span>{{ props.language === 'ru' ? '\u0427\u0435\u0440\u043D\u043E\u0432\u0438\u043A\u0438 \u0437\u0430\u0434\u0430\u0447' : 'Issue Drafts' }}</span>
+        <span>{{
+          props.language === 'ru'
+            ? '\u0427\u0435\u0440\u043D\u043E\u0432\u0438\u043A\u0438 \u0437\u0430\u0434\u0430\u0447'
+            : 'Issue Drafts'
+        }}</span>
       </div>
       <div :style="styles.headerControls">
         <button
@@ -596,7 +599,11 @@ function handleAuthStateChange(state: { authenticated: boolean }) {
           @mouseenter="hoveredButton = 'ready'"
           @mouseleave="hoveredButton = null"
         >
-          {{ props.language === 'ru' ? '\u2705 \u0413\u043E\u0442\u043E\u0432\u043E \u043A \u043F\u0443\u0431\u043B\u0438\u043A\u0430\u0446\u0438\u0438' : '\u2705 Ready to publish' }}
+          {{
+            props.language === 'ru'
+              ? '\u2705 \u0413\u043E\u0442\u043E\u0432\u043E \u043A \u043F\u0443\u0431\u043B\u0438\u043A\u0430\u0446\u0438\u0438'
+              : '\u2705 Ready to publish'
+          }}
         </button>
       </div>
     </div>
@@ -606,12 +613,18 @@ function handleAuthStateChange(state: { authenticated: boolean }) {
       <!-- Template selection (when no draft) -->
       <div v-if="!draft" :style="styles.generateSection">
         <div :style="styles.generateTitle">
-          {{ props.language === 'ru' ? '\u0421\u043E\u0437\u0434\u0430\u0442\u044C \u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A' : 'Create Draft' }}
+          {{
+            props.language === 'ru'
+              ? '\u0421\u043E\u0437\u0434\u0430\u0442\u044C \u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A'
+              : 'Create Draft'
+          }}
         </div>
         <div :style="styles.generateDescription">
-          {{ props.language === 'ru'
-            ? '\u0418\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0439\u0442\u0435 \u0418\u0418 \u0434\u043B\u044F \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u044F \u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A\u0430 \u043D\u0430 \u043E\u0441\u043D\u043E\u0432\u0435 \u0434\u0438\u0430\u043B\u043E\u0433\u0430 \u0438\u043B\u0438 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0448\u0430\u0431\u043B\u043E\u043D'
-            : 'Use AI to create a draft from conversation or select a template' }}
+          {{
+            props.language === 'ru'
+              ? '\u0418\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0439\u0442\u0435 \u0418\u0418 \u0434\u043B\u044F \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u044F \u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A\u0430 \u043D\u0430 \u043E\u0441\u043D\u043E\u0432\u0435 \u0434\u0438\u0430\u043B\u043E\u0433\u0430 \u0438\u043B\u0438 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0448\u0430\u0431\u043B\u043E\u043D'
+              : 'Use AI to create a draft from conversation or select a template'
+          }}
         </div>
         <div :style="styles.generateControls">
           <select
@@ -620,13 +633,13 @@ function handleAuthStateChange(state: { authenticated: boolean }) {
             @change="handleTemplateChange"
           >
             <option value="">
-              {{ props.language === 'ru' ? '\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0448\u0430\u0431\u043B\u043E\u043D...' : 'Choose template...' }}
+              {{
+                props.language === 'ru'
+                  ? '\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0448\u0430\u0431\u043B\u043E\u043D...'
+                  : 'Choose template...'
+              }}
             </option>
-            <option
-              v-for="template in templates"
-              :key="template.id"
-              :value="template.id"
-            >
+            <option v-for="template in templates" :key="template.id" :value="template.id">
               {{ template.icon }} {{ template.name }}
             </option>
           </select>
@@ -641,10 +654,18 @@ function handleAuthStateChange(state: { authenticated: boolean }) {
           >
             <div v-if="isGenerating" :style="styles.loading">
               <div :style="styles.spinner"></div>
-              <span>{{ props.language === 'ru' ? '\u0421\u043E\u0437\u0434\u0430\u043D\u0438\u0435...' : 'Generating...' }}</span>
+              <span>{{
+                props.language === 'ru'
+                  ? '\u0421\u043E\u0437\u0434\u0430\u043D\u0438\u0435...'
+                  : 'Generating...'
+              }}</span>
             </div>
             <span v-else>
-              {{ props.language === 'ru' ? '\uD83E\uDD16 \u0421\u043E\u0437\u0434\u0430\u0442\u044C \u0438\u0437 \u0434\u0438\u0430\u043B\u043E\u0433\u0430' : '\uD83E\uDD16 Generate from conversation' }}
+              {{
+                props.language === 'ru'
+                  ? '\uD83E\uDD16 \u0421\u043E\u0437\u0434\u0430\u0442\u044C \u0438\u0437 \u0434\u0438\u0430\u043B\u043E\u0433\u0430'
+                  : '\uD83E\uDD16 Generate from conversation'
+              }}
             </span>
           </button>
         </div>
@@ -654,7 +675,11 @@ function handleAuthStateChange(state: { authenticated: boolean }) {
       <div v-if="generationInsights" :style="styles.metadataSection">
         <div :style="styles.metadataItem">
           <span :style="styles.metadataLabel">
-            {{ props.language === 'ru' ? '\u041E\u043F\u0440\u0435\u0434\u0435\u043B\u0435\u043D\u043D\u044B\u0439 \u0442\u0438\u043F:' : 'Detected type:' }}
+            {{
+              props.language === 'ru'
+                ? '\u041E\u043F\u0440\u0435\u0434\u0435\u043B\u0435\u043D\u043D\u044B\u0439 \u0442\u0438\u043F:'
+                : 'Detected type:'
+            }}
           </span>
           <span :style="styles.metadataValue">
             {{ generationInsights.detectedType }}
@@ -662,7 +687,11 @@ function handleAuthStateChange(state: { authenticated: boolean }) {
         </div>
         <div :style="styles.metadataItem">
           <span :style="styles.metadataLabel">
-            {{ props.language === 'ru' ? '\u041F\u0440\u0438\u043E\u0440\u0438\u0442\u0435\u0442:' : 'Priority:' }}
+            {{
+              props.language === 'ru'
+                ? '\u041F\u0440\u0438\u043E\u0440\u0438\u0442\u0435\u0442:'
+                : 'Priority:'
+            }}
           </span>
           <span :style="styles.metadataValue">
             {{ generationInsights.detectedPriority }}
@@ -670,7 +699,11 @@ function handleAuthStateChange(state: { authenticated: boolean }) {
         </div>
         <div v-if="generationInsights.keyPhrases.length > 0" :style="styles.metadataItem">
           <span :style="styles.metadataLabel">
-            {{ props.language === 'ru' ? '\u041A\u043B\u044E\u0447\u0435\u0432\u044B\u0435 \u0444\u0440\u0430\u0437\u044B:' : 'Key phrases:' }}
+            {{
+              props.language === 'ru'
+                ? '\u041A\u043B\u044E\u0447\u0435\u0432\u044B\u0435 \u0444\u0440\u0430\u0437\u044B:'
+                : 'Key phrases:'
+            }}
           </span>
           <span :style="styles.metadataValue">
             {{ generationInsights.keyPhrases.slice(0, 3).join(', ') }}
@@ -678,10 +711,15 @@ function handleAuthStateChange(state: { authenticated: boolean }) {
         </div>
         <div v-if="generationInsights.requirements.length > 0" :style="styles.metadataItem">
           <span :style="styles.metadataLabel">
-            {{ props.language === 'ru' ? '\u0422\u0440\u0435\u0431\u043E\u0432\u0430\u043D\u0438\u044F:' : 'Requirements:' }}
+            {{
+              props.language === 'ru'
+                ? '\u0422\u0440\u0435\u0431\u043E\u0432\u0430\u043D\u0438\u044F:'
+                : 'Requirements:'
+            }}
           </span>
           <span :style="styles.metadataValue">
-            {{ generationInsights.requirements.length }} {{ props.language === 'ru' ? '\u043D\u0430\u0439\u0434\u0435\u043D\u043E' : 'found' }}
+            {{ generationInsights.requirements.length }}
+            {{ props.language === 'ru' ? '\u043D\u0430\u0439\u0434\u0435\u043D\u043E' : 'found' }}
           </span>
         </div>
       </div>
@@ -690,12 +728,20 @@ function handleAuthStateChange(state: { authenticated: boolean }) {
       <div v-if="draft" :style="styles.draftEditor">
         <!-- Title -->
         <div :style="styles.formGroup">
-          <label :style="styles.formLabel">{{ props.language === 'ru' ? '\u0417\u0430\u0433\u043E\u043B\u043E\u0432\u043E\u043A' : 'Title' }}</label>
+          <label :style="styles.formLabel">{{
+            props.language === 'ru'
+              ? '\u0417\u0430\u0433\u043E\u043B\u043E\u0432\u043E\u043A'
+              : 'Title'
+          }}</label>
           <input
             type="text"
             :style="styles.formInput"
             :value="draft.title"
-            :placeholder="props.language === 'ru' ? '\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u0437\u0430\u0433\u043E\u043B\u043E\u0432\u043E\u043A \u0437\u0430\u0434\u0430\u0447\u0438...' : 'Enter issue title...'"
+            :placeholder="
+              props.language === 'ru'
+                ? '\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u0437\u0430\u0433\u043E\u043B\u043E\u0432\u043E\u043A \u0437\u0430\u0434\u0430\u0447\u0438...'
+                : 'Enter issue title...'
+            "
             @input="handleDraftChange('title', ($event.target as HTMLInputElement).value)"
           />
         </div>
@@ -703,43 +749,122 @@ function handleAuthStateChange(state: { authenticated: boolean }) {
         <!-- Type and Priority -->
         <div :style="styles.formRow">
           <div :style="{ ...styles.formGroup, ...styles.formRowHalf }">
-            <label :style="styles.formLabel">{{ props.language === 'ru' ? '\u0422\u0438\u043F' : 'Type' }}</label>
+            <label :style="styles.formLabel">{{
+              props.language === 'ru' ? '\u0422\u0438\u043F' : 'Type'
+            }}</label>
             <select
               :style="styles.formSelect"
               :value="draft.type"
-              @change="handleDraftChange('type', ($event.target as HTMLSelectElement).value as IssueType)"
+              @change="
+                handleDraftChange('type', ($event.target as HTMLSelectElement).value as IssueType)
+              "
             >
-              <option value="bug">{{ props.language === 'ru' ? '\uD83D\uDC1B \u0411\u0430\u0433' : '\uD83D\uDC1B Bug' }}</option>
-              <option value="feature">{{ props.language === 'ru' ? '\uD83D\uDE80 \u0424\u0438\u0447\u0430' : '\uD83D\uDE80 Feature' }}</option>
-              <option value="improvement">{{ props.language === 'ru' ? '\u2728 \u0423\u043B\u0443\u0447\u0448\u0435\u043D\u0438\u0435' : '\u2728 Improvement' }}</option>
-              <option value="documentation">{{ props.language === 'ru' ? '\uD83D\uDCDA \u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430\u0446\u0438\u044F' : '\uD83D\uDCDA Documentation' }}</option>
-              <option value="question">{{ props.language === 'ru' ? '\u2753 \u0412\u043E\u043F\u0440\u043E\u0441' : '\u2753 Question' }}</option>
-              <option value="maintenance">{{ props.language === 'ru' ? '\uD83D\uDD27 \u041F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0430' : '\uD83D\uDD27 Maintenance' }}</option>
+              <option value="bug">
+                {{
+                  props.language === 'ru' ? '\uD83D\uDC1B \u0411\u0430\u0433' : '\uD83D\uDC1B Bug'
+                }}
+              </option>
+              <option value="feature">
+                {{
+                  props.language === 'ru'
+                    ? '\uD83D\uDE80 \u0424\u0438\u0447\u0430'
+                    : '\uD83D\uDE80 Feature'
+                }}
+              </option>
+              <option value="improvement">
+                {{
+                  props.language === 'ru'
+                    ? '\u2728 \u0423\u043B\u0443\u0447\u0448\u0435\u043D\u0438\u0435'
+                    : '\u2728 Improvement'
+                }}
+              </option>
+              <option value="documentation">
+                {{
+                  props.language === 'ru'
+                    ? '\uD83D\uDCDA \u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430\u0446\u0438\u044F'
+                    : '\uD83D\uDCDA Documentation'
+                }}
+              </option>
+              <option value="question">
+                {{
+                  props.language === 'ru'
+                    ? '\u2753 \u0412\u043E\u043F\u0440\u043E\u0441'
+                    : '\u2753 Question'
+                }}
+              </option>
+              <option value="maintenance">
+                {{
+                  props.language === 'ru'
+                    ? '\uD83D\uDD27 \u041F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0430'
+                    : '\uD83D\uDD27 Maintenance'
+                }}
+              </option>
             </select>
           </div>
 
           <div :style="{ ...styles.formGroup, ...styles.formRowHalf }">
-            <label :style="styles.formLabel">{{ props.language === 'ru' ? '\u041F\u0440\u0438\u043E\u0440\u0438\u0442\u0435\u0442' : 'Priority' }}</label>
+            <label :style="styles.formLabel">{{
+              props.language === 'ru'
+                ? '\u041F\u0440\u0438\u043E\u0440\u0438\u0442\u0435\u0442'
+                : 'Priority'
+            }}</label>
             <select
               :style="styles.formSelect"
               :value="draft.priority"
-              @change="handleDraftChange('priority', ($event.target as HTMLSelectElement).value as IssuePriority)"
+              @change="
+                handleDraftChange(
+                  'priority',
+                  ($event.target as HTMLSelectElement).value as IssuePriority
+                )
+              "
             >
-              <option value="low">{{ props.language === 'ru' ? '\uD83D\uDFE2 \u041D\u0438\u0437\u043A\u0438\u0439' : '\uD83D\uDFE2 Low' }}</option>
-              <option value="medium">{{ props.language === 'ru' ? '\uD83D\uDFE1 \u0421\u0440\u0435\u0434\u043D\u0438\u0439' : '\uD83D\uDFE1 Medium' }}</option>
-              <option value="high">{{ props.language === 'ru' ? '\uD83D\uDFE0 \u0412\u044B\u0441\u043E\u043A\u0438\u0439' : '\uD83D\uDFE0 High' }}</option>
-              <option value="critical">{{ props.language === 'ru' ? '\uD83D\uDD34 \u041A\u0440\u0438\u0442\u0438\u0447\u0435\u0441\u043A\u0438\u0439' : '\uD83D\uDD34 Critical' }}</option>
+              <option value="low">
+                {{
+                  props.language === 'ru'
+                    ? '\uD83D\uDFE2 \u041D\u0438\u0437\u043A\u0438\u0439'
+                    : '\uD83D\uDFE2 Low'
+                }}
+              </option>
+              <option value="medium">
+                {{
+                  props.language === 'ru'
+                    ? '\uD83D\uDFE1 \u0421\u0440\u0435\u0434\u043D\u0438\u0439'
+                    : '\uD83D\uDFE1 Medium'
+                }}
+              </option>
+              <option value="high">
+                {{
+                  props.language === 'ru'
+                    ? '\uD83D\uDFE0 \u0412\u044B\u0441\u043E\u043A\u0438\u0439'
+                    : '\uD83D\uDFE0 High'
+                }}
+              </option>
+              <option value="critical">
+                {{
+                  props.language === 'ru'
+                    ? '\uD83D\uDD34 \u041A\u0440\u0438\u0442\u0438\u0447\u0435\u0441\u043A\u0438\u0439'
+                    : '\uD83D\uDD34 Critical'
+                }}
+              </option>
             </select>
           </div>
         </div>
 
         <!-- Description -->
         <div :style="styles.formGroup">
-          <label :style="styles.formLabel">{{ props.language === 'ru' ? '\u041E\u043F\u0438\u0441\u0430\u043D\u0438\u0435' : 'Description' }}</label>
+          <label :style="styles.formLabel">{{
+            props.language === 'ru'
+              ? '\u041E\u043F\u0438\u0441\u0430\u043D\u0438\u0435'
+              : 'Description'
+          }}</label>
           <textarea
             :style="styles.formTextarea"
             :value="draft.body"
-            :placeholder="props.language === 'ru' ? '\u041F\u043E\u0434\u0440\u043E\u0431\u043D\u043E\u0435 \u043E\u043F\u0438\u0441\u0430\u043D\u0438\u0435 \u0437\u0430\u0434\u0430\u0447\u0438...' : 'Detailed issue description...'"
+            :placeholder="
+              props.language === 'ru'
+                ? '\u041F\u043E\u0434\u0440\u043E\u0431\u043D\u043E\u0435 \u043E\u043F\u0438\u0441\u0430\u043D\u0438\u0435 \u0437\u0430\u0434\u0430\u0447\u0438...'
+                : 'Detailed issue description...'
+            "
             @input="handleDraftChange('body', ($event.target as HTMLTextAreaElement).value)"
           />
         </div>
@@ -748,7 +873,11 @@ function handleAuthStateChange(state: { authenticated: boolean }) {
         <div v-if="showAdvancedOptions" :style="styles.metadataSection">
           <div :style="styles.metadataItem">
             <span :style="styles.metadataLabel">
-              {{ props.language === 'ru' ? '\u041A\u043E\u043D\u0444\u0438\u0434\u0435\u043D\u0446\u0438\u0430\u043B\u044C\u043D\u043E\u0441\u0442\u044C:' : 'Confidence:' }}
+              {{
+                props.language === 'ru'
+                  ? '\u041A\u043E\u043D\u0444\u0438\u0434\u0435\u043D\u0446\u0438\u0430\u043B\u044C\u043D\u043E\u0441\u0442\u044C:'
+                  : 'Confidence:'
+              }}
             </span>
             <span :style="styles.metadataValue">
               {{ draft.confidence ? `${Math.round((draft.confidence || 0) * 100)}%` : 'N/A' }}
@@ -768,7 +897,11 @@ function handleAuthStateChange(state: { authenticated: boolean }) {
             :style="styles.metadataItem"
           >
             <span :style="styles.metadataLabel">
-              {{ props.language === 'ru' ? '\u0421\u0432\u044F\u0437\u0430\u043D\u043D\u044B\u0435 \u043A\u043E\u043C\u043F\u043E\u043D\u0435\u043D\u0442\u044B:' : 'Related components:' }}
+              {{
+                props.language === 'ru'
+                  ? '\u0421\u0432\u044F\u0437\u0430\u043D\u043D\u044B\u0435 \u043A\u043E\u043C\u043F\u043E\u043D\u0435\u043D\u0442\u044B:'
+                  : 'Related components:'
+              }}
             </span>
             <span :style="styles.metadataValue">{{ draft.relatedComponents.join(', ') }}</span>
           </div>
@@ -777,7 +910,11 @@ function handleAuthStateChange(state: { authenticated: boolean }) {
         <!-- Validation warnings -->
         <div v-if="validation.warnings.length > 0" :style="styles.warningsSection">
           <div :style="styles.warningTitle">
-            {{ props.language === 'ru' ? '\u26A0\uFE0F \u0420\u0435\u043A\u043E\u043C\u0435\u043D\u0434\u0430\u0446\u0438\u0438' : '\u26A0\uFE0F Recommendations' }}
+            {{
+              props.language === 'ru'
+                ? '\u26A0\uFE0F \u0420\u0435\u043A\u043E\u043C\u0435\u043D\u0434\u0430\u0446\u0438\u0438'
+                : '\u26A0\uFE0F Recommendations'
+            }}
           </div>
           <ul :style="styles.warningList">
             <li v-for="(warning, index) in validation.warnings" :key="index">{{ warning }}</li>
@@ -787,7 +924,11 @@ function handleAuthStateChange(state: { authenticated: boolean }) {
         <!-- Validation errors -->
         <div v-if="validation.errors.length > 0" :style="styles.warningsSection">
           <div :style="styles.warningTitle">
-            {{ props.language === 'ru' ? '\u274C \u041E\u0448\u0438\u0431\u043A\u0438' : '\u274C Errors' }}
+            {{
+              props.language === 'ru'
+                ? '\u274C \u041E\u0448\u0438\u0431\u043A\u0438'
+                : '\u274C Errors'
+            }}
           </div>
           <ul :style="styles.warningList">
             <li v-for="(error, index) in validation.errors" :key="index">{{ error }}</li>
@@ -797,7 +938,13 @@ function handleAuthStateChange(state: { authenticated: boolean }) {
 
       <!-- Preview -->
       <div v-if="draft" :style="styles.previewSection">
-        <div :style="styles.previewTitle">{{ props.language === 'ru' ? '\u041F\u0440\u0435\u0434\u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440' : 'Preview' }}</div>
+        <div :style="styles.previewTitle">
+          {{
+            props.language === 'ru'
+              ? '\u041F\u0440\u0435\u0434\u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440'
+              : 'Preview'
+          }}
+        </div>
         <div :style="styles.previewContent">
           **{{ draft.title }}**
           {{ draft.body }}
@@ -824,7 +971,11 @@ function handleAuthStateChange(state: { authenticated: boolean }) {
           }"
         >
           <span>
-            {{ props.language === 'ru' ? '\uD83D\uDCF8 \u0421\u043A\u0440\u0438\u043D\u0448\u043E\u0442\u044B' : '\uD83D\uDCF8 Screenshots' }}{{ screenshots.length > 0 ? ` (${screenshots.length})` : '' }}
+            {{
+              props.language === 'ru'
+                ? '\uD83D\uDCF8 \u0421\u043A\u0440\u0438\u043D\u0448\u043E\u0442\u044B'
+                : '\uD83D\uDCF8 Screenshots'
+            }}{{ screenshots.length > 0 ? ` (${screenshots.length})` : '' }}
           </span>
           <button
             type="button"
@@ -837,9 +988,15 @@ function handleAuthStateChange(state: { authenticated: boolean }) {
             data-testid="capture-screenshot-button"
             @click="handleCaptureScreenshot"
           >
-            {{ isCapturing
-              ? (props.language === 'ru' ? '\u23F3 \u0417\u0430\u0445\u0432\u0430\u0442...' : '\u23F3 Capturing...')
-              : (props.language === 'ru' ? '\uD83D\uDCF7 \u0421\u0434\u0435\u043B\u0430\u0442\u044C \u0441\u043A\u0440\u0438\u043D\u0448\u043E\u0442' : '\uD83D\uDCF7 Capture screenshot') }}
+            {{
+              isCapturing
+                ? props.language === 'ru'
+                  ? '\u23F3 \u0417\u0430\u0445\u0432\u0430\u0442...'
+                  : '\u23F3 Capturing...'
+                : props.language === 'ru'
+                  ? '\uD83D\uDCF7 \u0421\u0434\u0435\u043B\u0430\u0442\u044C \u0441\u043A\u0440\u0438\u043D\u0448\u043E\u0442'
+                  : '\uD83D\uDCF7 Capture screenshot'
+            }}
           </button>
         </div>
         <div
@@ -970,7 +1127,10 @@ function handleAuthStateChange(state: { authenticated: boolean }) {
         />
 
         <!-- Publish Button -->
-        <div v-if="isGithubAuthenticated && props.githubOwner && props.githubRepo" :style="{ marginTop: '8px' }">
+        <div
+          v-if="isGithubAuthenticated && props.githubOwner && props.githubRepo"
+          :style="{ marginTop: '8px' }"
+        >
           <div
             v-if="publishResult?.success"
             :style="{
@@ -982,9 +1142,11 @@ function handleAuthStateChange(state: { authenticated: boolean }) {
             }"
           >
             <span :style="{ color: '#86efac' }">
-              {{ props.language === 'ru'
-                ? `\u2705 Issue #${publishResult.number} \u0441\u043E\u0437\u0434\u0430\u043D!`
-                : `\u2705 Issue #${publishResult.number} created!` }}
+              {{
+                props.language === 'ru'
+                  ? `\u2705 Issue #${publishResult.number} \u0441\u043E\u0437\u0434\u0430\u043D!`
+                  : `\u2705 Issue #${publishResult.number} created!`
+              }}
             </span>
             <br />
             <a
@@ -1013,9 +1175,15 @@ function handleAuthStateChange(state: { authenticated: boolean }) {
               data-testid="publish-github-button"
               @click="handlePublishToGitHub"
             >
-              {{ isPublishing
-                ? (props.language === 'ru' ? '\u23F3 \u041F\u0443\u0431\u043B\u0438\u043A\u0430\u0446\u0438\u044F...' : '\u23F3 Publishing...')
-                : (props.language === 'ru' ? '\uD83D\uDE80 \u041E\u043F\u0443\u0431\u043B\u0438\u043A\u043E\u0432\u0430\u0442\u044C \u043D\u0430 GitHub' : '\uD83D\uDE80 Publish to GitHub') }}
+              {{
+                isPublishing
+                  ? props.language === 'ru'
+                    ? '\u23F3 \u041F\u0443\u0431\u043B\u0438\u043A\u0430\u0446\u0438\u044F...'
+                    : '\u23F3 Publishing...'
+                  : props.language === 'ru'
+                    ? '\uD83D\uDE80 \u041E\u043F\u0443\u0431\u043B\u0438\u043A\u043E\u0432\u0430\u0442\u044C \u043D\u0430 GitHub'
+                    : '\uD83D\uDE80 Publish to GitHub'
+              }}
             </button>
           </template>
           <div

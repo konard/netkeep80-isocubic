@@ -210,9 +210,7 @@ describe('ExtendedSearchPanel Vue Component', () => {
         { text: 'Card', category: 'component' },
       ]
 
-      const filtered = suggestions.filter((s) =>
-        s.text.toLowerCase().startsWith('b')
-      )
+      const filtered = suggestions.filter((s) => s.text.toLowerCase().startsWith('b'))
       expect(filtered.length).toBe(2)
       expect(filtered.map((s) => s.text)).toContain('Button')
       expect(filtered.map((s) => s.text)).toContain('Badge')
@@ -252,9 +250,7 @@ describe('ExtendedSearchPanel Vue Component', () => {
     it('should display header with title', () => {
       const wrapper = mountPanel()
       const text = wrapper.text()
-      expect(
-        text.includes('Расширенный поиск') || text.includes('Extended Search')
-      ).toBe(true)
+      expect(text.includes('Расширенный поиск') || text.includes('Extended Search')).toBe(true)
     })
 
     it('should display search button', () => {
@@ -375,9 +371,7 @@ describe('ExtendedSearchPanel Vue Component', () => {
       await nextTick()
 
       const text = wrapper.text()
-      expect(
-        text.includes('не найдены') || text.includes('No components found')
-      ).toBe(true)
+      expect(text.includes('не найдены') || text.includes('No components found')).toBe(true)
     })
   })
 

@@ -238,9 +238,7 @@ describe('Gallery Vue Component — Category Filtering', () => {
     await stoneButton.trigger('click')
 
     // Then select All
-    const allButton = wrapper
-      .findAll('.gallery__category-btn')
-      .find((btn) => btn.text() === 'All')!
+    const allButton = wrapper.findAll('.gallery__category-btn').find((btn) => btn.text() === 'All')!
     await allButton.trigger('click')
 
     expect(allButton.classes()).toContain('gallery__category-btn--active')

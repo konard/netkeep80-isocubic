@@ -281,9 +281,9 @@ describe('ExportPanel Vue Component — Saved Configs List', () => {
     const wrapper = shallowMount(ExportPanel, {
       props: { currentCube: null },
     })
-    const loadButtons = wrapper.findAll('.export-panel__saved-actions button').filter((btn) =>
-      btn.text().includes('Load')
-    )
+    const loadButtons = wrapper
+      .findAll('.export-panel__saved-actions button')
+      .filter((btn) => btn.text().includes('Load'))
     expect(loadButtons.length).toBeGreaterThan(0)
   })
 
@@ -291,9 +291,9 @@ describe('ExportPanel Vue Component — Saved Configs List', () => {
     const wrapper = shallowMount(ExportPanel, {
       props: { currentCube: null },
     })
-    const deleteButtons = wrapper.findAll('.export-panel__saved-actions button').filter((btn) =>
-      btn.text().includes('Delete')
-    )
+    const deleteButtons = wrapper
+      .findAll('.export-panel__saved-actions button')
+      .filter((btn) => btn.text().includes('Delete'))
     expect(deleteButtons.length).toBeGreaterThan(0)
   })
 
@@ -302,9 +302,9 @@ describe('ExportPanel Vue Component — Saved Configs List', () => {
       props: { currentCube: null },
     })
 
-    const loadButtons = wrapper.findAll('.export-panel__saved-actions button').filter((btn) =>
-      btn.text() === 'Load'
-    )
+    const loadButtons = wrapper
+      .findAll('.export-panel__saved-actions button')
+      .filter((btn) => btn.text() === 'Load')
     await loadButtons[0].trigger('click')
 
     expect(wrapper.emitted('cubeLoad')).toBeTruthy()
@@ -321,9 +321,9 @@ describe('ExportPanel Vue Component — Saved Configs List', () => {
     // Initially should show the config
     expect(wrapper.text()).toContain('Test Cube')
 
-    const deleteButtons = wrapper.findAll('.export-panel__saved-actions button').filter((btn) =>
-      btn.text() === 'Delete'
-    )
+    const deleteButtons = wrapper
+      .findAll('.export-panel__saved-actions button')
+      .filter((btn) => btn.text() === 'Delete')
     await deleteButtons[0].trigger('click')
 
     // Config should be removed
@@ -338,9 +338,9 @@ describe('ExportPanel Vue Component — Saved Configs List', () => {
       props: { currentCube: null },
     })
 
-    const loadButtons = wrapper.findAll('.export-panel__saved-actions button').filter((btn) =>
-      btn.text() === 'Load'
-    )
+    const loadButtons = wrapper
+      .findAll('.export-panel__saved-actions button')
+      .filter((btn) => btn.text() === 'Load')
     await loadButtons[0].trigger('click')
 
     const statusEl = wrapper.find('[role="status"]')
@@ -356,9 +356,9 @@ describe('ExportPanel Vue Component — Saved Configs List', () => {
       props: { currentCube: null },
     })
 
-    const deleteButtons = wrapper.findAll('.export-panel__saved-actions button').filter((btn) =>
-      btn.text() === 'Delete'
-    )
+    const deleteButtons = wrapper
+      .findAll('.export-panel__saved-actions button')
+      .filter((btn) => btn.text() === 'Delete')
     await deleteButtons[0].trigger('click')
 
     const statusEl = wrapper.find('[role="status"]')

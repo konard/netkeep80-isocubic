@@ -344,8 +344,14 @@ describe('CubeGrid Vue Component — Boundary Stitching', () => {
 
     const gridPositions = cubes.map((cube) => cube.attributes('data-grid-position'))
     const expectedPositions = [
-      '0,0,0', '0,0,1', '0,1,0', '0,1,1',
-      '1,0,0', '1,0,1', '1,1,0', '1,1,1',
+      '0,0,0',
+      '0,0,1',
+      '0,1,0',
+      '0,1,1',
+      '1,0,0',
+      '1,0,1',
+      '1,1,0',
+      '1,1,1',
     ]
     expectedPositions.forEach((pos) => {
       expect(gridPositions).toContain(pos)
