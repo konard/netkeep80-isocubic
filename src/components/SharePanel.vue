@@ -203,21 +203,27 @@ let copiedTimer: ReturnType<typeof setTimeout> | null = null
 watch(createError, (msg) => {
   if (errorTimer) clearTimeout(errorTimer)
   if (msg) {
-    errorTimer = setTimeout(() => { createError.value = null }, 5000)
+    errorTimer = setTimeout(() => {
+      createError.value = null
+    }, 5000)
   }
 })
 
 watch(createSuccess, (msg) => {
   if (successTimer) clearTimeout(successTimer)
   if (msg) {
-    successTimer = setTimeout(() => { createSuccess.value = null }, 3000)
+    successTimer = setTimeout(() => {
+      createSuccess.value = null
+    }, 3000)
   }
 })
 
 watch(copiedId, (id) => {
   if (copiedTimer) clearTimeout(copiedTimer)
   if (id) {
-    copiedTimer = setTimeout(() => { copiedId.value = null }, 2000)
+    copiedTimer = setTimeout(() => {
+      copiedId.value = null
+    }, 2000)
   }
 })
 
@@ -371,11 +377,7 @@ const activeLinksCount = computed(() => userLinks.value.filter((link) => link.is
           class="share-panel__select"
           data-testid="visibility-select"
         >
-          <option
-            v-for="(info, key) in VISIBILITY_INFO"
-            :key="key"
-            :value="key"
-          >
+          <option v-for="(info, key) in VISIBILITY_INFO" :key="key" :value="key">
             {{ info.icon }} {{ info.label }}
           </option>
         </select>
@@ -386,9 +388,9 @@ const activeLinksCount = computed(() => userLinks.value.filter((link) => link.is
       <div v-if="visibility === 'protected'" class="share-panel__field">
         <label class="share-panel__label" for="password">Password</label>
         <input
-          type="password"
           id="password"
           v-model="password"
+          type="password"
           placeholder="Enter password for protected link"
           class="share-panel__input"
           data-testid="password-input"
@@ -419,10 +421,10 @@ const activeLinksCount = computed(() => userLinks.value.filter((link) => link.is
       <!-- Create Button -->
       <button
         type="button"
-        @click="handleCreateLink"
         :disabled="!currentCube || isCreating || (visibility === 'protected' && !password)"
         class="share-panel__button share-panel__button--primary"
         data-testid="create-link-button"
+        @click="handleCreateLink"
       >
         {{ isCreating ? 'Creating...' : 'Create Share Link' }}
       </button>
@@ -431,7 +433,11 @@ const activeLinksCount = computed(() => userLinks.value.filter((link) => link.is
       <div v-if="createError" class="share-panel__message share-panel__message--error" role="alert">
         {{ createError }}
       </div>
-      <div v-if="createSuccess" class="share-panel__message share-panel__message--success" role="status">
+      <div
+        v-if="createSuccess"
+        class="share-panel__message share-panel__message--success"
+        role="status"
+      >
         {{ createSuccess }}
       </div>
     </div>
@@ -451,9 +457,9 @@ const activeLinksCount = computed(() => userLinks.value.filter((link) => link.is
         />
         <button
           type="button"
-          @click="handleCopyLink(createdLink!)"
           class="share-panel__button share-panel__button--copy"
           data-testid="copy-link-button"
+          @click="handleCopyLink(createdLink!)"
         >
           {{ copiedId === createdLink.id ? 'Copied!' : 'Copy' }}
         </button>
@@ -464,9 +470,9 @@ const activeLinksCount = computed(() => userLinks.value.filter((link) => link.is
         <div class="share-panel__qr-image" v-html="qrCodeSvg" />
         <button
           type="button"
-          @click="handleDownloadQR"
           class="share-panel__button share-panel__button--secondary"
           data-testid="download-qr-button"
+          @click="handleDownloadQR"
         >
           Download QR Code
         </button>
@@ -506,7 +512,10 @@ const activeLinksCount = computed(() => userLinks.value.filter((link) => link.is
         <li
           v-for="link in userLinks"
           :key="link.id"
-          :class="['share-panel__link-item', { 'share-panel__link-item--inactive': !link.isActive }]"
+          :class="[
+            'share-panel__link-item',
+            { 'share-panel__link-item--inactive': !link.isActive },
+          ]"
           :data-testid="`share-link-item-${link.id}`"
         >
           <div class="share-panel__link-header">
@@ -526,34 +535,34 @@ const activeLinksCount = computed(() => userLinks.value.filter((link) => link.is
           <div class="share-panel__link-actions">
             <button
               type="button"
-              @click="handleCopyLink(link)"
               class="share-panel__button share-panel__button--small"
               title="Copy link"
+              @click="handleCopyLink(link)"
             >
               {{ copiedId === link.id ? 'Copied!' : 'Copy' }}
             </button>
             <button
               type="button"
-              @click="handleGenerateQR(link)"
               class="share-panel__button share-panel__button--small"
               title="Show QR code"
               :disabled="isGeneratingQR && selectedLinkId === link.id"
+              @click="handleGenerateQR(link)"
             >
               QR
             </button>
             <button
               type="button"
-              @click="handleToggleActive(link)"
               class="share-panel__button share-panel__button--small"
               :title="link.isActive ? 'Deactivate link' : 'Activate link'"
+              @click="handleToggleActive(link)"
             >
               {{ link.isActive ? 'Disable' : 'Enable' }}
             </button>
             <button
               type="button"
-              @click="handleDeleteLink(link.id)"
               class="share-panel__button share-panel__button--small share-panel__button--danger"
               title="Delete link"
+              @click="handleDeleteLink(link.id)"
             >
               Delete
             </button>

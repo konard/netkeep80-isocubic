@@ -125,7 +125,7 @@ interface NotificationPanelProps {
   className?: string
 }
 
-const props = withDefaults(defineProps<NotificationPanelProps>(), {
+withDefaults(defineProps<NotificationPanelProps>(), {
   className: '',
 })
 
@@ -253,16 +253,12 @@ function handleNotificationKeyDown(e: KeyboardEvent, notification: Notification)
 
       <div class="notification-panel__controls">
         <select
-          class="notification-panel__filter"
           v-model="filterType"
+          class="notification-panel__filter"
           aria-label="Filter notifications"
         >
           <option value="all">All Types</option>
-          <option
-            v-for="(info, type) in NOTIFICATION_TYPE_INFO"
-            :key="type"
-            :value="type"
-          >
+          <option v-for="(info, type) in NOTIFICATION_TYPE_INFO" :key="type" :value="type">
             {{ info.icon }} {{ info.label }}
           </option>
         </select>
@@ -271,8 +267,8 @@ function handleNotificationKeyDown(e: KeyboardEvent, notification: Notification)
           v-if="unreadCount > 0"
           type="button"
           class="notification-panel__mark-all-btn"
-          @click="handleMarkAllRead"
           aria-label="Mark all as read"
+          @click="handleMarkAllRead"
         >
           Mark all read
         </button>
@@ -293,20 +289,25 @@ function handleNotificationKeyDown(e: KeyboardEvent, notification: Notification)
     <!-- Notifications list -->
     <div v-if="!isLoading" class="notification-panel__list">
       <div v-if="filteredNotifications.length === 0" class="notification-panel__empty">
-        {{ filterType === 'all'
-          ? 'No notifications yet'
-          : `No ${NOTIFICATION_TYPE_INFO[filterType as NotificationType]?.label || ''} notifications` }}
+        {{
+          filterType === 'all'
+            ? 'No notifications yet'
+            : `No ${NOTIFICATION_TYPE_INFO[filterType as NotificationType]?.label || ''} notifications`
+        }}
       </div>
       <div
-        v-else
         v-for="notification in filteredNotifications"
+        v-else
         :key="notification.id"
-        :class="['notification-panel__item', { 'notification-panel__item--unread': !notification.isRead }]"
-        @click="handleClick(notification)"
-        @keydown="handleNotificationKeyDown($event, notification)"
+        :class="[
+          'notification-panel__item',
+          { 'notification-panel__item--unread': !notification.isRead },
+        ]"
         role="button"
         :tabindex="0"
         :aria-label="`${notification.title}: ${notification.message}`"
+        @click="handleClick(notification)"
+        @keydown="handleNotificationKeyDown($event, notification)"
       >
         <div
           class="notification-panel__icon"
@@ -333,18 +334,18 @@ function handleNotificationKeyDown(e: KeyboardEvent, notification: Notification)
             v-if="!notification.isRead"
             type="button"
             class="notification-panel__action-btn"
-            @click.stop="handleMarkRead(notification.id)"
             aria-label="Mark as read"
             title="Mark as read"
+            @click.stop="handleMarkRead(notification.id)"
           >
             \u2713
           </button>
           <button
             type="button"
             class="notification-panel__action-btn notification-panel__action-btn--danger"
-            @click.stop="handleDelete(notification.id)"
             aria-label="Delete notification"
             title="Delete"
+            @click.stop="handleDelete(notification.id)"
           >
             ×
           </button>

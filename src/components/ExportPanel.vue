@@ -204,14 +204,18 @@ let successTimer: ReturnType<typeof setTimeout> | null = null
 watch(importError, (msg) => {
   if (errorTimer) clearTimeout(errorTimer)
   if (msg) {
-    errorTimer = setTimeout(() => { importError.value = null }, 5000)
+    errorTimer = setTimeout(() => {
+      importError.value = null
+    }, 5000)
   }
 })
 
 watch(importSuccess, (msg) => {
   if (successTimer) clearTimeout(successTimer)
   if (msg) {
-    successTimer = setTimeout(() => { importSuccess.value = null }, 3000)
+    successTimer = setTimeout(() => {
+      importSuccess.value = null
+    }, 3000)
   }
 })
 
@@ -296,21 +300,21 @@ function formatDate(isoDate: string): string {
     <div class="export-panel__history">
       <button
         type="button"
-        @click="handleUndo"
         :disabled="!undoAvailable"
         class="export-panel__button export-panel__button--history"
         title="Undo (Ctrl+Z)"
         aria-label="Undo"
+        @click="handleUndo"
       >
         Undo
       </button>
       <button
         type="button"
-        @click="handleRedo"
         :disabled="!redoAvailable"
         class="export-panel__button export-panel__button--history"
         title="Redo (Ctrl+Shift+Z)"
         aria-label="Redo"
+        @click="handleRedo"
       >
         Redo
       </button>
@@ -320,27 +324,27 @@ function formatDate(isoDate: string): string {
     <div class="export-panel__actions">
       <button
         type="button"
-        @click="handleExport"
         :disabled="!currentCube"
         class="export-panel__button export-panel__button--primary"
         title="Download JSON file"
+        @click="handleExport"
       >
         Download JSON
       </button>
       <button
         type="button"
-        @click="handleImport"
         class="export-panel__button export-panel__button--secondary"
         title="Upload JSON file"
+        @click="handleImport"
       >
         Upload JSON
       </button>
       <button
         type="button"
-        @click="handleSave"
         :disabled="!currentCube"
         class="export-panel__button export-panel__button--save"
         title="Save to browser storage"
+        @click="handleSave"
       >
         Save
       </button>
@@ -350,7 +354,11 @@ function formatDate(isoDate: string): string {
     <div v-if="importError" class="export-panel__message export-panel__message--error" role="alert">
       {{ importError }}
     </div>
-    <div v-if="importSuccess" class="export-panel__message export-panel__message--success" role="status">
+    <div
+      v-if="importSuccess"
+      class="export-panel__message export-panel__message--success"
+      role="status"
+    >
       {{ importSuccess }}
     </div>
 
@@ -358,11 +366,7 @@ function formatDate(isoDate: string): string {
     <div v-if="savedConfigs.length > 0" class="export-panel__saved">
       <h3 class="export-panel__saved-title">Saved Configurations</h3>
       <ul class="export-panel__saved-list">
-        <li
-          v-for="config in savedConfigs"
-          :key="config.cube.id"
-          class="export-panel__saved-item"
-        >
+        <li v-for="config in savedConfigs" :key="config.cube.id" class="export-panel__saved-item">
           <div class="export-panel__saved-info">
             <span class="export-panel__saved-name">
               {{ config.cube.meta?.name || config.cube.id }}
@@ -372,17 +376,17 @@ function formatDate(isoDate: string): string {
           <div class="export-panel__saved-actions">
             <button
               type="button"
-              @click="handleLoadSaved(config.cube.id)"
               class="export-panel__button export-panel__button--small"
               title="Load this configuration"
+              @click="handleLoadSaved(config.cube.id)"
             >
               Load
             </button>
             <button
               type="button"
-              @click="handleDeleteSaved(config.cube.id)"
               class="export-panel__button export-panel__button--small export-panel__button--danger"
               title="Delete this configuration"
+              @click="handleDeleteSaved(config.cube.id)"
             >
               Delete
             </button>

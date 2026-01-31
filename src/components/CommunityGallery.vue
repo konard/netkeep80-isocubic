@@ -146,7 +146,7 @@ registerComponentMeta(COMMUNITY_GALLERY_META)
 </script>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import type { SpectralCube, MaterialType } from '../types/cube'
 import type {
   PublishedCube,
@@ -200,7 +200,7 @@ interface CommunityGalleryProps {
   className?: string
 }
 
-const props = withDefaults(defineProps<CommunityGalleryProps>(), {
+withDefaults(defineProps<CommunityGalleryProps>(), {
   className: '',
 })
 
@@ -278,32 +278,33 @@ const searchParams = computed<CommunityGallerySearchParams>(() => ({
 }))
 
 // Fetch cubes when params change
-let fetchCancelled = false
-watch(searchParams, async (params) => {
-  fetchCancelled = true
-  const localCancelled = { value: false }
-  fetchCancelled = false
+watch(
+  searchParams,
+  async (params) => {
+    const localCancelled = { value: false }
 
-  isLoading.value = true
-  error.value = null
+    isLoading.value = true
+    error.value = null
 
-  try {
-    const response = await communityGalleryService.search(params)
-    if (!localCancelled.value) {
-      cubes.value = response.cubes
-      pagination.value = response.pagination
+    try {
+      const response = await communityGalleryService.search(params)
+      if (!localCancelled.value) {
+        cubes.value = response.cubes
+        pagination.value = response.pagination
+      }
+    } catch (err) {
+      if (!localCancelled.value) {
+        error.value = 'Failed to load community cubes'
+        console.error('CommunityGallery fetch error:', err)
+      }
+    } finally {
+      if (!localCancelled.value) {
+        isLoading.value = false
+      }
     }
-  } catch (err) {
-    if (!localCancelled.value) {
-      error.value = 'Failed to load community cubes'
-      console.error('CommunityGallery fetch error:', err)
-    }
-  } finally {
-    if (!localCancelled.value) {
-      isLoading.value = false
-    }
-  }
-}, { immediate: true })
+  },
+  { immediate: true }
+)
 
 // Reset page when filters change
 watch([searchQuery, selectedCategory, selectedMaterial, sortBy], () => {
@@ -388,9 +389,7 @@ const paginationPages = computed(() => {
     <!-- Header -->
     <div class="community-gallery__header">
       <h2 class="community-gallery__title">Community Gallery</h2>
-      <p class="community-gallery__subtitle">
-        Discover cubes created by the isocubic community
-      </p>
+      <p class="community-gallery__subtitle">Discover cubes created by the isocubic community</p>
     </div>
 
     <!-- Search and Filters -->
@@ -398,18 +397,18 @@ const paginationPages = computed(() => {
       <!-- Search Input -->
       <div class="community-gallery__search">
         <input
+          v-model="searchQuery"
           type="text"
           class="community-gallery__search-input"
           placeholder="Search by name, tags, author..."
-          v-model="searchQuery"
           aria-label="Search community cubes"
         />
         <button
           v-if="searchQuery"
           type="button"
           class="community-gallery__search-clear"
-          @click="searchQuery = ''"
           aria-label="Clear search"
+          @click="searchQuery = ''"
         >
           ×
         </button>
@@ -418,8 +417,8 @@ const paginationPages = computed(() => {
       <!-- Filter Controls -->
       <div class="community-gallery__filters">
         <select
-          class="community-gallery__select"
           v-model="selectedCategory"
+          class="community-gallery__select"
           aria-label="Filter by category"
         >
           <option v-for="cat in CATEGORIES" :key="cat.id" :value="cat.id">
@@ -428,8 +427,8 @@ const paginationPages = computed(() => {
         </select>
 
         <select
-          class="community-gallery__select"
           v-model="selectedMaterial"
+          class="community-gallery__select"
           aria-label="Filter by material"
         >
           <option v-for="mat in MATERIAL_TYPES" :key="mat.id" :value="mat.id">
@@ -437,11 +436,7 @@ const paginationPages = computed(() => {
           </option>
         </select>
 
-        <select
-          class="community-gallery__select"
-          v-model="sortBy"
-          aria-label="Sort by"
-        >
+        <select v-model="sortBy" class="community-gallery__select" aria-label="Sort by">
           <option v-for="opt in SORT_OPTIONS" :key="opt.id" :value="opt.id">
             {{ opt.label }}
           </option>
@@ -464,27 +459,35 @@ const paginationPages = computed(() => {
     <template v-if="!isLoading && !error">
       <div class="community-gallery__grid">
         <div v-if="cubes.length === 0" class="community-gallery__empty">
-          {{ searchQuery || selectedCategory !== 'all' || selectedMaterial !== 'all'
-            ? 'No cubes match your search criteria'
-            : 'No community cubes available yet' }}
+          {{
+            searchQuery || selectedCategory !== 'all' || selectedMaterial !== 'all'
+              ? 'No cubes match your search criteria'
+              : 'No community cubes available yet'
+          }}
         </div>
         <div
-          v-else
           v-for="pub in cubes"
+          v-else
           :key="pub.id"
           class="community-gallery__item"
-          @click="handleCubeSelect(pub)"
-          @keydown="handleCubeKeyDown($event, pub)"
           role="button"
           :tabindex="0"
           :aria-label="`Select ${pub.cube.meta?.name || pub.cube.id}`"
+          @click="handleCubeSelect(pub)"
+          @keydown="handleCubeKeyDown($event, pub)"
         >
           <!-- Badges -->
           <div class="community-gallery__badges">
-            <span v-if="pub.isFeatured" class="community-gallery__badge community-gallery__badge--featured">
+            <span
+              v-if="pub.isFeatured"
+              class="community-gallery__badge community-gallery__badge--featured"
+            >
               Featured
             </span>
-            <span v-if="pub.isStaffPick" class="community-gallery__badge community-gallery__badge--staff">
+            <span
+              v-if="pub.isStaffPick"
+              class="community-gallery__badge community-gallery__badge--staff"
+            >
               Staff Pick
             </span>
           </div>
@@ -499,7 +502,10 @@ const paginationPages = computed(() => {
           >
             <div
               v-if="pub.cube.noise?.type"
-              :class="['community-gallery__noise-indicator', `community-gallery__noise-indicator--${pub.cube.noise.type}`]"
+              :class="[
+                'community-gallery__noise-indicator',
+                `community-gallery__noise-indicator--${pub.cube.noise.type}`,
+              ]"
             />
           </div>
 
@@ -508,20 +514,23 @@ const paginationPages = computed(() => {
             <span class="community-gallery__item-name">
               {{ pub.cube.meta?.name || pub.cube.id }}
             </span>
-            <span class="community-gallery__item-author">
-              by {{ pub.author.displayName }}
-            </span>
+            <span class="community-gallery__item-author"> by {{ pub.author.displayName }} </span>
           </div>
 
           <!-- Stats -->
           <div class="community-gallery__item-stats">
             <button
               type="button"
-              :class="['community-gallery__like-btn', { 'community-gallery__like-btn--liked': pub.isLiked }]"
-              @click="handleLikeToggle($event, pub.id)"
+              :class="[
+                'community-gallery__like-btn',
+                { 'community-gallery__like-btn--liked': pub.isLiked },
+              ]"
               :aria-label="pub.isLiked ? 'Unlike' : 'Like'"
+              @click="handleLikeToggle($event, pub.id)"
             >
-              <span class="community-gallery__like-icon">{{ pub.isLiked ? '\u2764\uFE0F' : '\U0001F90D' }}</span>
+              <span class="community-gallery__like-icon">{{
+                pub.isLiked ? '\u2764\uFE0F' : '\U0001F90D'
+              }}</span>
               <span class="community-gallery__like-count">{{ formatCount(pub.stats.likes) }}</span>
             </button>
             <span class="community-gallery__views">
@@ -533,7 +542,10 @@ const paginationPages = computed(() => {
           </div>
 
           <!-- Tags -->
-          <div v-if="pub.cube.meta?.tags && pub.cube.meta.tags.length > 0" class="community-gallery__item-tags">
+          <div
+            v-if="pub.cube.meta?.tags && pub.cube.meta.tags.length > 0"
+            class="community-gallery__item-tags"
+          >
             <span
               v-for="tag in pub.cube.meta.tags.slice(0, 3)"
               :key="tag"
@@ -556,18 +568,24 @@ const paginationPages = computed(() => {
         <button
           type="button"
           class="community-gallery__page-btn"
-          @click="handlePageChange(currentPage - 1)"
           :disabled="!pagination?.hasPrevPage"
           aria-label="Previous page"
+          @click="handlePageChange(currentPage - 1)"
         >
           &lt;
         </button>
 
-        <template v-for="(page, index) in paginationPages" :key="typeof page === 'number' ? page : `ellipsis-${index}`">
+        <template
+          v-for="(page, index) in paginationPages"
+          :key="typeof page === 'number' ? page : `ellipsis-${index}`"
+        >
           <button
             v-if="typeof page === 'number'"
             type="button"
-            :class="['community-gallery__page-btn', { 'community-gallery__page-btn--active': page === currentPage }]"
+            :class="[
+              'community-gallery__page-btn',
+              { 'community-gallery__page-btn--active': page === currentPage },
+            ]"
             @click="handlePageChange(page)"
           >
             {{ page }}
@@ -578,9 +596,9 @@ const paginationPages = computed(() => {
         <button
           type="button"
           class="community-gallery__page-btn"
-          @click="handlePageChange(currentPage + 1)"
           :disabled="!pagination?.hasNextPage"
           aria-label="Next page"
+          @click="handlePageChange(currentPage + 1)"
         >
           &gt;
         </button>

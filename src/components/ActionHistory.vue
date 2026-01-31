@@ -140,7 +140,9 @@ let tickInterval: ReturnType<typeof setInterval> | null = null
 const tick = ref(0)
 
 onMounted(() => {
-  tickInterval = setInterval(() => { tick.value++ }, 10000)
+  tickInterval = setInterval(() => {
+    tick.value++
+  }, 10000)
 })
 
 onUnmounted(() => {
@@ -250,7 +252,10 @@ function handleUndoAction(e: Event, action: CollaborativeAction) {
         v-for="[type, label] in filterableTypes"
         :key="type"
         type="button"
-        :class="['action-history__filter', { 'action-history__filter--active': activeFilters.has(type as ActionType) }]"
+        :class="[
+          'action-history__filter',
+          { 'action-history__filter--active': activeFilters.has(type as ActionType) },
+        ]"
         @click="handleFilterToggle(type as ActionType)"
       >
         {{ label }}
@@ -282,7 +287,9 @@ function handleUndoAction(e: Event, action: CollaborativeAction) {
           />
           <span class="action-history__group-name">
             {{ groupActions[0]?.participant?.name ?? 'Unknown' }}
-            <span v-if="participantId === localParticipantId" class="action-history__local-badge">(you)</span>
+            <span v-if="participantId === localParticipantId" class="action-history__local-badge"
+              >(you)</span
+            >
           </span>
           <span class="action-history__group-count">{{ groupActions.length }} actions</span>
         </div>
@@ -309,7 +316,9 @@ function handleUndoAction(e: Event, action: CollaborativeAction) {
                 {{ getActionIcon(action.type) }}
               </span>
               <div class="action-history__content">
-                <span class="action-history__description">{{ formatActionDescription(action) }}</span>
+                <span class="action-history__description">{{
+                  formatActionDescription(action)
+                }}</span>
                 <span class="action-history__time">{{ formatRelativeTime(action.timestamp) }}</span>
               </div>
             </button>
@@ -371,7 +380,11 @@ function handleUndoAction(e: Event, action: CollaborativeAction) {
           <div class="action-history__content">
             <span class="action-history__participant">
               {{ action.participant?.name ?? 'Unknown' }}
-              <span v-if="action.participantId === localParticipantId" class="action-history__local-badge">(you)</span>
+              <span
+                v-if="action.participantId === localParticipantId"
+                class="action-history__local-badge"
+                >(you)</span
+              >
             </span>
             <span class="action-history__description">{{ formatActionDescription(action) }}</span>
             <span class="action-history__time">{{ formatRelativeTime(action.timestamp) }}</span>
@@ -408,7 +421,10 @@ function handleUndoAction(e: Event, action: CollaborativeAction) {
     </ul>
 
     <!-- No results for filter -->
-    <div v-if="displayActions.length === 0 && activeFilters.size > 0" class="action-history__no-results">
+    <div
+      v-if="displayActions.length === 0 && activeFilters.size > 0"
+      class="action-history__no-results"
+    >
       <p>No actions match the selected filters</p>
       <button type="button" class="action-history__clear-btn" @click="handleClearFilters">
         Clear filters

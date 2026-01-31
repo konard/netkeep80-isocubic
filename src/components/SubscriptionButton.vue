@@ -201,10 +201,10 @@ function formatCount(count: number): string {
       { 'subscription-button--loading': isLoading },
       className,
     ]"
-    @click="handleToggle"
     :disabled="isLoading"
     :aria-label="isSubscribed ? 'Unfollow author' : 'Follow author'"
     :aria-pressed="isSubscribed"
+    @click="handleToggle"
   >
     <span v-if="isLoading" class="subscription-button__spinner" />
     <template v-else>

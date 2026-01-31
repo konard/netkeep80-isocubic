@@ -132,7 +132,7 @@ registerComponentMeta(COMMENTS_SECTION_META)
 </script>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import type { CubeAuthor } from '../types/community'
 import type { Comment, CreateCommentRequest } from '../types/social'
 import { formatRelativeTime, MAX_COMMENT_LENGTH } from '../types/social'
@@ -214,9 +214,13 @@ async function loadComments() {
 }
 
 // Watch cubeId changes
-watch(() => props.cubeId, () => {
-  loadComments()
-}, { immediate: true })
+watch(
+  () => props.cubeId,
+  () => {
+    loadComments()
+  },
+  { immediate: true }
+)
 
 // ============================================================================
 // Handlers
@@ -338,7 +342,10 @@ async function handleDelete(commentId: string) {
       comments.value = comments.value.filter((c) => c.id !== commentId)
       const newMap = new Map(repliesByParent.value)
       newMap.forEach((replies, parentId) => {
-        newMap.set(parentId, replies.filter((r) => r.id !== commentId))
+        newMap.set(
+          parentId,
+          replies.filter((r) => r.id !== commentId)
+        )
       })
       newMap.delete(commentId)
       repliesByParent.value = newMap
@@ -400,9 +407,9 @@ function isOwnComment(comment: Comment): boolean {
         </button>
       </div>
       <textarea
+        v-model="newComment"
         class="comments-section__input"
         :placeholder="replyingTo ? 'Write a reply...' : 'Write a comment...'"
-        v-model="newComment"
         :maxlength="MAX_COMMENT_LENGTH"
         :disabled="isSubmitting"
       />
@@ -413,8 +420,8 @@ function isOwnComment(comment: Comment): boolean {
         <button
           type="button"
           class="comments-section__submit-btn"
-          @click="handleSubmitComment"
           :disabled="!newComment.trim() || isSubmitting"
+          @click="handleSubmitComment"
         >
           {{ isSubmitting ? 'Posting...' : 'Post' }}
         </button>
@@ -427,13 +434,15 @@ function isOwnComment(comment: Comment): boolean {
       <div class="comments-section__edit-content">
         <h4>Edit Comment</h4>
         <textarea
-          class="comments-section__input"
           v-model="editContent"
+          class="comments-section__input"
           :maxlength="MAX_COMMENT_LENGTH"
         />
         <div class="comments-section__edit-actions">
           <button type="button" @click="handleCancelEdit">Cancel</button>
-          <button type="button" @click="handleSaveEdit" :disabled="!editContent.trim()">Save</button>
+          <button type="button" :disabled="!editContent.trim()" @click="handleSaveEdit">
+            Save
+          </button>
         </div>
       </div>
     </div>
@@ -450,11 +459,7 @@ function isOwnComment(comment: Comment): boolean {
         No comments yet. Be the first to comment!
       </div>
       <template v-else>
-        <div
-          v-for="comment in comments"
-          :key="comment.id"
-          class="comments-section__comment"
-        >
+        <div v-for="comment in comments" :key="comment.id" class="comments-section__comment">
           <div class="comments-section__comment-header">
             <div class="comments-section__author">
               <img
@@ -479,9 +484,12 @@ function isOwnComment(comment: Comment): boolean {
           <div class="comments-section__actions">
             <button
               type="button"
-              :class="['comments-section__action-btn', { 'comments-section__action-btn--active': comment.isLiked }]"
-              @click="handleLike(comment.id)"
+              :class="[
+                'comments-section__action-btn',
+                { 'comments-section__action-btn--active': comment.isLiked },
+              ]"
               :aria-label="comment.isLiked ? 'Unlike comment' : 'Like comment'"
+              @click="handleLike(comment.id)"
             >
               {{ comment.isLiked ? '\u2764\uFE0F' : '\U0001F90D' }}
               <template v-if="comment.likes > 0"> {{ comment.likes }}</template>
@@ -491,8 +499,8 @@ function isOwnComment(comment: Comment): boolean {
               v-if="currentUser"
               type="button"
               class="comments-section__action-btn"
-              @click="handleReply(comment.id)"
               aria-label="Reply to comment"
+              @click="handleReply(comment.id)"
             >
               \uD83D\uDCAC Reply
             </button>
@@ -501,16 +509,16 @@ function isOwnComment(comment: Comment): boolean {
               <button
                 type="button"
                 class="comments-section__action-btn"
-                @click="handleEdit(comment)"
                 aria-label="Edit comment"
+                @click="handleEdit(comment)"
               >
                 \u270F\uFE0F Edit
               </button>
               <button
                 type="button"
                 class="comments-section__action-btn comments-section__action-btn--danger"
-                @click="handleDelete(comment.id)"
                 aria-label="Delete comment"
+                @click="handleDelete(comment.id)"
               >
                 \uD83D\uDDD1\uFE0F Delete
               </button>
@@ -546,9 +554,12 @@ function isOwnComment(comment: Comment): boolean {
               <div class="comments-section__actions">
                 <button
                   type="button"
-                  :class="['comments-section__action-btn', { 'comments-section__action-btn--active': reply.isLiked }]"
-                  @click="handleLike(reply.id)"
+                  :class="[
+                    'comments-section__action-btn',
+                    { 'comments-section__action-btn--active': reply.isLiked },
+                  ]"
                   :aria-label="reply.isLiked ? 'Unlike comment' : 'Like comment'"
+                  @click="handleLike(reply.id)"
                 >
                   {{ reply.isLiked ? '\u2764\uFE0F' : '\U0001F90D' }}
                   <template v-if="reply.likes > 0"> {{ reply.likes }}</template>
@@ -557,8 +568,8 @@ function isOwnComment(comment: Comment): boolean {
                   v-if="currentUser"
                   type="button"
                   class="comments-section__action-btn"
-                  @click="handleReply(comment.id)"
                   aria-label="Reply to comment"
+                  @click="handleReply(comment.id)"
                 >
                   \uD83D\uDCAC Reply
                 </button>
@@ -566,16 +577,16 @@ function isOwnComment(comment: Comment): boolean {
                   <button
                     type="button"
                     class="comments-section__action-btn"
-                    @click="handleEdit(reply)"
                     aria-label="Edit comment"
+                    @click="handleEdit(reply)"
                   >
                     \u270F\uFE0F Edit
                   </button>
                   <button
                     type="button"
                     class="comments-section__action-btn comments-section__action-btn--danger"
-                    @click="handleDelete(reply.id)"
                     aria-label="Delete comment"
+                    @click="handleDelete(reply.id)"
                   >
                     \uD83D\uDDD1\uFE0F Delete
                   </button>

@@ -224,7 +224,9 @@ let statusTimer: ReturnType<typeof setTimeout> | null = null
 watch(statusMessage, (msg) => {
   if (statusTimer) clearTimeout(statusTimer)
   if (msg) {
-    statusTimer = setTimeout(() => { statusMessage.value = null }, 3000)
+    statusTimer = setTimeout(() => {
+      statusMessage.value = null
+    }, 3000)
   }
 })
 
@@ -390,18 +392,18 @@ function handleCubeKeyDown(e: KeyboardEvent, cube: SpectralCube) {
     <!-- Search bar -->
     <div class="gallery__search">
       <input
+        v-model="searchQuery"
         type="text"
         class="gallery__search-input"
         placeholder="Search by name, tags..."
-        v-model="searchQuery"
         aria-label="Search cubes"
       />
       <button
         v-if="searchQuery"
         type="button"
         class="gallery__search-clear"
-        @click="searchQuery = ''"
         aria-label="Clear search"
+        @click="searchQuery = ''"
       >
         ×
       </button>
@@ -413,7 +415,10 @@ function handleCubeKeyDown(e: KeyboardEvent, cube: SpectralCube) {
         v-for="category in CATEGORIES"
         :key="category.id"
         type="button"
-        :class="['gallery__category-btn', { 'gallery__category-btn--active': selectedCategory === category.id }]"
+        :class="[
+          'gallery__category-btn',
+          { 'gallery__category-btn--active': selectedCategory === category.id },
+        ]"
         @click="selectedCategory = category.id"
       >
         {{ category.name }}
@@ -440,34 +445,31 @@ function handleCubeKeyDown(e: KeyboardEvent, cube: SpectralCube) {
     </div>
 
     <!-- Save to gallery button -->
-    <button
-      v-if="currentCube"
-      type="button"
-      class="gallery__save-btn"
-      @click="handleSaveToGallery"
-    >
+    <button v-if="currentCube" type="button" class="gallery__save-btn" @click="handleSaveToGallery">
       Save Current to Gallery
     </button>
 
     <!-- Cube grid -->
     <div class="gallery__grid">
       <div v-if="filteredCubes.length === 0" class="gallery__empty">
-        {{ searchQuery
-          ? 'No cubes match your search'
-          : showUserCubes
-            ? 'No saved cubes yet'
-            : 'No cubes available' }}
+        {{
+          searchQuery
+            ? 'No cubes match your search'
+            : showUserCubes
+              ? 'No saved cubes yet'
+              : 'No cubes available'
+        }}
       </div>
       <div
-        v-else
         v-for="cube in filteredCubes"
+        v-else
         :key="cube.id"
         class="gallery__item"
-        @click="handleCubeSelect(cube)"
-        @keydown="handleCubeKeyDown($event, cube)"
         role="button"
         :tabindex="0"
         :aria-label="`Select ${cube.meta?.name || cube.id}`"
+        @click="handleCubeSelect(cube)"
+        @keydown="handleCubeKeyDown($event, cube)"
       >
         <!-- Cube preview thumbnail -->
         <div
@@ -491,17 +493,10 @@ function handleCubeKeyDown(e: KeyboardEvent, cube: SpectralCube) {
 
         <!-- Tags -->
         <div v-if="cube.meta?.tags && cube.meta.tags.length > 0" class="gallery__item-tags">
-          <span
-            v-for="tag in cube.meta.tags.slice(0, 3)"
-            :key="tag"
-            class="gallery__item-tag"
-          >
+          <span v-for="tag in cube.meta.tags.slice(0, 3)" :key="tag" class="gallery__item-tag">
             {{ tag }}
           </span>
-          <span
-            v-if="cube.meta.tags.length > 3"
-            class="gallery__item-tag gallery__item-tag--more"
-          >
+          <span v-if="cube.meta.tags.length > 3" class="gallery__item-tag gallery__item-tag--more">
             +{{ cube.meta.tags.length - 3 }}
           </span>
         </div>
