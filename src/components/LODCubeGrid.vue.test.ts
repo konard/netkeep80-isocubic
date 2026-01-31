@@ -14,7 +14,7 @@ import { DEFAULT_LOD_CONFIG } from '../types/lod'
 // Mock TresJS dependencies to avoid ESM import issues in test environment
 vi.mock('@tresjs/core', () => ({
   TresCanvas: {},
-  useRenderLoop: () => ({ onLoop: () => {} }),
+  useLoop: () => ({ onBeforeRender: () => {}, onRender: () => {} }),
   useTresContext: () => ({ camera: { value: null } }),
 }))
 

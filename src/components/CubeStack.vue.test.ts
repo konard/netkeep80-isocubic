@@ -19,7 +19,7 @@ import { createDefaultCube, type SpectralCube } from '../types/cube'
 
 // Mock TresJS dependencies
 vi.mock('@tresjs/core', () => ({
-  useRenderLoop: () => ({ onLoop: vi.fn() }),
+  useLoop: () => ({ onBeforeRender: vi.fn(), onRender: vi.fn() }),
 }))
 
 // Mock ParametricCube to render a simple stub with data attributes

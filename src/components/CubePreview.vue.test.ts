@@ -17,7 +17,7 @@ vi.mock('@tresjs/core', () => ({
     template: '<div data-testid="canvas-mock"><slot /></div>',
     props: ['camera', 'antialias', 'alpha', 'powerPreference', 'dpr'],
   },
-  useRenderLoop: () => ({ onLoop: vi.fn() }),
+  useLoop: () => ({ onBeforeRender: vi.fn(), onRender: vi.fn() }),
   useTresContext: () => ({ camera: { value: null } }),
 }))
 

@@ -18,7 +18,7 @@ import metalRust from '../../examples/metal-rust.json'
 
 // Mock TresJS dependencies to avoid ESM/WebGL issues in test environment
 vi.mock('@tresjs/core', () => ({
-  useRenderLoop: () => ({ onLoop: vi.fn() }),
+  useLoop: () => ({ onBeforeRender: vi.fn(), onRender: vi.fn() }),
 }))
 
 describe('ParametricCube Vue Component — Utility Functions', () => {
