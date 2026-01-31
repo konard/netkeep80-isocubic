@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { mount, flushPromises } from '@vue/test-utils'
+import { mount, shallowMount, flushPromises } from '@vue/test-utils'
 import { defineComponent, h } from 'vue'
 import UnifiedEditor from './UnifiedEditor.vue'
 import type { SpectralCube, FFTCubeConfig } from '../types/cube'
@@ -216,6 +216,26 @@ describe('UnifiedEditor Vue Component', () => {
           LODConfigEditor: MockLODConfigEditor,
           EnergyVisualizationEditor: MockEnergyVisualizationEditor,
           FFTChannelEditor: MockFFTChannelEditor,
+        },
+      },
+    })
+  }
+
+  // Shallow mount helper for tests that trigger reactive state changes via keyboard
+  // shortcuts. Using shallowMount avoids infinite Vue patch cycles caused by
+  // Suspense + deeply nested conditional rendering in the template.
+  function shallowMountEditor(props: Record<string, unknown> = {}) {
+    return shallowMount(UnifiedEditor, {
+      props,
+      global: {
+        stubs: {
+          ParamEditor: MockParamEditor,
+          FFTParamEditor: MockFFTParamEditor,
+          StackEditor: MockStackEditor,
+          LODConfigEditor: MockLODConfigEditor,
+          EnergyVisualizationEditor: MockEnergyVisualizationEditor,
+          FFTChannelEditor: MockFFTChannelEditor,
+          Suspense: true,
         },
       },
     })
@@ -590,20 +610,28 @@ describe('UnifiedEditor Vue Component', () => {
 
   describe('Keyboard shortcuts', () => {
     it('resets on Ctrl+R', async () => {
-      const wrapper = mountEditor({ currentCube: testCube, onCubeUpdate: mockOnCubeUpdate })
+      const wrapper = shallowMountEditor({
+        currentCube: testCube,
+        onCubeUpdate: mockOnCubeUpdate,
+      })
       await flushPromises()
 
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'r', ctrlKey: true }))
+      await flushPromises()
 
       expect(mockOnCubeUpdate).toHaveBeenCalled()
       wrapper.unmount()
     })
 
     it('duplicates on Ctrl+D', async () => {
-      const wrapper = mountEditor({ currentCube: testCube, onCubeUpdate: mockOnCubeUpdate })
+      const wrapper = shallowMountEditor({
+        currentCube: testCube,
+        onCubeUpdate: mockOnCubeUpdate,
+      })
       await flushPromises()
 
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', ctrlKey: true }))
+      await flushPromises()
 
       expect(mockOnCubeUpdate).toHaveBeenCalled()
       const cube = mockOnCubeUpdate.mock.calls[0][0]
@@ -612,12 +640,16 @@ describe('UnifiedEditor Vue Component', () => {
     })
 
     it('randomizes on Ctrl+Shift+R', async () => {
-      const wrapper = mountEditor({ currentCube: testCube, onCubeUpdate: mockOnCubeUpdate })
+      const wrapper = shallowMountEditor({
+        currentCube: testCube,
+        onCubeUpdate: mockOnCubeUpdate,
+      })
       await flushPromises()
 
       window.dispatchEvent(
         new KeyboardEvent('keydown', { key: 'r', ctrlKey: true, shiftKey: true })
       )
+      await flushPromises()
 
       expect(mockOnCubeUpdate).toHaveBeenCalled()
       const cube = mockOnCubeUpdate.mock.calls[0][0]
@@ -630,10 +662,11 @@ describe('UnifiedEditor Vue Component', () => {
         toString: () => '',
       } as Selection)
 
-      const wrapper = mountEditor({ currentCube: testCube })
+      const wrapper = shallowMountEditor({ currentCube: testCube })
       await flushPromises()
 
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'c', ctrlKey: true }))
+      await flushPromises()
 
       expect(navigator.clipboard.writeText).toHaveBeenCalled()
       wrapper.unmount()
