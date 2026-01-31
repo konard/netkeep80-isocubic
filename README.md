@@ -157,6 +157,11 @@ isocubic/
 │   │   ├── SubscriptionButton.vue # Кнопка подписки (Vue SFC, TASK 64)
 │   │   ├── NotificationPanel.vue # Панель уведомлений (Vue SFC, TASK 64)
 │   │   ├── ActionHistory.vue    # История действий (Vue SFC, TASK 64)
+│   │   ├── AuthForms.vue        # Формы авторизации (Vue SFC, TASK 65)
+│   │   ├── UserProfile.vue      # Профиль пользователя и аватар (Vue SFC, TASK 65)
+│   │   ├── SessionPanel.vue     # Панель сессий коллаборации (Vue SFC, TASK 65)
+│   │   ├── CollaborativeParamEditor.vue # Совместное редактирование (Vue SFC, TASK 65)
+│   │   ├── ParticipantCursor.vue # Курсоры участников (Vue SFC, TASK 65)
 │   │   ├── DevModeQueryPanel.tsx # AI-запросы в режиме разработки
 │   │   ├── ComponentContextPanel.tsx # AI-контекст для компонентов в DevMode
 │   │   ├── ExtendedSearchPanel.tsx # Расширенный AI-поиск компонентов
@@ -310,6 +315,7 @@ npm run test:coverage
 - Тесты 3D-компонентов Vue.js (ParametricCube, EnergyCube, CubePreview, CubeGrid, CubeStack, LODCubeGrid, LODStatisticsDisplay, MagicCubeDemo — TASK 62)
 - Тесты UI-компонентов редактора Vue.js (UnifiedEditor, ParamEditor, FFTParamEditor, FFTChannelEditor, EnergyVisualizationEditor, LODConfigEditor, StackEditor, StackPresetPicker, PromptGenerator — TASK 63)
 - Тесты компонентов галереи, экспорта и шаринга Vue.js (Gallery, CommunityGallery, ExportPanel, SharePanel, CommentsSection, SubscriptionButton, NotificationPanel, ActionHistory — TASK 64)
+- Тесты компонентов аутентификации и коллаборации Vue.js (AuthForms, UserProfile, SessionPanel, CollaborativeParamEditor, ParticipantCursor — TASK 65)
 - Unit-тесты для типов, валидации, хранилища, производительности, физики энергии
 - Тесты модуля коллаборации (сессии, участники, синхронизация, конфликты)
 - Тесты WebSocket клиента (подключение, сообщения, реконнект, fallback на polling)

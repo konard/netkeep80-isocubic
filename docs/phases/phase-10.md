@@ -222,13 +222,13 @@
 Перевести компоненты аутентификации и коллаборативного редактирования на Vue.js.
 
 **Компоненты для миграции**:
-- [ ] `AuthForms.tsx` → `AuthForms.vue` — формы авторизации
-- [ ] `UserProfile.tsx` → `UserProfile.vue` — профиль пользователя
-- [ ] `SessionPanel.tsx` → `SessionPanel.vue` — панель сессий
-- [ ] `CollaborativeParamEditor.tsx` → `CollaborativeParamEditor.vue` — совместное редактирование
-- [ ] `ParticipantCursor.tsx` → `ParticipantCursor.vue` — курсоры участников
-- [ ] Создать Pinia store для состояния аутентификации (заменить React Context AuthProvider)
-- [ ] Создать Pinia store для состояния коллаборации
+- [x] `AuthForms.tsx` → `AuthForms.vue` — формы авторизации
+- [x] `UserProfile.tsx` → `UserProfile.vue` — профиль пользователя (включая UserAvatar)
+- [x] `SessionPanel.tsx` → `SessionPanel.vue` — панель сессий
+- [x] `CollaborativeParamEditor.tsx` → `CollaborativeParamEditor.vue` — совместное редактирование (включая EditingIndicator, ConflictIndicator)
+- [x] `ParticipantCursor.tsx` → `ParticipantCursor.vue` — курсоры участников (включая CursorDisplay, CursorList)
+- [x] Создать Pinia store для состояния аутентификации — уже существует в `src/lib/auth.ts` (useAuthStore, TASK 61)
+- [x] Создать Pinia store для состояния коллаборации — используется `CollaborationManager` из `src/lib/collaboration.ts` (framework-agnostic)
 
 **Ключевые изменения**:
 - AuthProvider (React Context) → `useAuthStore()` (Pinia store)
