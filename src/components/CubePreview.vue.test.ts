@@ -5,23 +5,49 @@
  * @vitest-environment jsdom
  */
 
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { shallowMount } from '@vue/test-utils'
 import type { SpectralCube } from '../types/cube'
 import { createDefaultCube } from '../types/cube'
 import type { ComponentMeta } from '../types/component-meta'
 
 // Mock TresJS dependencies to avoid ESM import issues in test environment
 vi.mock('@tresjs/core', () => ({
-  TresCanvas: {},
-  useRenderLoop: () => ({ onLoop: () => {} }),
+  TresCanvas: {
+    name: 'TresCanvas',
+    template: '<div data-testid="canvas-mock"><slot /></div>',
+    props: ['camera', 'antialias', 'alpha', 'powerPreference', 'dpr'],
+  },
+  useRenderLoop: () => ({ onLoop: vi.fn() }),
   useTresContext: () => ({ camera: { value: null } }),
 }))
 
 vi.mock('@tresjs/cientos', () => ({
-  OrbitControls: {},
-  ContactShadows: {},
-  Environment: {},
-  Html: {},
+  OrbitControls: {
+    name: 'OrbitControls',
+    template: '<div data-testid="orbit-controls-mock" />',
+  },
+  ContactShadows: {
+    name: 'ContactShadows',
+    template: '<div data-testid="contact-shadows-mock" />',
+  },
+  Environment: {
+    name: 'Environment',
+    template: '<div data-testid="environment-mock" />',
+  },
+  Html: {
+    name: 'Html',
+    template: '<div />',
+  },
+}))
+
+// Mock ParametricCube child component
+vi.mock('./ParametricCube.vue', () => ({
+  default: {
+    name: 'ParametricCube',
+    template: '<div data-testid="parametric-cube-mock" />',
+    props: ['config', 'position', 'animate', 'rotationSpeed'],
+  },
 }))
 
 // Mock cube for testing
@@ -55,13 +81,10 @@ const mockCube: SpectralCube = {
 describe('CubePreview Vue Component — Metadata', () => {
   it('should export component metadata', async () => {
     const module = await import('./CubePreview.vue')
-    // The CUBE_PREVIEW_META is exported from the SFC script setup
-    // but since it's registered via registerComponentMeta, we test it separately
     expect(module.default).toBeDefined()
   })
 
   it('should have correct component metadata structure', async () => {
-    // Test the metadata import directly
     const { CUBE_PREVIEW_META } = await import('./CubePreview.vue')
     expect(CUBE_PREVIEW_META).toBeDefined()
     expect(CUBE_PREVIEW_META.id).toBe('cube-preview')
@@ -98,7 +121,6 @@ describe('CubePreview Vue Component — Metadata', () => {
 
 describe('CubePreview Vue Component — Props Interface', () => {
   it('should define correct default props values', () => {
-    // Verify the expected defaults match the documented behavior
     const defaultProps = {
       showGrid: true,
       animate: false,
@@ -117,7 +139,6 @@ describe('CubePreview Vue Component — Props Interface', () => {
   })
 
   it('should handle null config for placeholder display', () => {
-    // When config is null, the component shows a placeholder
     const config: SpectralCube | null = null
     expect(config).toBeNull()
   })
@@ -133,5 +154,177 @@ describe('CubePreview Vue Component — Module Exports', () => {
     const module = await import('./CubePreview.vue')
     expect(module.default).toBeDefined()
     expect(typeof module.default).toBe('object')
+  })
+})
+
+describe('CubePreview Vue Component — Component Mounting', () => {
+  const globalStubs = {
+    stubs: {
+      TresCanvas: true,
+      TresColor: true,
+      TresAmbientLight: true,
+      TresDirectionalLight: true,
+      TresPointLight: true,
+      OrbitControls: true,
+      ContactShadows: true,
+      Environment: true,
+      ParametricCube: true,
+    },
+  }
+
+  beforeEach(() => {
+    // Mock getBoundingClientRect to return non-zero dimensions
+    Element.prototype.getBoundingClientRect = vi.fn(() => ({
+      width: 400,
+      height: 300,
+      top: 0,
+      left: 0,
+      bottom: 300,
+      right: 400,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    }))
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('should mount with config prop', async () => {
+    const { default: CubePreview } = await import('./CubePreview.vue')
+    const wrapper = shallowMount(CubePreview as any, {
+      props: { config: mockCube },
+      global: globalStubs,
+    })
+    expect(wrapper.exists()).toBe(true)
+  })
+
+  it('should render container with data-testid', async () => {
+    const { default: CubePreview } = await import('./CubePreview.vue')
+    const wrapper = shallowMount(CubePreview as any, {
+      props: { config: mockCube },
+      global: globalStubs,
+    })
+    expect(wrapper.find('[data-testid="cube-preview"]').exists()).toBe(true)
+  })
+
+  it('should render with default background color', async () => {
+    const { default: CubePreview } = await import('./CubePreview.vue')
+    const wrapper = shallowMount(CubePreview as any, {
+      props: { config: mockCube },
+      global: globalStubs,
+    })
+    const container = wrapper.find('[data-testid="cube-preview"]')
+    const style = container.attributes('style') ?? ''
+    expect(style).toContain('background:')
+    // jsdom may convert #1a1a1a to rgb(26, 26, 26)
+    expect(style.includes('1a1a1a') || style.includes('rgb(26, 26, 26)')).toBe(true)
+  })
+
+  it('should render with custom background color', async () => {
+    const { default: CubePreview } = await import('./CubePreview.vue')
+    const wrapper = shallowMount(CubePreview as any, {
+      props: { config: mockCube, backgroundColor: '#2a2a2a' },
+      global: globalStubs,
+    })
+    const container = wrapper.find('[data-testid="cube-preview"]')
+    const style = container.attributes('style') ?? ''
+    expect(style).toContain('background:')
+    // jsdom may convert #2a2a2a to rgb(42, 42, 42)
+    expect(style.includes('2a2a2a') || style.includes('rgb(42, 42, 42)')).toBe(true)
+  })
+
+  it('should apply custom className', async () => {
+    const { default: CubePreview } = await import('./CubePreview.vue')
+    const wrapper = shallowMount(CubePreview as any, {
+      props: { config: mockCube, className: 'custom-class' },
+      global: globalStubs,
+    })
+    const container = wrapper.find('[data-testid="cube-preview"]')
+    expect(container.classes()).toContain('cube-preview')
+    expect(container.classes()).toContain('custom-class')
+  })
+
+  it('should render placeholder when no config provided', async () => {
+    const { default: CubePreview } = await import('./CubePreview.vue')
+    const wrapper = shallowMount(CubePreview as any, {
+      props: { config: null },
+      global: globalStubs,
+    })
+    expect(wrapper.text()).toContain('Select a cube to preview')
+  })
+
+  it('should have proper container styling', async () => {
+    const { default: CubePreview } = await import('./CubePreview.vue')
+    const wrapper = shallowMount(CubePreview as any, {
+      props: { config: mockCube },
+      global: globalStubs,
+    })
+    const style = wrapper.find('[data-testid="cube-preview"]').attributes('style') ?? ''
+    expect(style).toContain('width: 100%')
+    expect(style).toContain('height: 100%')
+    expect(style).toContain('border-radius: 8px')
+    expect(style).toContain('overflow: hidden')
+    expect(style).toContain('min-height: 200px')
+  })
+
+  it('should set touch-action none on container element', async () => {
+    const { default: CubePreview } = await import('./CubePreview.vue')
+    const wrapper = shallowMount(CubePreview as any, {
+      props: { config: mockCube },
+      global: globalStubs,
+    })
+    const container = wrapper.find('[data-testid="cube-preview"]')
+    // Vue binds touchAction via :style, check the element's style property directly
+    // jsdom may strip non-standard CSS props from serialized style attribute,
+    // so we verify the component template includes it
+    const el = container.element as HTMLElement
+    // The touchAction may be set as a DOM property even if not in serialized style
+    const styleAttr = container.attributes('style') ?? ''
+    const hasTouchAction = styleAttr.includes('touch-action') || el.style.touchAction === 'none'
+    expect(hasTouchAction).toBe(true)
+  })
+
+  it('should accept all optional props without throwing', async () => {
+    const { default: CubePreview } = await import('./CubePreview.vue')
+    expect(() => {
+      shallowMount(CubePreview as any, {
+        props: {
+          config: mockCube,
+          showGrid: true,
+          animate: true,
+          rotationSpeed: 1.0,
+          showShadows: true,
+          backgroundColor: '#333',
+          className: 'test-class',
+        },
+        global: globalStubs,
+      })
+    }).not.toThrow()
+  })
+
+  it('should work with minimal props (null config)', async () => {
+    const { default: CubePreview } = await import('./CubePreview.vue')
+    expect(() => {
+      shallowMount(CubePreview as any, {
+        props: { config: null },
+        global: globalStubs,
+      })
+    }).not.toThrow()
+  })
+
+  it('should handle different cube configs', async () => {
+    const { default: CubePreview } = await import('./CubePreview.vue')
+    const differentCube = createDefaultCube('different_cube')
+
+    const wrapper = shallowMount(CubePreview as any, {
+      props: { config: mockCube },
+      global: globalStubs,
+    })
+    expect(wrapper.exists()).toBe(true)
+
+    await wrapper.setProps({ config: differentCube })
+    expect(wrapper.exists()).toBe(true)
   })
 })

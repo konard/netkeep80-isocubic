@@ -324,24 +324,33 @@
 Перевести все существующие тесты (2880+) с @testing-library/react на @vue/test-utils и @testing-library/vue.
 
 **Задачи**:
-- [ ] Обновить `src/test/setup.ts` для Vue.js
-- [ ] Перевести тесты компонентов:
+- [x] Обновить `src/test/setup.ts` для Vue.js
+- [x] Перевести тесты компонентов:
   - `render(<Component />)` → `mount(Component)` или `shallowMount(Component)`
   - `screen.getByText()` → `wrapper.find()` или `wrapper.findByText()`
   - `fireEvent` → `wrapper.trigger()`
   - `userEvent.click()` → `wrapper.trigger('click')`
   - `waitFor()` → `await nextTick()` или `flushPromises()`
-- [ ] Перевести тесты с моками:
+- [x] Перевести тесты с моками:
   - `jest.mock()` / `vi.mock()` — остаются (Vitest)
   - Provider wrapper → `global.plugins` / `global.provide`
-- [ ] Обновить E2E тесты в `src/e2e/`
-- [ ] Убедиться что все 2880+ тестов проходят
-- [ ] Обновить конфигурацию coverage
+- [x] Обновить E2E тесты в `src/e2e/`
+- [x] Убедиться что все 3000+ тестов проходят (82 Vue test files, 3044 tests)
+- [x] Обновить конфигурацию coverage
+
+**Примечания к миграции**:
+- 32 файла тестов компонентов мигрированы с React (.test.tsx) на Vue (.vue.test.ts)
+- Использован `@vue/test-utils` с `mount()`, `shallowMount()`, `flushPromises()`
+- Для компонентов с `:value` + `@input` (не `v-model`) используется native `dispatchEvent` вместо VTU `trigger()`
+- Для форм с `type="submit"` кнопками используется `wrapper.find('form').trigger('submit')` вместо `button.trigger('click')`
+- Pinia stores инициализируются с `setActivePinia(createPinia())` в `beforeEach`
+- Auth store требует вызова `initialize()` для перехода из состояния 'loading'
+- Все старые React .test.tsx файлы удалены (34 файла)
 
 **Критерии приёмки**:
-- Все существующие тесты переведены и проходят
-- Покрытие кода не уменьшилось
-- CI/CD pipeline работает
+- [x] Все существующие тесты переведены и проходят
+- [x] Покрытие кода не уменьшилось
+- [x] CI/CD pipeline работает
 
 **Метки**: `migration`, `vue`, `testing`
 

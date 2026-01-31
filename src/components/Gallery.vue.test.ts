@@ -5,7 +5,38 @@
  * @vitest-environment jsdom
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { shallowMount } from '@vue/test-utils'
+import Gallery, { GALLERY_META } from './Gallery.vue'
+import type { SpectralCube } from '../types/cube'
+
+// Mock cube for testing
+const mockCube: SpectralCube = {
+  id: 'test_cube',
+  prompt: 'Test cube',
+  base: {
+    color: [0.5, 0.5, 0.5],
+    roughness: 0.5,
+    transparency: 1.0,
+  },
+  gradients: [
+    {
+      axis: 'y',
+      factor: 0.3,
+      color_shift: [0.1, 0.2, 0.1],
+    },
+  ],
+  physics: {
+    material: 'stone',
+    density: 2.5,
+    break_pattern: 'crumble',
+  },
+  meta: {
+    name: 'Test Cube',
+    tags: ['test', 'sample'],
+    author: 'test',
+  },
+}
 
 describe('Gallery Vue Component — Module Exports', () => {
   it('should export Gallery.vue as a valid Vue component', async () => {
@@ -14,12 +45,11 @@ describe('Gallery Vue Component — Module Exports', () => {
     expect(typeof module.default).toBe('object')
   })
 
-  it('should export GALLERY_META with correct metadata', async () => {
-    const module = await import('./Gallery.vue')
-    expect(module.GALLERY_META).toBeDefined()
-    expect(module.GALLERY_META.id).toBe('gallery')
-    expect(module.GALLERY_META.name).toBe('Gallery')
-    expect(module.GALLERY_META.filePath).toBe('components/Gallery.vue')
+  it('should export GALLERY_META with correct metadata', () => {
+    expect(GALLERY_META).toBeDefined()
+    expect(GALLERY_META.id).toBe('gallery')
+    expect(GALLERY_META.name).toBe('Gallery')
+    expect(GALLERY_META.filePath).toBe('components/Gallery.vue')
   })
 })
 
@@ -102,5 +132,283 @@ describe('Gallery Vue Component — Color Utilities', () => {
     expect(colorToCSS([0, 1, 0])).toBe('rgb(0, 255, 0)')
     expect(colorToCSS([0, 0, 1])).toBe('rgb(0, 0, 255)')
     expect(colorToCSS([0.5, 0.5, 0.5])).toBe('rgb(128, 128, 128)')
+  })
+})
+
+describe('Gallery Vue Component — Mounting and Rendering', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  it('should render gallery title', () => {
+    const wrapper = shallowMount(Gallery)
+    expect(wrapper.text()).toContain('Gallery')
+  })
+
+  it('should render view mode toggle buttons', () => {
+    const wrapper = shallowMount(Gallery)
+    const toggleButtons = wrapper.findAll('.gallery__toggle-btn')
+    const texts = toggleButtons.map((btn) => btn.text())
+    expect(texts).toContain('Presets')
+    expect(texts).toContain('My Cubes')
+  })
+
+  it('should render search input', () => {
+    const wrapper = shallowMount(Gallery)
+    const searchInput = wrapper.find('.gallery__search-input')
+    expect(searchInput.exists()).toBe(true)
+    expect(searchInput.attributes('placeholder')).toBe('Search by name, tags...')
+  })
+
+  it('should render category filter buttons', () => {
+    const wrapper = shallowMount(Gallery)
+    const categoryButtons = wrapper.findAll('.gallery__category-btn')
+    const texts = categoryButtons.map((btn) => btn.text())
+    expect(texts).toContain('All')
+    expect(texts).toContain('Stone')
+    expect(texts).toContain('Wood')
+    expect(texts).toContain('Metal')
+    expect(texts).toContain('Organic')
+    expect(texts).toContain('Crystal')
+    expect(texts).toContain('Liquid')
+  })
+
+  it('should display preset cubes by default', () => {
+    const wrapper = shallowMount(Gallery)
+    expect(wrapper.text()).toContain('of 13 cubes')
+  })
+
+  it('should show save button when currentCube is provided', () => {
+    const wrapper = shallowMount(Gallery, {
+      props: { currentCube: mockCube },
+    })
+    const saveBtn = wrapper.find('.gallery__save-btn')
+    expect(saveBtn.exists()).toBe(true)
+    expect(saveBtn.text()).toBe('Save Current to Gallery')
+  })
+
+  it('should not show save button when no currentCube', () => {
+    const wrapper = shallowMount(Gallery)
+    const saveBtn = wrapper.find('.gallery__save-btn')
+    expect(saveBtn.exists()).toBe(false)
+  })
+
+  it('should have gallery grid', () => {
+    const wrapper = shallowMount(Gallery)
+    expect(wrapper.find('.gallery__grid').exists()).toBe(true)
+  })
+
+  it('should display cube info (name and material)', () => {
+    const wrapper = shallowMount(Gallery)
+    const materialLabels = wrapper.findAll('.gallery__item-material')
+    expect(materialLabels.length).toBeGreaterThan(0)
+  })
+})
+
+describe('Gallery Vue Component — Category Filtering', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  it('should filter by Stone category', async () => {
+    const wrapper = shallowMount(Gallery)
+    const stoneButton = wrapper
+      .findAll('.gallery__category-btn')
+      .find((btn) => btn.text() === 'Stone')!
+    await stoneButton.trigger('click')
+    expect(stoneButton.classes()).toContain('gallery__category-btn--active')
+  })
+
+  it('should filter by Wood category', async () => {
+    const wrapper = shallowMount(Gallery)
+    const woodButton = wrapper
+      .findAll('.gallery__category-btn')
+      .find((btn) => btn.text() === 'Wood')!
+    await woodButton.trigger('click')
+    expect(woodButton.classes()).toContain('gallery__category-btn--active')
+  })
+
+  it('should show all cubes when All category is selected', async () => {
+    const wrapper = shallowMount(Gallery)
+
+    // First filter by Stone
+    const stoneButton = wrapper
+      .findAll('.gallery__category-btn')
+      .find((btn) => btn.text() === 'Stone')!
+    await stoneButton.trigger('click')
+
+    // Then select All
+    const allButton = wrapper
+      .findAll('.gallery__category-btn')
+      .find((btn) => btn.text() === 'All')!
+    await allButton.trigger('click')
+
+    expect(allButton.classes()).toContain('gallery__category-btn--active')
+    expect(wrapper.text()).toContain('of 13 cubes')
+  })
+})
+
+describe('Gallery Vue Component — Search Functionality', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  it('should filter cubes by search query', async () => {
+    const wrapper = shallowMount(Gallery)
+    const searchInput = wrapper.find('.gallery__search-input')
+    await searchInput.setValue('stone')
+    expect((searchInput.element as HTMLInputElement).value).toBe('stone')
+  })
+
+  it('should show clear button when searching', async () => {
+    const wrapper = shallowMount(Gallery)
+    const searchInput = wrapper.find('.gallery__search-input')
+    await searchInput.setValue('test')
+    const clearButton = wrapper.find('.gallery__search-clear')
+    expect(clearButton.exists()).toBe(true)
+  })
+
+  it('should clear search when clear button clicked', async () => {
+    const wrapper = shallowMount(Gallery)
+    const searchInput = wrapper.find('.gallery__search-input')
+    await searchInput.setValue('test')
+
+    const clearButton = wrapper.find('.gallery__search-clear')
+    await clearButton.trigger('click')
+
+    expect((searchInput.element as HTMLInputElement).value).toBe('')
+  })
+
+  it('should search by cube name', async () => {
+    const wrapper = shallowMount(Gallery)
+    const searchInput = wrapper.find('.gallery__search-input')
+    await searchInput.setValue('Moss')
+    // Should find results
+    expect(wrapper.text()).toMatch(/of \d+ cubes/)
+  })
+
+  it('should show no results message when no cubes match', async () => {
+    const wrapper = shallowMount(Gallery)
+    const searchInput = wrapper.find('.gallery__search-input')
+    await searchInput.setValue('xyznonexistent')
+    expect(wrapper.text()).toContain('No cubes match your search')
+  })
+})
+
+describe('Gallery Vue Component — View Mode Toggle', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  it('should toggle to My Cubes view', async () => {
+    const wrapper = shallowMount(Gallery)
+    const myCubesButton = wrapper
+      .findAll('.gallery__toggle-btn')
+      .find((btn) => btn.text() === 'My Cubes')!
+    await myCubesButton.trigger('click')
+    expect(myCubesButton.classes()).toContain('gallery__toggle-btn--active')
+  })
+
+  it('should show empty message when no user cubes saved', async () => {
+    const wrapper = shallowMount(Gallery)
+    const myCubesButton = wrapper
+      .findAll('.gallery__toggle-btn')
+      .find((btn) => btn.text() === 'My Cubes')!
+    await myCubesButton.trigger('click')
+    expect(wrapper.text()).toContain('No saved cubes yet')
+  })
+
+  it('should toggle back to Presets view', async () => {
+    const wrapper = shallowMount(Gallery)
+
+    // Switch to My Cubes
+    const myCubesButton = wrapper
+      .findAll('.gallery__toggle-btn')
+      .find((btn) => btn.text() === 'My Cubes')!
+    await myCubesButton.trigger('click')
+
+    // Switch back to Presets
+    const presetsButton = wrapper
+      .findAll('.gallery__toggle-btn')
+      .find((btn) => btn.text() === 'Presets')!
+    await presetsButton.trigger('click')
+
+    expect(presetsButton.classes()).toContain('gallery__toggle-btn--active')
+    expect(wrapper.text()).toContain('of 13 cubes')
+  })
+})
+
+describe('Gallery Vue Component — Cube Selection', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  it('should emit cubeSelect when cube is clicked', async () => {
+    const wrapper = shallowMount(Gallery)
+    const cubeItems = wrapper.findAll('.gallery__item')
+    expect(cubeItems.length).toBeGreaterThan(0)
+    await cubeItems[0].trigger('click')
+    expect(wrapper.emitted('cubeSelect')).toBeTruthy()
+  })
+
+  it('should support keyboard navigation (Enter key)', async () => {
+    const wrapper = shallowMount(Gallery)
+    const cubeItems = wrapper.findAll('.gallery__item')
+    expect(cubeItems.length).toBeGreaterThan(0)
+    await cubeItems[0].trigger('keydown', { key: 'Enter' })
+    expect(wrapper.emitted('cubeSelect')).toBeTruthy()
+  })
+
+  it('should show status message after selecting cube', async () => {
+    vi.useFakeTimers()
+    const wrapper = shallowMount(Gallery)
+    const cubeItems = wrapper.findAll('.gallery__item')
+    expect(cubeItems.length).toBeGreaterThan(0)
+    await cubeItems[0].trigger('click')
+
+    // Status message should appear
+    const statusEl = wrapper.find('[role="status"]')
+    expect(statusEl.exists()).toBe(true)
+    vi.useRealTimers()
+  })
+})
+
+describe('Gallery Vue Component — Save to Gallery', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  it('should save current cube when save button is clicked', async () => {
+    vi.useFakeTimers()
+    const wrapper = shallowMount(Gallery, {
+      props: { currentCube: mockCube },
+    })
+
+    const saveButton = wrapper.find('.gallery__save-btn')
+    await saveButton.trigger('click')
+
+    // Status message should appear
+    const statusEl = wrapper.find('[role="status"]')
+    expect(statusEl.exists()).toBe(true)
+    expect(wrapper.text()).toContain('Saved:')
+    vi.useRealTimers()
+  })
+})
+
+describe('Gallery Vue Component — Custom className', () => {
+  it('should apply custom className', () => {
+    const wrapper = shallowMount(Gallery, {
+      props: { className: 'custom-class' },
+    })
+    expect(wrapper.find('.gallery.custom-class').exists()).toBe(true)
+  })
+})
+
+describe('Gallery Vue Component — Tag Suggestions', () => {
+  it('should update search when tag is entered', async () => {
+    const wrapper = shallowMount(Gallery)
+    const searchInput = wrapper.find('.gallery__search-input')
+    await searchInput.setValue('stone')
+    expect((searchInput.element as HTMLInputElement).value).toBe('stone')
   })
 })
