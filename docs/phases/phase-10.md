@@ -195,14 +195,14 @@
 Перевести компоненты галереи, экспорта и социальных функций на Vue.js SFC.
 
 **Компоненты для миграции**:
-- [ ] `Gallery.tsx` → `Gallery.vue` — галерея примеров
-- [ ] `CommunityGallery.tsx` → `CommunityGallery.vue` — галерея сообщества
-- [ ] `ExportPanel.tsx` → `ExportPanel.vue` — экспорт/импорт
-- [ ] `SharePanel.tsx` → `SharePanel.vue` — шаринг с QR-кодами
-- [ ] `CommentsSection.tsx` → `CommentsSection.vue` — секция комментариев
-- [ ] `SubscriptionButton.tsx` → `SubscriptionButton.vue` — кнопка подписки
-- [ ] `NotificationPanel.tsx` → `NotificationPanel.vue` — панель уведомлений
-- [ ] `ActionHistory.tsx` → `ActionHistory.vue` — история действий (undo/redo)
+- [x] `Gallery.tsx` → `Gallery.vue` — галерея примеров
+- [x] `CommunityGallery.tsx` → `CommunityGallery.vue` — галерея сообщества
+- [x] `ExportPanel.tsx` → `ExportPanel.vue` — экспорт/импорт
+- [x] `SharePanel.tsx` → `SharePanel.vue` — шаринг с QR-кодами
+- [x] `CommentsSection.tsx` → `CommentsSection.vue` — секция комментариев
+- [x] `SubscriptionButton.tsx` → `SubscriptionButton.vue` — кнопка подписки
+- [x] `NotificationPanel.tsx` → `NotificationPanel.vue` — панель уведомлений
+- [x] `ActionHistory.tsx` → `ActionHistory.vue` — история действий (undo/redo)
 
 **Критерии приёмки**:
 - Галерея отображается и кубики можно выбирать
