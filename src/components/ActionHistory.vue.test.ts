@@ -38,8 +38,7 @@ describe('ActionHistory Vue Component — Action Type Icons', () => {
 describe('ActionHistory Vue Component — Action Description Formatting', () => {
   it('should format cube_create action correctly', () => {
     const action = { type: 'cube_create', payload: {} }
-    const description =
-      action.type === 'cube_create' ? 'Created a cube' : 'Unknown action'
+    const description = action.type === 'cube_create' ? 'Created a cube' : 'Unknown action'
     expect(description).toBe('Created a cube')
   })
 
