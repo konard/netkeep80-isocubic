@@ -172,10 +172,15 @@ isocubic/
 │   │   ├── IssueDraftPanel.vue  # Генератор черновиков issues (Vue SFC, TASK 66)
 │   │   ├── GitHubAuthButton.vue # Авторизация GitHub (Vue SFC, TASK 66)
 │   │   └── AnnotationCanvas.vue # Аннотирование скриншотов (Vue SFC, TASK 66)
+│   │   ├── DraggableWindow.vue # Перетаскиваемые окна (Phase 11, TASK 71)
+│   │   ├── CommandBar.vue      # Командная строка (Phase 11, TASK 73)
+│   │   ├── WindowTaskbar.vue  # Панель задач для окон (Phase 11, TASK 72)
+│   │   └── ComponentInfo.vue    # DevMode индикатор компонентов (Vue SFC, TASK 66)
 │   ├── composables/       # Vue composables (TASK 67)
 │   │   ├── useDeviceType.ts    # Определение типа устройства (desktop/tablet/mobile)
 │   │   ├── useCubeEditor.ts    # Централизованное управление состоянием куба
-│   │   └── useLODStatistics.ts # Статистика LOD-системы
+│   │   ├── useLODStatistics.ts # Статистика LOD-системы
+│   │   └── useWindowManager.ts # Управление состоянием окон (Phase 11, TASK 70)
 │   ├── shaders/           # GLSL-шейдеры
 │   │   ├── parametric-cube.glsl  # Исходный GLSL код
 │   │   ├── parametric-cube.ts    # TypeScript модуль для Three.js
@@ -202,7 +207,12 @@ isocubic/
 │   │   ├── collaboration.ts   # Модуль коллаборативного редактирования
 │   │   ├── community-gallery.ts # Сервис галереи сообщества
 │   │   ├── share-links.ts     # Сервис share-ссылок и QR-кодов
-│   │   └── publishing-api.ts  # REST API для публикации кубиков
+│   │   ├── publishing-api.ts  # REST API для публикации кубиков
+│   │   ├── window-layout-manager.ts # Менеджер раскладки окон (Phase 11, TASK 77)
+│   │   ├── command-macros.ts   # Система макросов команд (Phase 11, TASK 77)
+│   │   ├── command-plugins.ts   # Система плагинов команд (Phase 11, TASK 77)
+│   │   ├── command-registry.ts  # Реестр команд (Phase 11, TASK 73)
+│   │   └── command-parser.ts    # Парсер команд с TinyLLM (Phase 11, TASK 73)
 │   ├── types/             # TypeScript-типы
 │   │   ├── cube.ts
 │   │   ├── lod.ts             # Типы для LOD-системы
@@ -213,8 +223,17 @@ isocubic/
 │   │   ├── publishing-api.ts  # Типы для REST API публикации
 │   │   ├── ai-query.ts        # Типы для AI-запросов в DevMode
 │   │   ├── god-mode.ts        # Типы для GOD MODE (Phase 9)
-│   │   └── issue-generator.ts # Типы для генератора issues (Phase 9)
-│   └── App.vue            # Корневой компонент с адаптивным layout (TASK 67)
+│   │   ├── issue-generator.ts # Типы для генератора issues (Phase 9)
+│   │   ├── auth.ts            # Типы для аутентификации (Phase 8)
+│   │   ├── collaboration.ts   # Типы для коллаборации (Phase 8)
+│   │   ├── community.ts       # Типы для галереи сообщества (Phase 7)
+│   │   ├── component-meta.ts  # Типы для метаданных компонентов
+│   │   ├── cube-schema.json   # JSON схема валидации кубиков
+│   │   ├── god-mode.ts        # Типы для GOD MODE (Phase 9)
+│   │   ├── issue-generator.ts # Типы для генератора issues
+│   │   ├── publishing-api.ts  # Типы для REST API публикации
+│   │   └── window-manager.ts # Типы для оконного менеджера (Phase 11)
+│   └── App.vue            # Корневой компонент с оконным интерфейсом (Phase 11, TASK 76)
 ├── wasm-fft/              # Rust WASM модуль для FFT
 │   ├── Cargo.toml             # Rust конфигурация
 │   ├── src/lib.rs             # Реализация 3D FFT
@@ -268,7 +287,7 @@ isocubic/
 | 8 | [AI + Metadata](docs/phase-8.md) | ✅ Завершена |
 | 9 | [GOD MODE — Автоматизация разработки](docs/phase-9.md) | ✅ Завершена |
 | 10 | [Переход на Vue.js 3.0 + TypeScript](docs/phase-10.md) | ✅ Завершена |
-| 11 | [Новый пользовательский интерфейс isocubic](docs/phase-11.md) | Запланирована |
+| 11 | [Новый пользовательский интерфейс isocubic](docs/phase-11.md) | 🚧 В разработке |
 
 ## Деплой
 
@@ -345,6 +364,14 @@ npm run test:coverage
 - Тесты библиотеки @isocubic/god-mode (типы, утилиты, хранилище, GodModeProvider, useGodMode)
 - Тесты DevMode компонентов Vue.js (DevModeQueryPanel, ComponentContextPanel, ExtendedSearchPanel, ComponentInfo, AnnotationCanvas — TASK 66)
 - E2E тесты для полных workflow редактирования (мигрированы на Vue — TASK 68)
+- Тесты оконного менеджера (useWindowManager — Phase 11, TASK 70)
+- Тесты перетаскиваемых окон (DraggableWindow — Phase 11, TASK 71)
+- Тесты панели задач (WindowTaskbar — Phase 11, TASK 72)
+- Тесты командной строки (CommandBar — Phase 11, TASK 73)
+- Тесты менеджера раскладки окон (WindowLayoutManager — Phase 11, TASK 77)
+- Тесты системы макросов команд (CommandMacros — Phase 11, TASK 77)
+- Тесты системы плагинов команд (CommandPlugins — Phase 11, TASK 77)
+- E2E тесты оконной системы (window-manager.e2e.test.ts — Phase 11, TASK 78)
 
 ## Вклад в проект
 
