@@ -12,6 +12,9 @@ import { useDevModeKeyboard, useHoveredComponentId } from './lib/devmode'
 import { useAuthStore } from './lib/auth'
 import { useWindowManager } from './composables/useWindowManager'
 import type { WindowDefinition } from './composables/useWindowManager'
+import { windowLayoutManager } from './lib/window-layout-manager'
+import { commandMacros } from './lib/command-macros'
+import { commandPlugins } from './lib/command-plugins'
 import Gallery from './components/Gallery.vue'
 import { GALLERY_META } from './components/Gallery.vue'
 import ExportPanel from './components/ExportPanel.vue'
@@ -178,6 +181,43 @@ const commandItems = computed<CommandItem[]>(() => {
     })
   }
 
+  // Window layout commands
+  items.push({
+    id: 'action:arrange-windows',
+    label: 'Arrange Windows',
+    icon: '\ud83d\udccb',
+    description: 'Arrange all windows in a grid layout',
+    category: 'action',
+  })
+  items.push({
+    id: 'action:tile-windows',
+    label: 'Tile Windows',
+    icon: '\ud83d\udcd0',
+    description: 'Tile windows horizontally or vertically',
+    category: 'action',
+  })
+  items.push({
+    id: 'action:cascade-windows',
+    label: 'Cascade Windows',
+    icon: '\ud83d\udc73',
+    description: 'Cascade windows diagonally',
+    category: 'action',
+  })
+  items.push({
+    id: 'action:minimize-all',
+    label: 'Minimize All',
+    icon: '\ud83d\udced',
+    description: 'Minimize all windows',
+    category: 'action',
+  })
+  items.push({
+    id: 'action:restore-all',
+    label: 'Restore All',
+    icon: '\ud83d\udd04',
+    description: 'Restore all minimized windows',
+    category: 'action',
+  })
+
   // Action commands
   items.push({
     id: 'action:reset-layout',
@@ -187,22 +227,100 @@ const commandItems = computed<CommandItem[]>(() => {
     category: 'action',
   })
 
+  // Add macro commands
+  items.push(...commandMacros.getMacroCommands())
+
+  // Add plugin commands
+  items.push(...commandPlugins.getAllCommands())
+
   return items
 })
 
 /** Handle command bar execution */
-function onCommandExecute(commandId: string) {
-  if (commandId.startsWith('window:')) {
-    const winId = commandId.slice('window:'.length)
-    const win = windowManager.getWindow(winId)
-    if (win?.isOpen) {
-      windowManager.bringToFront(winId)
-      if (win.isMinimized) windowManager.restoreWindow(winId)
-    } else {
-      windowManager.openWindow(winId)
+async function onCommandExecute(commandId: string) {
+  try {
+    // Handle window commands
+    if (commandId.startsWith('window:')) {
+      const winId = commandId.slice('window:'.length)
+      const win = windowManager.getWindow(winId)
+      if (win?.isOpen) {
+        windowManager.bringToFront(winId)
+        if (win.isMinimized) windowManager.restoreWindow(winId)
+      } else {
+        windowManager.openWindow(winId)
+      }
+      return
     }
-  } else if (commandId === 'action:reset-layout') {
-    windowManager.resetLayout()
+
+    // Handle macro commands
+    if (commandId.startsWith('macro:')) {
+      const macroId = commandId.slice('macro:'.length)
+      await commandMacros.executeMacro(macroId, onCommandExecute)
+      return
+    }
+
+    // Handle plugin commands
+    if (commandId.includes(':') && !commandId.startsWith('window:') && !commandId.startsWith('action:')) {
+      await commandPlugins.executeCommand(commandId)
+      return
+    }
+
+    // Handle action commands
+    switch (commandId) {
+      case 'action:arrange-windows':
+        const arrangeLayouts = windowLayoutManager.getOptimalLayout(
+          Array.from(windowManager.allWindows.value.values()),
+          { type: 'arrange' }
+        )
+        arrangeLayouts.forEach((layout, windowId) => {
+          windowManager.moveWindow(windowId, layout.x, layout.y)
+          windowManager.resizeWindow(windowId, layout.width, layout.height)
+        })
+        break
+
+      case 'action:tile-windows':
+        const tileLayouts = windowLayoutManager.getOptimalLayout(
+          Array.from(windowManager.allWindows.value.values()),
+          { type: 'tile' }
+        )
+        tileLayouts.forEach((layout, windowId) => {
+          windowManager.moveWindow(windowId, layout.x, layout.y)
+          windowManager.resizeWindow(windowId, layout.width, layout.height)
+        })
+        break
+
+      case 'action:cascade-windows':
+        const cascadeLayouts = windowLayoutManager.getOptimalLayout(
+          Array.from(windowManager.allWindows.value.values()),
+          { type: 'cascade' }
+        )
+        cascadeLayouts.forEach((layout, windowId) => {
+          windowManager.moveWindow(windowId, layout.x, layout.y)
+          windowManager.resizeWindow(windowId, layout.width, layout.height)
+        })
+        break
+
+      case 'action:minimize-all':
+        Array.from(windowManager.allWindows.value.values())
+          .filter(w => w.isOpen && !w.isMinimized)
+          .forEach(w => windowManager.minimizeWindow(w.id))
+        break
+
+      case 'action:restore-all':
+        Array.from(windowManager.allWindows.value.values())
+          .filter(w => w.isOpen && w.isMinimized)
+          .forEach(w => windowManager.restoreWindow(w.id))
+        break
+
+      case 'action:reset-layout':
+        windowManager.resetLayout()
+        break
+
+      default:
+        console.warn(`Unknown command: ${commandId}`)
+    }
+  } catch (error) {
+    console.error(`Command execution failed: ${commandId}`, error)
   }
 }
 
